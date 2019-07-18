@@ -13,7 +13,7 @@ from itertools import tee
 from collections import OrderedDict
 
 from pytal.terrain_module import terrain_module
-from pytal.qkpfl import run_itmlogic
+from pytal.run_itmlogic import run_itmlogic
 
 # #set up file paths
 CONFIG = configparser.ConfigParser()
