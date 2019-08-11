@@ -10,7 +10,7 @@ import pyproj
 import numpy as np
 from itertools import tee
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from pytal.terrain_module import terrain_module
 from pytal.run_itmlogic import run_itmlogic
@@ -58,10 +58,9 @@ class NetworkManager(object):
                 )
             self.interfering_transmitters[site_id] = site_object
 
-    def estimate_link_budget(self, modulation_and_coding_lut, simulation_parameters):
-        # , frequency, bandwidth,
-        # generation, mast_height, environment, modulation_and_coding_lut,
-        # simulation_parameters):
+    def estimate_link_budget(self, propagation_parameters,
+        modulation_and_coding_lut, simulation_parameters,
+        dem_folder, old_crs, new_crs):
         """
         Takes propagation parameters and calculates link budget capacity.
         Parameters
@@ -86,48 +85,55 @@ class NetworkManager(object):
 
         for receiver in self.receivers.values():
 
-            path_loss = self.calculate_path_loss(
-                self.transmitter, receiver
-            )
-            # print(path_loss)
-            received_power = self.calc_received_power(
-                self.transmitter, receiver, path_loss
+            path_loss_dict = self.calculate_path_loss(
+                self.transmitter, receiver, dem_folder,
+                old_crs, new_crs, propagation_parameters,
+                simulation_parameters
             )
 
-            interference = self.calculate_interference(
-                self.interfering_transmitters, receiver)
+            received_power_dict = self.calc_received_power(
+                self.transmitter, receiver, path_loss_dict
+            )
+
+            interference_dict = self.calculate_interference(
+                self.interfering_transmitters, receiver,
+                dem_folder, old_crs, new_crs, propagation_parameters,
+                simulation_parameters)
 
             bandwidth = 10
             noise = self.calculate_noise(
                 bandwidth
             )
 
-            sinr = self.calculate_sinr(
-                received_power, interference, noise, simulation_parameters
+            sinr_dict, summed_interference_dict = self.calculate_sinr(
+                received_power_dict, interference_dict, noise, simulation_parameters
             )
 
             generation = '4G'
-            spectral_efficiency = self.modulation_scheme_and_coding_rate(
-                sinr, generation, modulation_and_coding_lut
+            spectral_efficiency_dict = self.modulation_scheme_and_coding_rate(
+                sinr_dict, generation, modulation_and_coding_lut
             )
 
-            estimated_capacity = self.link_budget_capacity(
-                bandwidth, spectral_efficiency
+            estimated_capacity_dict = self.estimated_capacity(
+                bandwidth, spectral_efficiency_dict
             )
-            # print(estimated_capacity)
-            data = {
-                'receiver_x': receiver.coordinates[0],
-                'receiver_y': receiver.coordinates[1],
-                'path_loss': path_loss,
-                'received_power': received_power,
-                'interference': interference[0],
-                'noise': noise,
-                'sinr': sinr,
-                'spectral_efficiency': spectral_efficiency,
-                'estimated_capacity': estimated_capacity
-                }
 
-            results.append(data)
+            for key in estimated_capacity_dict.keys():
+                data = {
+                    'receiver_x': receiver.coordinates[0],
+                    'receiver_y': receiver.coordinates[1],
+                    'path_loss': path_loss_dict[key],
+                    'received_power': received_power_dict[key],
+                    'interference': summed_interference_dict[key],
+                    'noise': noise,
+                    'sinr': sinr_dict[key],
+                    'spectral_efficiency': spectral_efficiency_dict[key],
+                    'estimated_capacity': estimated_capacity_dict[key],
+                    'frequency': key,
+                    'bandwidth': 10,
+                    }
+
+                results.append(data)
 
             # print('received_power is {}'.format(received_power))
             # print('interference is {}'.format(interference))
@@ -141,7 +147,8 @@ class NetworkManager(object):
         return results
 
 
-    def calculate_path_loss(self, transmitter, receiver):
+    def calculate_path_loss(self, transmitter, receiver, dem_folder,
+        old_crs, new_crs, propagation_parameters, simulation_parameters):
 
         line = {
             'type': 'Feature',
@@ -156,10 +163,11 @@ class NetworkManager(object):
                 }
             }
 
-        measured_terrain_profile = terrain_module(line, 'EPSG:4326', 'EPSG:27700')
+        measured_terrain_profile = terrain_module(dem_folder, line, old_crs, new_crs)
         # print(measured_terrain_profile)
+        # print(LineString(line['geometry']['coordinates']).length)
         distance = LineString(line['geometry']['coordinates']).length / 1e3
-
+        # print(distance)
         # output = run_itmlogic(
         #     measured_terrain_profile,
         #     distance
@@ -169,20 +177,30 @@ class NetworkManager(object):
         #(not that this would be a worthy ITM problem anyway)
         output = run_itmlogic(
             measured_terrain_profile,
-            distance
+            distance,
+            propagation_parameters,
+            simulation_parameters['antenna_heights'],
             )
 
-        for entry in output:
-            #get 90% reliability level
-            if entry[0] == 90:
-                confidence_90_percent = entry[2]
+        path_loss_dict = {}
+        for frequency in propagation_parameters:
+            # print(frequency)
+            for frequency_results in output.values():
+                # print(frequency_results)
+                for reliability_level in frequency_results:
+                    # print(reliability_level)
+                    #get 90% reliability level
+                    if reliability_level[0] == 90:
+                        confidence_90_percent = reliability_level[2]
+                        path_loss_dict[frequency] = confidence_90_percent
+        # print(path_loss_dict)
         # else:
         #     confidence_90_percent = 0
         # confidence_90_percent = 0
-        return confidence_90_percent
+        return path_loss_dict
 
 
-    def calc_received_power(self, site, receiver, path_loss):
+    def calc_received_power(self, site, receiver, path_loss_dict):
         """
         Calculate received power based on site and receiver
         characteristcs, and path loss.
@@ -193,25 +211,30 @@ class NetworkManager(object):
             float(site.gain) - \
             float(site.losses)
 
-        received_power = eirp - \
-            path_loss - \
-            receiver.misc_losses + \
-            receiver.gain - \
-            receiver.losses
+        received_power_dict = {}
+        for key, value in path_loss_dict.items():
+            received_power = eirp - \
+                value - \
+                receiver.misc_losses + \
+                receiver.gain - \
+                receiver.losses
+            received_power_dict[key] = received_power
 
-        return received_power
+        return received_power_dict
 
 
     def calculate_interference(
-        self, interfering_sites, receiver):
+        self, interfering_sites, receiver, dem_folder, old_crs,
+        new_crs, propagation_parameters, simulation_parameters):
         """
         Calculate interference from other cells.
         closest_sites contains all sites, ranked based
         on distance, meaning we need to select cells 1-3 (as cell 0
         is the actual cell in use)
         """
-        interference = []
+        interference = defaultdict(list)
 
+        # for frequency in propagation_parameters.keys():
         for interference_site in interfering_sites.values():
 
             line = {
@@ -227,29 +250,38 @@ class NetworkManager(object):
                     }
                 }
 
-            measured_terrain_profile = terrain_module(line, 'EPSG:4326', 'EPSG:27700')
+            measured_terrain_profile = terrain_module(dem_folder, line, old_crs, new_crs)
             distance = LineString(line['geometry']['coordinates']).length / 1e3
             if distance > 0:
                 # print('distance is {}'.format(distance))
                 output = run_itmlogic(
                     measured_terrain_profile,
-                    distance
+                    distance,
+                    propagation_parameters,
+                    simulation_parameters['antenna_heights'],
                     )
 
-            for entry in output:
-                #get 90% reliability level
-                if entry[0] == 90:
-                    confidence_90_percent = entry[2]
+            path_loss_dict = {}
+            for frequency in propagation_parameters.keys():
+                for frequency_results in output.values():
+                    for reliability_level in frequency_results:
+                        #get 90% reliability level
+                        if reliability_level[0] == 90:
+                            confidence_90_percent = reliability_level[2]
+                            path_loss_dict[frequency] = confidence_90_percent
 
             #calc interference from other cells
-            received_interference = self.calc_received_power(
+            received_interference_dict = self.calc_received_power(
                 interference_site,
                 receiver,
-                confidence_90_percent
+                path_loss_dict
                 )
 
-            #add cell interference to list
-            interference.append(received_interference)
+            for frequency in propagation_parameters.keys():
+                if interference.get(frequency) != None:
+                    interference[frequency].append(received_interference_dict[frequency])
+                else:
+                    interference[frequency] = [received_interference_dict[frequency]]
 
         return interference
 
@@ -278,70 +310,80 @@ class NetworkManager(object):
         return noise
 
 
-    def calculate_sinr(self, received_power, interference, noise,
-        simulation_parameters):
+    def calculate_sinr(self, received_power_dict, interference_dict,
+        noise, simulation_parameters):
         """
         Calculate the Signal-to-Interference-plus-Noise-Ration (SINR).
         """
-        raw_received_power = 10**received_power
+        sinr_dict = {}
+        summed_interference_dict = {}
+        for rp_key, rp_value in received_power_dict.items():
+            for i_key, i_value in interference_dict.items():
+                if rp_key == i_key:
+                    raw_received_power = 10**rp_value
 
-        interference_values = []
-        for value in interference:
-            output_value = 10**value
-            interference_values.append(output_value)
+                    interference_values = []
+                    for value in i_value[:3]:
+                        output_value = 10**value
+                        interference_values.append(output_value)
 
-        network_load = simulation_parameters['network_load']
+                    network_load = simulation_parameters['network_load']
 
-        raw_sum_of_interference = sum(interference_values) * (1+(network_load/100))
+                    raw_sum_of_interference = sum(interference_values) * (1+(network_load/100))
 
-        raw_noise = 10**noise
+                    raw_noise = 10**noise
 
-        sinr = np.log10(
-            raw_received_power / (raw_sum_of_interference + raw_noise)
-            )
+                    sinr_dict[rp_key] = np.log10(
+                        raw_received_power / (raw_sum_of_interference + raw_noise)
+                        )
+                    summed_interference_dict[rp_key] = np.log10(raw_sum_of_interference)
 
-        return round(sinr, 2)
+        return sinr_dict, summed_interference_dict
 
 
-    def modulation_scheme_and_coding_rate(self, sinr,
+    def modulation_scheme_and_coding_rate(self, sinr_dict,
         generation, modulation_and_coding_lut):
         """
         Uses the SINR to allocate a modulation scheme and affliated
         coding rate.
         """
-        spectral_efficiency = 0
+        spectral_efficiency_dict = {}
+        for key, value in sinr_dict.items():
+            for lower, upper in pairwise(modulation_and_coding_lut):
+                if lower[0] and upper[0] == generation:
 
-        for lower, upper in pairwise(modulation_and_coding_lut):
-            if lower[0] and upper[0] == generation:
+                    lower_sinr = lower[5]
+                    upper_sinr = upper[5]
 
-                lower_sinr = lower[5]
-                upper_sinr = upper[5]
+                    if value >= lower_sinr and value < upper_sinr:
+                        spectral_efficiency_dict[key] = lower[4]
+                        continue
 
-                if sinr >= lower_sinr and sinr < upper_sinr:
-                    spectral_efficiency = lower[4]
-                    break
+                    if value >= modulation_and_coding_lut[-1][5]:
+                        spectral_efficiency_dict[key] = modulation_and_coding_lut[-1][4]
+                        continue
 
-                if sinr >= modulation_and_coding_lut[-1][5]:
-                    spectral_efficiency = modulation_and_coding_lut[-1][4]
-                    break
-
-        return spectral_efficiency
+        return spectral_efficiency_dict
 
 
-    def link_budget_capacity(self, bandwidth, spectral_efficiency):
+    def estimated_capacity(self, bandwidth, spectral_efficiency_dict):
         """
         Estimate wireless link capacity (Mbps) based on bandwidth and
         receiver signal.
         capacity (Mbps) = bandwidth (MHz) + log2*(1+SINR[dB])
         """
-        #estimated_capacity = round(bandwidth*np.log2(1+sinr), 2)
-        bandwidth_in_hertz = bandwidth*1000000
+        estimated_capacity_dict = {}
+        for key, value in spectral_efficiency_dict.items():
+            #estimated_capacity = round(bandwidth*np.log2(1+sinr), 2)
+            bandwidth_in_hertz = bandwidth*1000000
 
-        link_budget_capacity = bandwidth_in_hertz * spectral_efficiency
-        link_budget_capacity_mbps = link_budget_capacity / 1000000
-        link_budget_capacity_mbps_km2 = link_budget_capacity / self.cell_area.area
+            estimated_capacity = bandwidth_in_hertz * value
+            estimated_capacity_mbps = estimated_capacity / 1e6
 
-        return link_budget_capacity_mbps_km2
+            #link_budget_capacity_mbps_km2
+            estimated_capacity_dict[key] = estimated_capacity_mbps / (self.cell_area.area / 1e6)
+
+        return estimated_capacity_dict
 
 
 class Transmitter(object):
