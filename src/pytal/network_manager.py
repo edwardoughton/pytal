@@ -135,15 +135,6 @@ class NetworkManager(object):
 
                 results.append(data)
 
-            # print('received_power is {}'.format(received_power))
-            # print('interference is {}'.format(interference))
-            # print('noise is {}'.format(noise))
-            # print('sinr is {}'.format(sinr))
-            # print('spectral_efficiency is {}'.format(spectral_efficiency))
-            # print('estimated_capacity is {}'.format(estimated_capacity))
-            # print('path_loss is {}'.format(path_loss))
-            # print('-----------------------------')
-
         return results
 
 
@@ -167,6 +158,7 @@ class NetworkManager(object):
         # print(measured_terrain_profile)
         # print(LineString(line['geometry']['coordinates']).length)
         distance = LineString(line['geometry']['coordinates']).length / 1e3
+
         # print(distance)
         # output = run_itmlogic(
         #     measured_terrain_profile,
@@ -181,7 +173,7 @@ class NetworkManager(object):
             propagation_parameters,
             simulation_parameters['antenna_heights'],
             )
-
+        # print(output)
         path_loss_dict = {}
         for frequency in propagation_parameters:
             # print(frequency)
@@ -251,7 +243,10 @@ class NetworkManager(object):
                 }
 
             measured_terrain_profile = terrain_module(dem_folder, line, old_crs, new_crs)
+            # print(measured_terrain_profile)
             distance = LineString(line['geometry']['coordinates']).length / 1e3
+            # print(line['geometry']['coordinates'])
+            # print(distance)
             if distance > 0:
                 # print('distance is {}'.format(distance))
                 output = run_itmlogic(
@@ -260,7 +255,7 @@ class NetworkManager(object):
                     propagation_parameters,
                     simulation_parameters['antenna_heights'],
                     )
-
+                # print(output)
             path_loss_dict = {}
             for frequency in propagation_parameters.keys():
                 for frequency_results in output.values():
