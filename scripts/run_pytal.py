@@ -254,9 +254,16 @@ if __name__ == '__main__':
         'percentile': 90,
     }
 
+    PROPAGATION_PARAMETERS = {
+        700: 10,
+        800: 10,
+    }
+
     inter_site_distances = [
         500, 1000, 2000
         ]
+
+    dem_folder = os.path.join(RAW_DATA, 'dem_london')
 
     with fiona.open(
         os.path.join(DATA_RAW, 'crystal_palace_to_mursley.shp'), 'r') as source:
@@ -279,8 +286,11 @@ if __name__ == '__main__':
         results = MANAGER.estimate_link_budget(
             # frequency, bandwidth, generation, mast_height,
             # environment,
+            PROPAGATION_PARAMETERS,
             MODULATION_AND_CODING_LUT,
-            SIMULATION_PARAMETERS
+            SIMULATION_PARAMETERS,
+            dem_folder,
+            'EPSG:4326', 'EPSG:3857'
             )
 
         csv_writer(results,
