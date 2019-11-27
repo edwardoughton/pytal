@@ -1,5 +1,5 @@
 """
-Link budget estimation module
+Four Dimensional Model
 
 Written by Ed Oughton
 
@@ -31,74 +31,65 @@ DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 
-def generate_receivers(cell_area, inter_site_distance, simulation_parameters):
+def generate_receivers(transmitter, interfering_transmitters, simulation_parameters):
     """
-    The indoor probability provides a likelihood of a user being indoor,
-    given the building footprint area and number of floors for all
-    building stock, in a postcode sector.
+
+    Generate receivers on a line between the transmitter and all other transmitters,
+    to represent movement over time.
+
     Parameters
     ----------
-    postcode_sector : polygon
-        Shape of the area we want to generate receivers within.
-    postcode_sector_lut : dict
-        Contains information on indoor and outdoor probability.
+    transmitter : point
+        Transmitter point.
+    interfering_transmitters : dict
+        Interfering transmitter points.
     simulation_parameters : dict
         Contains all necessary simulation parameters.
+
     Output
     ------
     receivers : List of dicts
         Contains the quantity of desired receivers within the area boundary.
 
     """
-    geom = shape(cell_area[0]['geometry'])
-    geom_box = geom.bounds
+    paths = []
 
-    minx = geom_box[0]
-    miny = geom_box[1]
-    maxx = geom_box[2]
-    maxy = geom_box[3]
+    for interfering_transmitter in interfering_transmitters:
+        geom = LineString([
+            transmitter[0]['geometry']['coordinates'],
+            interfering_transmitter['geometry']['coordinates']])
+        paths.append(geom)
 
     receivers = []
 
+    length = int(paths[0].length)
+    increment = int(length / 5)
+
     id_number = 0
-
-    x_axis = np.linspace(
-        minx, maxx, num=(int(math.sqrt(geom.area) / (math.sqrt(geom.area)/20)))
-        )
-    y_axis = np.linspace(
-        miny, maxy, num=(int(math.sqrt(geom.area) / (math.sqrt(geom.area)/20)))
-        )
-
-    xv, yv = np.meshgrid(x_axis, y_axis, sparse=False, indexing='ij')
-    for i in range(len(x_axis)):
-        for j in range(len(y_axis)):
-            receiver = Point((xv[i,j], yv[i,j]))
-            if geom.contains(receiver):
-                receivers.append({
-                    'type': "Feature",
-                    'geometry': {
-                        "type": "Point",
-                        "coordinates": [xv[i,j], yv[i,j]],
-                    },
-                    'properties': {
-                        'ue_id': "id_{}".format(id_number),
-                        "misc_losses": simulation_parameters['rx_misc_losses'],
-                        "gain": simulation_parameters['rx_gain'],
-                        "losses": simulation_parameters['rx_losses'],
-                        "ue_height": float(simulation_parameters['rx_height']),
-                        # "indoor": (True if float(indoor_outdoor_probability) < \
-                        #     float(indoor_probability) else False),
-                    }
-                })
-                id_number += 1
-
-            else:
-                pass
+    for path in paths:
+        for increment_value in range(1, 5):
+            point = path.interpolate(increment * increment_value)
+            indoor_outdoor_probability = np.random.rand(1,1)[0][0]
+            receivers.append({
+                'type': "Feature",
+                'geometry': mapping(point),
+                'properties': {
+                    'ue_id': "id_{}".format(id_number),
+                    "misc_losses": simulation_parameters['rx_misc_losses'],
+                    "gain": simulation_parameters['rx_gain'],
+                    "losses": simulation_parameters['rx_losses'],
+                    "ue_height": float(simulation_parameters['rx_height']),
+                    "indoor": str(True if float(indoor_outdoor_probability) < \
+                        float(0.5) else False),
+                    "time_increment": id_number,
+                }
+            })
+            id_number += 1
 
     return receivers
 
 
-def convert_shape_to_projected_crs(line, original_crs, new_crs):
+def convert_shape_to_projected_crs(geojson, original_crs, new_crs):
     """
     Existing elevation path needs to be converted from WGS84 to projected
     coordinates.
@@ -111,12 +102,16 @@ def convert_shape_to_projected_crs(line, original_crs, new_crs):
         pyproj.Proj(init = new_crs)
         )
 
-    new_geom = transform(project, LineString(line['geometry']['coordinates']))
+    # if geojson['geometry']['type'] == 'Point':
+    new_geom = transform(project, Point(geojson[0], geojson[1]))
+
+    # if geojson['geometry']['type'] == 'LineString':
+    #     new_geom = transform(project, LineString(geojson['geometry']['coordinates']))
 
     output = {
         'type': 'Feature',
         'geometry': mapping(new_geom),
-        'properties': line['properties']
+        'properties': {}#geojson['properties']
         }
 
     return output
@@ -183,7 +178,7 @@ def csv_writer(data, directory, filename):
             ))
 
 
-def write_shapefile(data, filename):
+def write_shapefile(data, new_crs, filename):
 
     # Translate props to Fiona sink schema
     prop_schema = []
@@ -197,7 +192,7 @@ def write_shapefile(data, filename):
         prop_schema.append((name, fiona_prop_type))
 
     sink_driver = 'ESRI Shapefile'
-    sink_crs = {'init': 'epsg:27700'}
+    sink_crs = {'init': new_crs}
     sink_schema = {
         'geometry': data[0]['geometry']['type'],
         'properties': OrderedDict(prop_schema)
@@ -252,6 +247,7 @@ if __name__ == '__main__':
         'rx_height': 1.5,
         'network_load': 50,
         'percentile': 90,
+        'antenna_heights': [50, 2],
     }
 
     PROPAGATION_PARAMETERS = {
@@ -259,57 +255,59 @@ if __name__ == '__main__':
         800: 10,
     }
 
-    inter_site_distances = [
-        500, 1000, 2000
-        ]
+    inter_site_distance = 10000
 
-    dem_folder = os.path.join(RAW_DATA, 'dem_london')
+    old_crs = 'EPSG:4326'
+    new_crs = 'EPSG:3857'
+
+    dem_folder = os.path.join(DATA_RAW, 'dem_london')
 
     with fiona.open(
         os.path.join(DATA_RAW, 'crystal_palace_to_mursley.shp'), 'r') as source:
             unprojected_line = next(iter(source))
             unprojected_point = unprojected_line['geometry']['coordinates'][0]
 
-    for inter_site_distance in inter_site_distances:
+    point = convert_shape_to_projected_crs(unprojected_point, old_crs, new_crs)
 
-        print('--working on {}'.format(inter_site_distance))
+    transmitter, interfering_transmitters, cell_area, interfering_cell_areas = \
+        produce_sites_and_cell_areas(point, inter_site_distance, old_crs, new_crs)
 
-        transmitter, interfering_transmitters, cell_area, interfering_cell_areas = \
-            produce_sites_and_cell_areas(unprojected_point, inter_site_distance)
+    receivers = generate_receivers(
+        transmitter, interfering_transmitters, SIMULATION_PARAMETERS
+    )
 
-        receivers = generate_receivers(cell_area, inter_site_distance, SIMULATION_PARAMETERS)
+    MANAGER = NetworkManager(
+        transmitter, interfering_transmitters, receivers, cell_area, SIMULATION_PARAMETERS
+        )
 
-        MANAGER = NetworkManager(
-            transmitter, interfering_transmitters, receivers, cell_area, SIMULATION_PARAMETERS
-            )
+    results = MANAGER.estimate_link_budget(
+        # frequency, bandwidth, generation, mast_height,
+        # environment,
+        PROPAGATION_PARAMETERS,
+        MODULATION_AND_CODING_LUT,
+        SIMULATION_PARAMETERS,
+        dem_folder,
+        old_crs,
+        new_crs
+        )
 
-        results = MANAGER.estimate_link_budget(
-            # frequency, bandwidth, generation, mast_height,
-            # environment,
-            PROPAGATION_PARAMETERS,
-            MODULATION_AND_CODING_LUT,
-            SIMULATION_PARAMETERS,
-            dem_folder,
-            'EPSG:4326', 'EPSG:3857'
-            )
+    csv_writer(results,
+        os.path.join(DATA_PROCESSED, 'test_results'),
+        'test_capacity_data_{}.csv'.format(inter_site_distance))
 
-        csv_writer(results,
-            os.path.join(DATA_PROCESSED, 'test_results'),
-            'test_capacity_data_{}.csv'.format(inter_site_distance))
+    geojson_receivers = convert_results_geojson(results)
 
-        geojson_receivers = convert_results_geojson(results)
+    write_shapefile(geojson_receivers, new_crs, 'receivers_{}.shp'.format(inter_site_distance))
+    write_shapefile(transmitter, new_crs, 'transmitter_{}.shp'.format(inter_site_distance))
+    write_shapefile(cell_area, new_crs, 'cell_area_{}.shp'.format(inter_site_distance))
+    write_shapefile(interfering_transmitters, new_crs, 'interfering_transmitters_{}.shp'.format(inter_site_distance))
+    write_shapefile(interfering_cell_areas, new_crs, 'interfering_cell_areas_{}.shp'.format(inter_site_distance))
 
-        write_shapefile(geojson_receivers, 'receivers_{}.shp'.format(inter_site_distance))
-        write_shapefile(transmitter, 'transmitter_{}.shp'.format(inter_site_distance))
-        write_shapefile(cell_area, 'cell_area_{}.shp'.format(inter_site_distance))
-        write_shapefile(interfering_transmitters, 'interfering_transmitters_{}.shp'.format(inter_site_distance))
-        write_shapefile(interfering_cell_areas, 'interfering_cell_areas_{}.shp'.format(inter_site_distance))
+    # average_capacity = []
+    # for result in results:
+    #     average_capacity.append(result['estimated_capacity'])
+    # print('------')
+    # print_ave_capacity = round(sum(average_capacity)/len(average_capacity))
+    # print('isd: {}, {}'.format(inter_site_distance, print_ave_capacity))
 
-        average_capacity = []
-        for result in results:
-            average_capacity.append(result['estimated_capacity'])
-        print('------')
-        print_ave_capacity = round(sum(average_capacity)/len(average_capacity))
-        print('isd: {}, {}'.format(inter_site_distance, print_ave_capacity))
-
-        print('complete')
+    print('complete')

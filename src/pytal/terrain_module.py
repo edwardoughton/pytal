@@ -31,7 +31,6 @@ def terrain_module(dem_folder, line, old_crs, new_crs):
     #     pyproj.Proj(init='epsg:4326'),
     #     pyproj.Proj(init='epsg:3857'))
 
-
     # line_geometry = transform(ll_to_osgb, line_geometry)
 
     length = int(line_geometry.length)
@@ -47,6 +46,7 @@ def terrain_module(dem_folder, line, old_crs, new_crs):
 
     for currentdistance  in range(0, length, increment):
         point = line_geometry.interpolate(currentdistance)
+        # print(point)
         point = transform(osgb_to_ll, point)
         xp, yp = point.x, point.y
         x.append(xp)
@@ -60,7 +60,11 @@ def terrain_module(dem_folder, line, old_crs, new_crs):
 
 
 def load_extents(dem_folder):
-    """Check the extent of each DEM tile, save to dict for future reference
+    """
+    Check the extent of each DEM tile, save to dict for future reference.
+
+    For London DEM, this needs to be in EPSG: 4326.
+
     """
     extents = {}
     for tile_path in glob.glob(os.path.join(dem_folder, "*.tif")):

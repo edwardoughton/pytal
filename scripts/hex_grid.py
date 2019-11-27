@@ -8,7 +8,6 @@ from functools import partial
 from rtree import index
 import pyproj
 
-
 from collections import OrderedDict
 
 CONFIG = configparser.ConfigParser()
@@ -17,30 +16,6 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 
 DATA_RAW = os.path.join(BASE_PATH, 'raw')
 DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
-
-
-def convert_point_to_projected_crs(point, original_crs, new_crs):
-    """
-    Existing elevation path needs to be converted from WGS84 to projected
-    coordinates.
-
-    """
-    # Geometry transform function based on pyproj.transform
-    project = partial(
-        pyproj.transform,
-        pyproj.Proj(init = original_crs),
-        pyproj.Proj(init = new_crs)
-        )
-
-    new_geom = transform(project, Point(point))
-
-    output = {
-        'type': 'Feature',
-        'geometry': mapping(new_geom),
-        'properties': 'Crystal Palace Radio Tower'
-        }
-
-    return output
 
 
 def calculate_polygons(startx, starty, endx, endy, radius):
@@ -171,14 +146,16 @@ def find_site_locations(cell_area, interfering_cell_areas):
     })
 
     interfering_transmitters = []
+    site_id =0
     for interfering_cell in interfering_cell_areas:
         interfering_transmitters.append({
             'type': 'Feature',
             'geometry': mapping(interfering_cell['centroid']),
             'properties': {
-                'site_id': 'transmitter'
+                'site_id': 'interfering_transmitter_{}'.format(site_id)
             }
         })
+        site_id += 1
 
     return transmitter, interfering_transmitters
 
@@ -219,9 +196,7 @@ def generate_cell_areas(point, inter_site_distance):
     return cell_area, interfering_cell_areas
 
 
-def produce_sites_and_cell_areas(unprojected_point, inter_site_distance):
-
-    point = convert_point_to_projected_crs(unprojected_point, 'EPSG:4326', 'EPSG:27700')
+def produce_sites_and_cell_areas(point, inter_site_distance, old_crs, new_crs):
 
     cell_area, interfering_cell_areas = generate_cell_areas(point, inter_site_distance)
 
@@ -230,7 +205,35 @@ def produce_sites_and_cell_areas(unprojected_point, inter_site_distance):
     return transmitter, interfering_transmitters, cell_area, interfering_cell_areas
 
 
-def write_shapefile(data, filename):
+def convert_shape_to_projected_crs(geojson, original_crs, new_crs):
+    """
+    Existing elevation path needs to be converted from WGS84 to projected
+    coordinates.
+
+    """
+    # Geometry transform function based on pyproj.transform
+    project = partial(
+        pyproj.transform,
+        pyproj.Proj(init = original_crs),
+        pyproj.Proj(init = new_crs)
+        )
+
+    # if geojson['geometry']['type'] == 'Point':
+    new_geom = transform(project, Point(geojson[0], geojson[1]))
+
+    # if geojson['geometry']['type'] == 'LineString':
+    #     new_geom = transform(project, LineString(geojson['geometry']['coordinates']))
+
+    output = {
+        'type': 'Feature',
+        'geometry': mapping(new_geom),
+        'properties': {}#geojson['properties']
+        }
+
+    return output
+
+
+def write_shapefile(data, crs, filename):
 
     # Translate props to Fiona sink schema
     prop_schema = []
@@ -244,7 +247,7 @@ def write_shapefile(data, filename):
         prop_schema.append((name, fiona_prop_type))
 
     sink_driver = 'ESRI Shapefile'
-    sink_crs = {'init': 'epsg:27700'}
+    sink_crs = {'init': crs}
     sink_schema = {
         'geometry': data[0]['geometry']['type'],
         'properties': OrderedDict(prop_schema)
@@ -266,15 +269,24 @@ def write_shapefile(data, filename):
 
 if __name__ == '__main__':
 
+    inter_site_distance = 10000
+
+    old_crs = 'EPSG:4326'
+    new_crs = 'EPSG:3857'
+
+    dem_folder = os.path.join(DATA_RAW, 'dem_london')
+
     with fiona.open(
         os.path.join(DATA_RAW, 'crystal_palace_to_mursley.shp'), 'r') as source:
             unprojected_line = next(iter(source))
             unprojected_point = unprojected_line['geometry']['coordinates'][0]
 
-    transmitter, interfering_transmitters, cell_area, interfering_cell_areas = \
-        produce_sites_and_cell_areas(unprojected_point, 750)
+    point = convert_shape_to_projected_crs(unprojected_point, old_crs, new_crs)
 
-    # write_shapefile(transmitter, 'transmitter.shp')
-    # write_shapefile(cell_area, 'cell_area.shp')
-    # write_shapefile(interfering_transmitters, 'interfering_transmitters.shp')
-    # write_shapefile(interfering_cell_areas, 'interfering_cell_areas.shp')
+    transmitter, interfering_transmitters, cell_area, interfering_cell_areas = \
+        produce_sites_and_cell_areas(point, inter_site_distance, old_crs, new_crs)
+
+    # write_shapefile(transmitter, crs, 'transmitter.shp')
+    # write_shapefile(cell_area, crs, 'cell_area.shp')
+    # write_shapefile(interfering_transmitters, crs, 'interfering_transmitters.shp')
+    # write_shapefile(interfering_cell_areas, crs, 'interfering_cell_areas.shp')
