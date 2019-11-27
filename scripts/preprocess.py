@@ -646,17 +646,17 @@ def clip_osm(data_path,planet_path,area_poly,area_pbf):
     """
     print('{} started!'.format(area_pbf))
 
-    osm_convert_path = os.path.join(BASE_PATH,'..','scripts','osmconvert64-0.8.8p')
+    osm_convert_path = os.path.join(BASE_PATH,'osmconvert64','osmconvert64-0.8.8p')
     try:
         if (os.path.exists(area_pbf) is not True):
-            os.system('{}  {} -B={} --complete-ways -o={}'.format(osm_convert_path,planet_path,area_poly,area_pbf))
+            os.system('{}  {} -B={} -o={}'.format(osm_convert_path,planet_path,area_poly,area_pbf)) # --complete-ways
         print('{} finished!'.format(area_pbf))
 
     except:
         print('{} did not finish!'.format(area_pbf))
 
 
-def all_countries(subset = [], regionalized=False,reversed_order=False):
+def all_countries(subset = [], regionalized=False, reversed_order=False):
     """
     Clip all countries from the planet osm file and save them to individual osm.pbf files
 
@@ -703,7 +703,7 @@ def all_countries(subset = [], regionalized=False,reversed_order=False):
         else:
             polyPaths = [os.path.join(data_path,'country_poly_files',x) for x in get_poly_files]
             area_pbfs = [os.path.join(data_path,'region_osm_admin1',x.split('.')[0]+'.osm.pbf') for x in get_poly_files]
-        print(area_pbfs)
+
         big_osm_paths = [planet_path]*len(polyPaths)
 
     elif regionalized == True:
@@ -751,4 +751,4 @@ if __name__ == '__main__':
 
     # poly_files()
 
-    all_countries(subset = ['AFG'], regionalized=False, reversed_order=False)
+    all_countries(subset = ['MWI'], regionalized=False, reversed_order=False)
