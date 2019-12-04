@@ -614,4 +614,4 @@ if __name__ == '__main__':
 
     # poly_files()
 
-    all_countries(subset = [], regionalized=False, reversed_order=False)
+    all_countries(subset = [], regionalized=False, reversed_order=True)
