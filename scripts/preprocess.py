@@ -15,7 +15,7 @@ from rasterio.mask import mask
 import json
 import glob
 from geopy.distance import vincenty
-from pathos.multiprocessing import Pool,cpu_count
+from pathos.multiprocessing import Pool, cpu_count
 
 from utils import load_config #,create_folder_lookup,map_roads,line_length
 
@@ -343,143 +343,6 @@ def planet_osm():
         print('Planet file is already downloaded')
 
 
-# def poly_files(save_shapefile=False,regionalized=False):
-#     """
-#     This function will create the .poly files from the world shapefile. These
-#     .poly files are used to extract data from the openstreetmap files.
-
-#     This function is adapted from the OSMPoly function in QGIS.
-
-#     Optional Arguments:
-#         *save_shape_file* : Default is **False**. Set to **True** will the new shapefile with the
-#         countries that we include in this analysis will be saved.
-
-#         *regionalized*  : Default is **False**. Set to **True** will perform the analysis
-#         on a regional level.
-
-#     Returns:
-#         *.poly file* for each country in a new dir in the working directory.
-
-#     """
-# # =============================================================================
-# #     """ Create output dir for .poly files if it is doesnt exist yet"""
-# # =============================================================================
-#     poly_dir = os.path.join(DATA_INTERMEDIATE,'country_poly_files')
-
-#     if regionalized == True:
-#         poly_dir = os.path.join(DATA_INTERMEDIATE,'regional_poly_files')
-
-#     if not os.path.exists(poly_dir):
-#         os.makedirs(poly_dir)
-
-# # =============================================================================
-# #     """ Set the paths for the files we are going to use """
-# # =============================================================================
-#     wb_poly_out = os.path.join(DATA_INTERMEDIATE, 'global_countries.shp')
-#     if regionalized == True:
-#         wb_poly_out = os.path.join(DATA_INTERMEDIATE, 'global_regions.shp')
-# # =============================================================================
-# #   """Load country shapes and country list and only keep the required countries"""
-# # =============================================================================
-#     wb_poly = geopandas.read_file(os.path.join(DATA_INTERMEDIATE, 'global_countries.shp'))
-
-#     # filter polygon file
-#     if regionalized == True:
-#         wb_poly = wb_poly.loc[wb_poly['GID_0'] != '-']
-#         wb_poly = wb_poly.loc[wb_poly['TYPE_1'] != 'Water body']
-
-#     else:
-#         # print(wb_poly)
-#         wb_poly = wb_poly.loc[wb_poly['GID_0'] != '-']
-#         # wb_poly = wb_poly.loc[wb_poly['ISO_3digit'] != '-']
-
-#     wb_poly.crs = {'init' :'epsg:4326'}
-
-#     # and save the new country shapefile if requested
-#     if save_shapefile == True:
-#         wb_poly.to_file(wb_poly_out)
-
-#     # we need to simplify the country shapes a bit. If the polygon is too diffcult,
-#     # osmconvert cannot handle it.
-# #    wb_poly['geometry'] = wb_poly.simplify(tolerance = 0.1, preserve_topology=False)
-
-# # =============================================================================
-# #   """ The important part of this function: create .poly files to clip the country
-# #   data from the openstreetmap file """
-# # =============================================================================
-#     num = 0
-#     # iterate over the counties (rows) in the world shapefile
-#     for f in wb_poly.iterrows():
-#         f = f[1]
-#         num = num + 1
-#         geom=f.geometry
-
-# #        try:
-#         # this will create a list of the different subpolygons
-#         if geom.geom_type == 'MultiPolygon':
-#             polygons = geom
-
-#         # the list will be lenght 1 if it is just one polygon
-#         elif geom.geom_type == 'Polygon':
-#             polygons = [geom]
-
-#         # define the name of the output file, based on the ISO3 code
-#         ctry = f['GID_0']
-#         if regionalized == True:
-#             attr=f['GID_1']
-#         else:
-#             attr=f['GID_0']
-
-#         # start writing the .poly file
-#         f = open(poly_dir + "/" + attr +'.poly', 'w')
-#         f.write(attr + "\n")
-
-#         i = 0
-
-#         # loop over the different polygons, get their exterior and write the
-#         # coordinates of the ring to the .poly file
-#         for polygon in polygons:
-
-#             if ctry == 'CAN':
-
-#                 x = polygon.centroid.x#coords[:1][0][0]
-#                 if x < -90:
-#                     x = -90
-#                 y = polygon.centroid.y#coords[:1][0][1]
-#                 dist = vincenty((x,y), (83.24,-79.80), ellipsoid='WGS-84').kilometers
-#                 if dist < 2000:
-#                     continue
-
-#             if ctry == 'RUS':
-#                 x = polygon.centroid.x#coords[:1][0][0]
-#                 if x < -90:
-#                     x = -90
-#                 if x > 90:
-#                     x = 90
-#                 y = polygon.centroid.y#coords[:1][0][1]
-#                 dist = vincenty((x,y), (58.89,82.26), ellipsoid='WGS-84').kilometers
-#                 if dist < 500:
-#                     continue
-
-#             polygon = numpy.array(polygon.exterior)
-
-#             j = 0
-#             f.write(str(i) + "\n")
-
-#             for ring in polygon:
-#                 j = j + 1
-#                 f.write("    " + str(ring[0]) + "     " + str(ring[1]) +"\n")
-
-#             i = i + 1
-#             # close the ring of one subpolygon if done
-#             f.write("END" +"\n")
-
-#         # close the file when done
-#         f.write("END" +"\n")
-#         f.close()
-# #        except:
-# #            print(f['GID_1'])
-
 def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
 
     """
@@ -676,7 +539,7 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
     data_path = DATA_INTERMEDIATE
 
     # path to planet file
-    planet_path = os.path.join(data_path,'planet_osm','planet-latest.osm.pbf')
+    planet_path = os.path.join(DATA_RAW,'planet_osm','planet-latest.osm.pbf')
 
     # global shapefile path
     if regionalized == True:
@@ -751,4 +614,4 @@ if __name__ == '__main__':
 
     # poly_files()
 
-    all_countries(subset = ['MWI'], regionalized=False, reversed_order=False)
+    all_countries(subset = [], regionalized=False, reversed_order=True)
