@@ -2,7 +2,6 @@
 """
 
 """
-
 import os
 import json
 # import rasterio
@@ -27,7 +26,6 @@ def load_config():
     return config
 
 
-
 def load_osm_data(data_path,country):
     """
     Load osm data for an entire country.
@@ -42,6 +40,7 @@ def load_osm_data(data_path,country):
 
     driver=ogr.GetDriverByName('OSM')
     return driver.Open(osm_path)
+
 
 def load_osm_data_region(data_path,region):
     """
