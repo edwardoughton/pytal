@@ -7,6 +7,8 @@ import tarfile
 import gzip
 import shutil
 import glob
+import geoio
+import math
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -49,16 +51,11 @@ def get_nightlight_data(path, data_year):
     print('Data download complete')
 
     for year in [data_year]:
+
         print('Working on {}'.format(year))
         folder_loc = os.path.join(path, str(year))
-        print(folder_loc)
         file_loc = os.path.join(folder_loc, 'nightlights_data')
-        print(file_loc)
-        # files = os.listdir(folder_loc)
-        # print('len(files) == {}'.format(len(files)))
-        # for file_type in files:
-        #     print(file_type)
-        #     if file_type.endswith('.tar'):
+
         print('Unzipping data')
         tar = tarfile.open(file_loc)
         tar.extractall(path=folder_loc)
@@ -72,29 +69,44 @@ def get_nightlight_data(path, data_year):
                     with gzip.open(file_path, 'rb') as f_in:
                         with open(file_path[:-3], 'wb') as f_out:
                             shutil.copyfileobj(f_in, f_out)
-            # os.remove(file_path)
 
     return print('Downloaded and processed night light data')
 
 
 def process_wb_survey_data(path):
     """
-    Make sure you download the 2016-2017 Household LSMS survey
-    data for Malawi from
+    This function takes the World Bank Living Standards Measurement
+    Survey and processes all the data.
+
+    I've used the 2016-2017 Household LSMS survey data for Malawi from
     https://microdata.worldbank.org/index.php/catalog/lsms.
-    It should be in ../data/input/LSMS/malawi-2016
+    It should be in ../data/raw/LSMS/malawi-2016
+
+    IHS4 Consumption Aggregate.csv contains:
+
+    - Case ID: Unique household ID
+    - rexpagg: Total annual per capita consumption,
+        spatially & (within IHS4) temporally adjust (rexpagg)
+    - adulteq: Adult equivalence
+    - hh_wgt: Household sampling weight
+
+    HouseholdGeovariablesIHS4.csv contains:
+
+    - Case ID: Unique household ID
+    - HHID: Survey solutions unique HH identifier
+    - lat_modified: GPS Latitude Modified
+    - lon_modified: GPS Longitude Modified
 
     """
-    # everything in comments I have not converted to Python3 but
-    # they don't matter for predicting consumption
-    # you can play around with the stata files and add additional
-    # information to predict if you want
-    file_path = os.path.join(path, 'IHS4 Consumption Aggregate.dta')
+    ## Path to non-spatial consumption results
+    file_path = os.path.join(path, 'IHS4 Consumption Aggregate.csv')
 
-    ##Read file
-    df = pd.read_stata(file_path)
-    df['cons'] = df['rexpagg']/(365*df['adulteq'])
-    df['cons'] = df['cons']*107.62/(116.28*166.12)
+    ##Read results
+    df = pd.read_csv(file_path)
+
+    ##Estimate daily consumption accounting for adult equivalence
+    df['cons'] = df['rexpagg'] / (365 * df['adulteq'])
+    df['cons'] = df['cons'] * 107.62 / (116.28 * 166.12)
 
     ## Rename column
     df.rename(columns={'hh_wgt': 'weight'}, inplace=True)
@@ -103,41 +115,189 @@ def process_wb_survey_data(path):
     df = df[['case_id', 'cons', 'weight', 'urban']]
 
     ##Read geolocated survey data
-    df_geo = pd.read_stata('../data/input/LSMS/malawi_2016/HouseholdGeovariables_stata11/HouseholdGeovariablesIHS4.dta')
+    df_geo = pd.read_csv(os.path.join(path,
+        'HouseholdGeovariables_csv/HouseholdGeovariablesIHS4.csv'))
 
     ##Subset household coordinates
     df_cords = df_geo[['case_id', 'HHID', 'lat_modified', 'lon_modified']]
-    df_cords.rename(columns={'lat_modified': 'lat', 'lon_modified': 'lon'}, inplace=True)
-    # mwi13.hha <- read.dta('data/input/LSMS/MWI_2016_IHS-IV_v02_M_Stata/HH_MOD_A_FILT.dta')
+    df_cords.rename(columns={
+        'lat_modified': 'lat', 'lon_modified': 'lon'}, inplace=True)
 
-    ##
-    df_hhf = pd.read_stata('../data/input/LSMS/malawi_2016/HH_MOD_F.dta')
-    # mwi13.room <- data.frame(hhid = mwi13.hhf$HHID, room = mwi13.hhf$hh_f10)
-    # mwi13.metal <- data.frame(hhid = mwi13.hhf$HHID, metal = mwi13.hhf$hh_f10=='IRON SHEETS')
-
-    ##Merge to add coordinates to
+    ##Merge to add coordinates to aggregate consumption data
     df = pd.merge(df, df_cords[['case_id', 'HHID']], on='case_id')
 
+    ##Repeat to get df_combined
     df_combined = pd.merge(df, df_cords, on=['case_id', 'HHID'])
 
+    ##Drop case id variable
     df_combined.drop('case_id', axis=1, inplace=True)
 
+    ##Drop incomplete
     df_combined.dropna(inplace=True) # can't use na values
 
     print('Combined shape is {}'.format(df_combined.shape))
 
-    clust_cons_avg = df_combined.groupby(['lat', 'lon']).mean().reset_index()[['lat', 'lon', 'cons']]
+    ##Find cluster constant average
+    clust_cons_avg = df_combined.groupby(
+                        ['lat', 'lon']).mean().reset_index()[
+                        ['lat', 'lon', 'cons']]
 
-    df_combined = pd.merge(df_combined.drop('cons', axis=1), clust_cons_avg, on=['lat', 'lon'])
+    ##Merge dataframes
+    df_combined = pd.merge(df_combined.drop(
+                        'cons', axis=1), clust_cons_avg, on=[
+                        'lat', 'lon'])
 
-    df_uniques = df_combined.drop_duplicates(subset=['lat', 'lon']); df_uniques.shape
+    ##Get uniques
+    df_uniques = df_combined.drop_duplicates(subset=
+                        ['lat', 'lon'])
 
-    return print('Processed wb survey data')
+    print('Processed WB Living Standards Measurement Survey')
+
+    return df_uniques, df_combined
+
+
+def query_nightlight_data(filename, df_uniques, df_combined, path):
+    """
+    Query the nighlight data and export results.
+
+    """
+    img = geoio.GeoImage(filename)
+    ##Convert points in projection space to points in raster space.
+    xPixel, yPixel = img.proj_to_raster(34.915074, -14.683761)
+
+    ##Remove single-dimensional entries from the shape of an array.
+    im_array = np.squeeze(img.get_data())
+
+    ##Get the nightlight values
+    im_array[int(yPixel),int(xPixel)]
+
+    household_nightlights = []
+    for i,r in df_uniques.iterrows():
+
+        ##Create 10km^2 bounding box around point
+        min_lat, min_lon, max_lat, max_lon = create_space(r.lat, r.lon)
+
+        ##Convert point coordinaces to raster space
+        xminPixel, yminPixel = img.proj_to_raster(min_lon, min_lat)
+        xmaxPixel, ymaxPixel = img.proj_to_raster(max_lon, max_lat)
+
+        ##Get min max values
+        xminPixel, xmaxPixel = (min(xminPixel, xmaxPixel),
+                                max(xminPixel, xmaxPixel))
+        yminPixel, ymaxPixel = (min(yminPixel, ymaxPixel),
+                                max(yminPixel, ymaxPixel))
+        xminPixel, yminPixel, xmaxPixel, ymaxPixel = (
+                                int(xminPixel), int(yminPixel),
+                                int(xmaxPixel), int(ymaxPixel))
+
+        ##Append mean value data to df
+        household_nightlights.append(
+            im_array[yminPixel:ymaxPixel,xminPixel:xmaxPixel].mean())
+
+    df_uniques['nightlights'] = household_nightlights
+
+    df_combined = pd.merge(df_combined, df_uniques[
+                    ['lat', 'lon', 'nightlights']], on=['lat', 'lon'])
+
+    print('Complete querying process')
+
+    return df_combined
+
+
+def create_space(lat, lon):
+    """
+    Creates a 10km^2 area bounding box.
+
+    Parameters
+    ----------
+    lat : float
+        Latitude
+    lon : float
+        Longitude
+
+    """
+    bottom = lat - (180 / math.pi) * (5000 / 6378137)
+    left = lon - (180 / math.pi) * (5000 / 6378137) / math.cos(lat)
+    top = lat + (180 / math.pi) * (5000 / 6378137)
+    right = lon + (180 / math.pi) * (5000 / 6378137) / math.cos(lat)
+
+    return bottom, left, top, right
+
+
+def create_clusters(df_combined):
+    """
+
+    """
+    # encode "RURAL" as 0 and "URBAN" as 1
+    df_combined['urban_encoded'] = pd.factorize(df_combined['urban'])[0]
+
+    clust_groups = df_combined.groupby(['lat', 'lon'])
+
+    clust_averages = clust_groups.mean().reset_index()
+
+    counts = clust_groups.count().reset_index()[['lat', 'lon', 'cons']]
+    counts.rename(columns={'cons': 'num_households'}, inplace=True)
+    clust_averages = pd.merge(clust_averages, counts, on=['lat', 'lon'])
+
+    # if more than 0.5 average within a clust, label it as 1 (URBAN), else 0
+    clust_averages['urban_encoded'] = clust_averages['urban_encoded'].apply(
+        lambda x: round(x))
+
+    clust_averages['urban_encoded'] = clust_averages['urban_encoded'].apply(
+        lambda x: 'RURAL' if x == 0 else 'URBAN')
+
+    clust_averages.rename(columns={'urban_encoded': 'urban'}, inplace=True)
+
+    return clust_averages
+
+
+def setup_training_and_validation_datasets():
+
+
+    return print('Complete')
+
 
 if __name__ == '__main__':
 
-    path = os.path.join(DATA_RAW, 'nightlights')
-    get_nightlight_data(path, 2013)
+    year = 2013
+    path_nightlights = os.path.join(DATA_RAW, 'nightlights')
+    filepath = os.path.join(path_nightlights,
+            str(year), 'F182013.v4c_web.stable_lights.avg_vis.tif')
 
-    # path = os.path.join(DATA_RAW, 'LSMS', 'malawi_2016')
-    # process_wb_survey_data(path)
+    if not os.path.exists(filepath):
+        print('Need to download nightlight data first')
+        get_nightlight_data(path_nightlights, year)
+    else:
+        print('Nightlight data already exists in data folder')
+
+    print('Processing World Bank Living Standards Measurement Survey')
+    path = os.path.join(DATA_RAW, 'LSMS', 'malawi_2016')
+    df_uniques, df_combined = process_wb_survey_data(path)
+
+    print('Querying nightlight data')
+    df_combined = query_nightlight_data(filepath, df_uniques, df_combined,
+                os.path.join(path_nightlights, str(year)))
+
+    print('Writing Living Standards Measurement Survey data')
+    df_combined.to_csv(os.path.join(DATA_INTERMEDIATE,
+                'Malawi-2016-LSMS-Household.csv'), index=False)
+
+    print('Creating clusters')
+    clust_averages = create_clusters(df_combined)
+
+    print('Writing all other data')
+    clust_averages.to_csv(os.path.join(
+                DATA_INTERMEDIATE,'Malawi-2016-LSMS-Cluster.csv'), index=False)
+
+    np.save(os.path.join(DATA_INTERMEDIATE, 'lats.npy'),
+        clust_averages['lat'].values)
+    np.save(os.path.join(DATA_INTERMEDIATE, 'lons.npy'),
+        clust_averages['lon'].values)
+    np.save(os.path.join(DATA_INTERMEDIATE, 'consumptions.npy'),
+        clust_averages['cons'].values)
+    np.save(os.path.join(DATA_INTERMEDIATE, 'nightlights.npy'),
+        clust_averages['nightlights'].values)
+    np.save(os.path.join(DATA_INTERMEDIATE, 'households.npy'),
+        clust_averages['num_households'].values)
+
+    print('Complete')
