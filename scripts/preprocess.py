@@ -1,8 +1,8 @@
 """
 
 """
-import configparser
 import os
+import configparser
 import numpy
 import pandas
 import geopandas
@@ -14,7 +14,7 @@ import rasterio
 from rasterio.mask import mask
 import json
 import glob
-from geopy.distance import vincenty
+from geopy.distance import distance
 from pathos.multiprocessing import Pool, cpu_count
 
 from utils import load_config #,create_folder_lookup,map_roads,line_length
@@ -454,7 +454,7 @@ def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
                 if x < -90:
                     x = -90
                 y = polygon.centroid.y
-                dist = vincenty((x,y), (83.24,-79.80), ellipsoid='WGS-84').kilometers
+                dist = distance((x,y), (83.24,-79.80), ellipsoid='WGS-84').kilometers
                 if dist < 2000:
                     continue
 
@@ -465,7 +465,7 @@ def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
                 if x > 90:
                     x = 90
                 y = polygon.centroid.y
-                dist = vincenty((x,y), (58.89,82.26), ellipsoid='WGS-84').kilometers
+                dist = distance((x,y), (58.89,82.26), ellipsoid='WGS-84').kilometers
                 if dist < 500:
                     continue
 
@@ -507,16 +507,24 @@ def clip_osm(data_path,planet_path,area_poly,area_pbf):
     Returns:
         a clipped .osm.pbf file.
     """
-    print('{} started!'.format(area_pbf))
+    import os
+    import configparser
+    CONFIG = configparser.ConfigParser()
+    CONFIG.read(os.path.join('scripts', 'script_config.ini'))
+    BASE_PATH = CONFIG['file_locations']['base_path']
 
+    print('{} started!'.format(area_pbf))
+    # osm_convert_path = 'D:\github\pytal\data\osmconvert64\osmconvert64-0.8.8p'
     osm_convert_path = os.path.join(BASE_PATH,'osmconvert64','osmconvert64-0.8.8p')
     try:
         if (os.path.exists(area_pbf) is not True):
             os.system('{}  {} -B={} -o={}'.format(osm_convert_path,planet_path,area_poly,area_pbf)) # --complete-ways
-        print('{} finished!'.format(area_pbf))
+            print('{} finished!'.format(area_pbf))
 
     except:
         print('{} did not finish!'.format(area_pbf))
+
+    return print('Complete')
 
 
 def all_countries(subset = [], regionalized=False, reversed_order=False):
