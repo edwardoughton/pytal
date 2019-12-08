@@ -6,6 +6,7 @@ import os
 import configparser
 import glob
 import fiona
+import rasterio
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -16,11 +17,9 @@ DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 
-def load_regions(country):
+def load_regions(directory):
 
     regions = []
-
-    directory = os.path.join(DATA_INTERMEDIATE, country)
 
     paths = glob.glob(os.path.join(directory, 'regions','*.shp'))
 
@@ -28,6 +27,29 @@ def load_regions(country):
         with fiona.open(path, 'r') as source:
             for item in source:
                 regions.append(item)
+
+    return regions
+
+
+def load_settlements(directory, regions):
+
+    regions = []
+
+    path_settlements = os.path.join(directory,'settlements.tif')
+
+    settlements = rasterio.open(path_settlements)
+
+    for region in regions:
+        #intersect with settlement
+        # population =
+
+        # regions.append({
+        #     'type': region['type'],
+        #     'geometry': region['geometry'],
+        #     'properties': {
+        #         'population': population,
+        #     }
+        # })
 
     return regions
 
@@ -57,7 +79,10 @@ def dissagregate_coverage(regions, coverage):
 if __name__ == '__main__':
 
     country = 'MWI'
+    directory = os.path.join(DATA_INTERMEDIATE, country)
 
-    regions = load_regions(country)
+    regions = load_regions(directory)
 
-    print([r for r in regions])
+    regions = load_settlements(directory, regions)
+
+    # print([r for r in regions])
