@@ -4,7 +4,7 @@
 import os
 import configparser
 import numpy
-import pandas
+import pandas as pd
 import geopandas
 
 import urllib.request
@@ -12,6 +12,7 @@ from shapely.geometry import MultiPolygon, mapping, box
 from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
+from rasterstats import zonal_stats
 import json
 import glob
 from geopy.distance import distance
@@ -174,7 +175,6 @@ def process_settlement_layer():
     return print('Completed processing of settlement layer')
 
 
-
 def process_night_lights():
     """
 
@@ -227,7 +227,9 @@ def process_night_lights():
                                 "transform": out_transform,
                                 "crs": 'epsg:4326'})
 
-                shape_path = os.path.join(path_country, 'night_lights_{}.tif'.format(tile_num))
+                shape_path = os.path.join(path_country,
+                    'night_lights_{}.tif'.format(tile_num))
+
                 with rasterio.open(shape_path, "w", **out_meta) as dest:
                         dest.write(out_img)
                 tile_num += 1
@@ -242,6 +244,84 @@ def process_night_lights():
     return print('Completed processing of night lights layer')
 
 
+def get_regional_nightlight_values():
+    """
+    Extract luminosity values.
+
+    """
+    path_processed = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
+
+    countries = geopandas.read_file(path_processed)
+
+    for name in countries.GID_0.unique():
+
+        # if not name == 'USA':
+        #     continue
+
+        single_country = countries[countries.GID_0 == name]
+
+        print('working on {}'.format(name))
+
+        path_country = os.path.join(DATA_INTERMEDIATE, name, 'regions')
+
+        if os.path.exists(os.path.join(path_country, '..', 'luminosity.csv')):
+            continue
+
+        path_regions = glob.glob(os.path.join(path_country, '*.shp'))
+
+        results = []
+
+        num = 0
+        for path_region in path_regions:
+
+            region = geopandas.read_file(path_region)
+            centroid = region.centroid
+
+            path_night_lights = glob.glob(
+                os.path.join(path_country,'..','night_lights*.tif'))
+
+            extents = load_extents(path_night_lights)
+
+            try:
+                xp = centroid.x.values[0]
+                yp = centroid.y.values[0]
+                tile_path = get_tile_path_for_point(extents, xp, yp)
+
+
+                with rasterio.open(tile_path) as src:
+                    affine = src.transform
+                    array = src.read(1)
+
+                    #set missing data (-999) to 0
+                    array[array < 0] = 0
+
+                    #get luminosity values
+                    median = [d['median'] for d in zonal_stats(
+                        region, array, stats=['median'], affine=affine)]
+                    summation = [d['sum'] for d in zonal_stats(
+                        region, array, stats=['sum'], affine=affine)]
+                    # print(median)
+                    results.append({
+                        'GID_0': single_country.GID_0.values[0],
+                        'GID_1': region.GID_1.values[0],
+                        'GID_2': region.GID_2.values[0],
+                        'median_luminosity': median[0],
+                        'sum_luminosity': summation[0],
+                    })
+
+            except:
+                print('Failed {}'.format(path_region))
+                pass
+
+        results_df = pd.DataFrame(results)
+
+        results_df.to_csv(os.path.join(path_country, '..', 'luminosity.csv'), index=False)
+
+        print('Completed {}'.format(single_country.NAME_0.values[0]))
+
+    return print('Completed night lights data querying')
+
+
 def load_extents(glob_interator):
     """
     Check the extent of each DEM tile, save to dict for future reference.
@@ -253,6 +333,7 @@ def load_extents(glob_interator):
     for tile_path in glob_interator:
         dataset = rasterio.open(tile_path)
         extents[tuple(dataset.bounds)] = tile_path
+
     return extents
 
 
@@ -618,8 +699,10 @@ if __name__ == '__main__':
 
     # process_night_lights()
 
+    get_regional_nightlight_values()
+
     # planet_osm()
 
     # poly_files()
 
-    all_countries(subset = [], regionalized=False, reversed_order=True)
+    # all_countries(subset = [], regionalized=False, reversed_order=True)
