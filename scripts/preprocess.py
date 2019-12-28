@@ -18,7 +18,7 @@ import glob
 from geopy.distance import distance
 from pathos.multiprocessing import Pool, cpu_count
 
-from utils import load_config #,create_folder_lookup,map_roads,line_length
+from pytal.utils import load_config #,create_folder_lookup,map_roads,line_length
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -39,17 +39,23 @@ def process_country_shapes():
 
         print('Working on global_countries.shp')
         path_raw = os.path.join(DATA_RAW, 'gadm36_levels_shp', 'gadm36_0.shp')
-        countries = geopandas.read_file(path_raw)#[1:3]
+        countries = geopandas.read_file(path_raw)
 
         print('Excluding Antarctica')
         countries = countries.loc[~countries['NAME_0'].isin(['Antarctica'])]
+
+        print('Excluding small shapes')
+        countries['geometry'] = countries.apply(exclude_small_shapes,axis=1)
 
         print('Simplifying geometries')
         countries['geometry'] = countries.simplify(tolerance = 0.005, preserve_topology=True) \
             .buffer(0.01).simplify(tolerance = 0.005, preserve_topology=True)
 
-        print('Excluding small shapes')
-        countries['geometry'] = countries.apply(exclude_small_shapes,axis=1)
+        print('Adding ISO country codes')
+        glob_info_path = os.path.join(BASE_PATH, 'global_information.csv')
+        load_glob_info = pd.read_csv(glob_info_path, encoding = "ISO-8859-1")
+
+        countries = countries.merge(load_glob_info,left_on='GID_0', right_on='ISO_3digit')
 
         print('Writing global_countries.shp to file')
         countries.to_file(path_processed, driver='ESRI Shapefile')
@@ -74,53 +80,113 @@ def process_country_shapes():
     return print('Completed processing of country shapes')
 
 
-def process_regional_shapes():
-    """
-    Process sub-national regional shapes.
+def process_global_regions(level):
 
-    """
-    path_processed = os.path.join(DATA_INTERMEDIATE,'global_regions.shp')
+    filename = 'global_regions_{}.shp'.format(level)
+    path_processed = os.path.join(DATA_INTERMEDIATE, filename)
 
     if not os.path.exists(path_processed):
 
         print('Working on global_countries.shp')
-        path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', 'gadm36_2.shp')
-        regions = geopandas.read_file(path_regions)#[:10]
+        filename = 'gadm36_{}.shp'.format(level)
+        path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
+        regions = geopandas.read_file(path_regions)
 
         print('Excluding Antarctica')
         regions = regions.loc[~regions['NAME_0'].isin(['Antarctica'])]
+        regions = regions.loc[~regions['GID_1'].isin(['RUS.12_1'])] # Chukot
+        regions = regions.loc[~regions['GID_1'].isin(['FJI.3_1'])] #Northern
+
+        print('Excluding small shapes')
+        regions['geometry'] = regions.apply(exclude_small_shapes,axis=1)
 
         print('Simplifying geometries')
         regions['geometry'] = regions.simplify(tolerance = 0.005, preserve_topology=True) \
             .buffer(0.01).simplify(tolerance = 0.005, preserve_topology=True)
 
-        print('Excluding small shapes')
-        regions['geometry'] = regions.apply(exclude_small_shapes,axis=1)
+        print('Adding ISO country codes')
+        glob_info_path = os.path.join(BASE_PATH, 'global_information.csv')
+        load_glob_info = pd.read_csv(glob_info_path, encoding = "ISO-8859-1")
+
+        regions = regions.merge(load_glob_info,left_on='GID_0',right_on='ISO_3digit')
+        regions.rename(columns={'coordinates':'coordinate'}, inplace=True)
+
+        regions.reset_index(drop=True,inplace=True)
 
         print('Writing global_regions.shp to file')
         regions.to_file(path_processed, driver='ESRI Shapefile')
 
-    else:
+        print('Completed processing of regional shapes level {}'.format(level))
 
+    else:
         regions = geopandas.read_file(path_processed)
+
+    return regions
+
+
+def process_regional_shapes():
+    """
+    Process sub-national regional shapes.
+
+    """
+    filename = 'global_regions.shp'
+    path_processed = os.path.join(DATA_INTERMEDIATE, filename)
+
+    regions_1 = process_global_regions(1)
+    regions_2 = process_global_regions(2)
+
+    regions_1 = regions_1.loc[regions_1['gid_region'] == 1]
+    print('len(regions_1) {}'.format(len(regions_1)))
+
+    regions_2 = regions_2.loc[regions_2['gid_region'] == 2]
+    print('len(regions_2) {}'.format(len(regions_2)))
+
+    # regions = geopandas.GeoDataFrame(pd.concat([regions_1, regions_2], ignore_index=True))
+    regions = pd.concat([regions_1, regions_2], sort=True)
+    print('len(regions) {}'.format(len(regions)))
+    regions.reset_index(drop=True,inplace=True)
+
+    print('Writing global_regions.shp to file')
+    regions.to_file(path_processed, driver='ESRI Shapefile')
+
+    print('Completed processing of regional shapes level')
 
     for name in regions.GID_0.unique():
 
-        print('working on {}'.format(name))
-
         path = os.path.join(DATA_INTERMEDIATE, name, 'regions')
+
+        #remove old files first
+        existing_files = glob.glob(os.path.join(path, '*'))
+        for existing_file in existing_files:
+            if os.path.exists(existing_file):
+                os.remove(existing_file)
+
+        if os.path.exists(path):
+            os.rmdir(path)
 
         if not os.path.exists(path):
             os.makedirs(path)
 
-        single_country = regions[regions.GID_0 == name]
+            print('working on {}'.format(name))
 
-        for name_region in single_country.GID_2.unique():
+            single_country = regions[regions.GID_0 == name]
 
-            single_region = single_country[single_country.GID_2 == name_region]
+            try:
+                for name_region in single_country.GID_2.unique():
 
-            shape_path = os.path.join(path, '{}.shp'.format(name_region))
-            single_region.to_file(shape_path)
+                    single_region = single_country[single_country.GID_2 == name_region]
+
+                    shape_path = os.path.join(path, '{}.shp'.format(name_region))
+                    single_region.to_file(shape_path)
+            except:
+                for name_region in single_country.GID_1.unique():
+
+                    single_region = single_country[single_country.GID_1 == name_region]
+
+                    shape_path = os.path.join(path, '{}.shp'.format(name_region))
+                    single_region.to_file(shape_path)
+        else:
+            pass
 
     return print('Completed processing of regional shapes')
 
@@ -181,65 +247,56 @@ def process_night_lights():
     """
     path_processed = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
 
-    path_night_lights = glob.glob(os.path.join(DATA_RAW,'viirs','*avg_rade9h.tif'))
-    extents = load_extents(path_night_lights)
+    filename = 'F182013.v4c_web.stable_lights.avg_vis.tif'
+    path_night_lights = os.path.join(DATA_RAW, 'nightlights', '2013', filename)
 
-    countries = geopandas.read_file(path_processed)
+    # extents = load_extents(path_night_lights)
 
-    num = 0
+    countries = geopandas.read_file(path_processed)#[:40]
+
+    # num = 0
     for name in countries.GID_0.unique():
+
+        # if not name == 'CAN':
+        #     continue
 
         print('working on {}'.format(name))
 
         path_country = os.path.join(DATA_INTERMEDIATE, name)
+
+        #remove old files first
+        existing_files = glob.glob(os.path.join(path_country, 'night_lights*'))
+        for existing_file in existing_files:
+            if os.path.exists(existing_file):
+                os.remove(existing_file)
 
         single_country = countries[countries.GID_0 == name]
 
         bbox = single_country.envelope
 
         geo = geopandas.GeoDataFrame()
-        geo = geopandas.GeoDataFrame({'geometry': bbox}, index=[num], crs=from_epsg('4326'))
-        num += 1
+        geo = geopandas.GeoDataFrame({'geometry': bbox}, crs=from_epsg('4326')) #index=[num],
+
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
-        paths = set()
+        night_lights = rasterio.open(path_night_lights)
 
-        try:
-            for coord in coords[0]['coordinates'][0]:
-                xp = coord[0]
-                yp = coord[1]
-                tile_path = get_tile_path_for_point(extents, xp, yp)
-                paths.add(tile_path)
+        #chop on coords
+        out_img, out_transform = mask(night_lights, coords, crop=True)
 
-            tile_num = 0
-            for path in list(paths):
+        # Copy the metadata
+        out_meta = night_lights.meta.copy()
 
-                night_lights = rasterio.open(path)
-                #chop on coords
-                out_img, out_transform = mask(night_lights, coords, crop=True)
+        out_meta.update({"driver": "GTiff",
+                        "height": out_img.shape[1],
+                        "width": out_img.shape[2],
+                        "transform": out_transform,
+                        "crs": 'epsg:4326'})
 
-                # Copy the metadata
-                out_meta = night_lights.meta.copy()
+        shape_path = os.path.join(path_country,'night_lights.tif')
 
-                out_meta.update({"driver": "GTiff",
-                                "height": out_img.shape[1],
-                                "width": out_img.shape[2],
-                                "transform": out_transform,
-                                "crs": 'epsg:4326'})
-
-                shape_path = os.path.join(path_country,
-                    'night_lights_{}.tif'.format(tile_num))
-
-                with rasterio.open(shape_path, "w", **out_meta) as dest:
-                        dest.write(out_img)
-                tile_num += 1
-        except:
-            #CAN
-            #FJI
-            #GRL
-            #RUS
-            #SJM
-            print('Failed to preprocess {}'.format(name))
+        with rasterio.open(shape_path, "w", **out_meta) as dest:
+                dest.write(out_img)
 
     return print('Completed processing of night lights layer')
 
@@ -255,7 +312,7 @@ def get_regional_nightlight_values():
 
     for name in countries.GID_0.unique():
 
-        # if not name == 'USA':
+        # if not name == 'GBR':
         #     continue
 
         single_country = countries[countries.GID_0 == name]
@@ -265,53 +322,38 @@ def get_regional_nightlight_values():
         path_country = os.path.join(DATA_INTERMEDIATE, name, 'regions')
 
         if os.path.exists(os.path.join(path_country, '..', 'luminosity.csv')):
-            continue
+            os.remove(os.path.join(path_country, '..', 'luminosity.csv'))
+
+        path_night_lights = os.path.join(DATA_INTERMEDIATE, name, 'night_lights.tif')
 
         path_regions = glob.glob(os.path.join(path_country, '*.shp'))
 
         results = []
 
-        num = 0
         for path_region in path_regions:
 
             region = geopandas.read_file(path_region)
-            centroid = region.centroid
 
-            path_night_lights = glob.glob(
-                os.path.join(path_country,'..','night_lights*.tif'))
+            with rasterio.open(path_night_lights) as src:
+                affine = src.transform
+                array = src.read(1)
 
-            extents = load_extents(path_night_lights)
+                #set missing data (-999) to 0
+                array[array < 0] = 0
 
-            try:
-                xp = centroid.x.values[0]
-                yp = centroid.y.values[0]
-                tile_path = get_tile_path_for_point(extents, xp, yp)
-
-
-                with rasterio.open(tile_path) as src:
-                    affine = src.transform
-                    array = src.read(1)
-
-                    #set missing data (-999) to 0
-                    array[array < 0] = 0
-
-                    #get luminosity values
-                    median = [d['median'] for d in zonal_stats(
-                        region, array, stats=['median'], affine=affine)]
-                    summation = [d['sum'] for d in zonal_stats(
-                        region, array, stats=['sum'], affine=affine)]
-                    # print(median)
-                    results.append({
-                        'GID_0': single_country.GID_0.values[0],
-                        'GID_1': region.GID_1.values[0],
-                        'GID_2': region.GID_2.values[0],
-                        'median_luminosity': median[0],
-                        'sum_luminosity': summation[0],
-                    })
-
-            except:
-                print('Failed {}'.format(path_region))
-                pass
+                #get luminosity values
+                median = [d['median'] for d in zonal_stats(
+                    region, array, stats=['median'], affine=affine)]
+                summation = [d['sum'] for d in zonal_stats(
+                    region, array, stats=['sum'], affine=affine)]
+                # print(median)
+                results.append({
+                    'GID_0': single_country.GID_0.values[0],
+                    'GID_1': region.GID_1.values[0],
+                    'GID_2': region.GID_2.values[0],
+                    'median_luminosity': median[0],
+                    'sum_luminosity': summation[0],
+                })
 
         results_df = pd.DataFrame(results)
 
@@ -438,8 +480,8 @@ def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
         *global_shape*: exact path to the global shapefile used to create the poly files.
 
     Optional Arguments:
-        *save_shape_file* : Default is **False**. Set to **True** will the new shapefile with the
-        countries that we include in this analysis will be saved.
+        *save_shape_file* : Default is **False**. Set to **True** will the new shapefile
+        with the countries that we include in this analysis will be saved.
 
         *regionalized*  : Default is **False**. Set to **True** will perform the analysis
         on a regional level.
@@ -571,19 +613,26 @@ def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
 
 
 def clip_osm(data_path,planet_path,area_poly,area_pbf):
-    """ Clip the an area osm file from the larger continent (or planet) file and save to a new osm.pbf file.
-    This is much faster compared to clipping the osm.pbf file while extracting through ogr2ogr.
+    """
+    Clip the an area osm file from the larger continent (or planet) file and
+    save to a new osm.pbf file. This is much faster compared to clipping the
+    osm.pbf file while extracting through ogr2ogr.
 
-    This function uses the osmconvert tool, which can be found at http://wiki.openstreetmap.org/wiki/Osmconvert.
+    This function uses the osmconvert tool, which can be found at
+    http://wiki.openstreetmap.org/wiki/Osmconvert.
 
-    Either add the directory where this executable is located to your environmental variables or just put it in the 'scripts' directory.
+    Either add the directory where this executable is located to your
+    environmental variables or just put it in the 'scripts' directory.
 
     Arguments:
-        *continent_osm*: path string to the osm.pbf file of the continent associated with the country.
+        *continent_osm*: path string to the osm.pbf file of the continent
+        associated with the country.
 
-        *area_poly*: path string to the .poly file, made through the 'create_poly_files' function.
+        *area_poly*: path string to the .poly file, made through the
+        'create_poly_files' function.
 
-        *area_pbf*: path string indicating the final output dir and output name of the new .osm.pbf file.
+        *area_pbf*: path string indicating the final output dir and output
+        name of the new .osm.pbf file.
 
     Returns:
         a clipped .osm.pbf file.
@@ -599,7 +648,8 @@ def clip_osm(data_path,planet_path,area_poly,area_pbf):
     osm_convert_path = os.path.join(BASE_PATH,'osmconvert64','osmconvert64-0.8.8p')
     try:
         if (os.path.exists(area_pbf) is not True):
-            os.system('{}  {} -B={} -o={}'.format(osm_convert_path,planet_path,area_poly,area_pbf)) # --complete-ways
+            os.system('{}  {} -B={} -o={}'.format( \
+                osm_convert_path,planet_path,area_poly,area_pbf)) # --complete-ways
             print('{} finished!'.format(area_pbf))
 
     except:
@@ -613,14 +663,18 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
     Clip all countries from the planet osm file and save them to individual osm.pbf files
 
     Optional Arguments:
-        *subset* : allow for a pre-defined subset of countries. REquires ISO3 codes. Will run all countries if left empty.
+        *subset* : allow for a pre-defined subset of countries. REquires ISO3 codes.
+        Will run all countries if left empty.
 
-        *regionalized* : Default is **False**. Set to **True** if you want to have the regions of a country as well.
+        *regionalized* : Default is **False**. Set to **True** if you want to have the
+        regions of a country as well.
 
-        *reversed_order* : Default is **False**. Set to **True**  to work backwards for a second process of the same country set to prevent overlapping calculations.
+        *reversed_order* : Default is **False**. Set to **True**  to work backwards for
+        a second process of the same country set to prevent overlapping calculations.
 
     Returns:
-        clipped osm.pbf files for the defined set of countries (either the whole world by default or the specified subset)
+        clipped osm.pbf files for the defined set of countries (either the whole world
+        by default or the specified subset)
 
     """
 
@@ -650,11 +704,16 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
 
         get_poly_files = os.listdir(os.path.join(data_path,'country_poly_files'))
         if len(subset) > 0:
-            polyPaths = [os.path.join(data_path,'country_poly_files',x) for x in get_poly_files if x[:3] in subset]
-            area_pbfs = [os.path.join(data_path,'region_osm_admin1',x.split('.')[0]+'.osm.pbf') for x in get_poly_files if x[:3] in subset]
+            polyPaths = [os.path.join(data_path,'country_poly_files',x) for x in \
+                            get_poly_files if x[:3] in subset]
+            area_pbfs = [os.path.join(data_path,'region_osm_admin1', \
+                            x.split('.')[0]+'.osm.pbf') for x in \
+                            get_poly_files if x[:3] in subset]
         else:
-            polyPaths = [os.path.join(data_path,'country_poly_files',x) for x in get_poly_files]
-            area_pbfs = [os.path.join(data_path,'region_osm_admin1',x.split('.')[0]+'.osm.pbf') for x in get_poly_files]
+            polyPaths = [os.path.join(data_path,'country_poly_files',x) for x in \
+                            get_poly_files]
+            area_pbfs = [os.path.join(data_path,'region_osm_admin1', \
+                            x.split('.')[0]+'.osm.pbf') for x in get_poly_files]
 
         big_osm_paths = [planet_path]*len(polyPaths)
 
@@ -668,17 +727,27 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
 
         get_poly_files = os.listdir(os.path.join(data_path,'regional_poly_files'))
         if len(subset) > 0:
-            polyPaths = [os.path.join(data_path,'regional_poly_files',x) for x in get_poly_files if x[:3] in subset]
-            area_pbfs = [os.path.join(data_path,'region_osm_admin1',x.split('.')[0]+'.osm.pbf') for x in get_poly_files if x[:3] in subset]
-            big_osm_paths = [os.path.join(DATA_RAW,'planet_osm',x[:3]+'.osm.pbf') for x in get_poly_files if x[:3] in subset]
+            polyPaths = [os.path.join(data_path,'regional_poly_files',x) for x in \
+                            get_poly_files if x[:3] in subset]
+            area_pbfs = [os.path.join(data_path,'region_osm_admin1', \
+                            x.split('.')[0]+'.osm.pbf') for x in \
+                            get_poly_files if x[:3] in subset]
+            big_osm_paths = [os.path.join(DATA_RAW,'planet_osm', \
+                                x[:3]+'.osm.pbf') for x in \
+                                get_poly_files if x[:3] in subset]
         else:
-            polyPaths = [os.path.join(data_path,'regional_poly_files',x) for x in get_poly_files]
-            area_pbfs = [os.path.join(data_path,'region_osm_admin1',x.split('.')[0]+'.osm.pbf') for x in get_poly_files]
-            big_osm_paths = [os.path.join(DATA_RAW,'planet_osm',x[:3]+'.osm.pbf') for x in get_poly_files]
+            polyPaths = [os.path.join(data_path,'regional_poly_files',x) \
+                            for x in get_poly_files]
+            area_pbfs = [os.path.join(data_path,'region_osm_admin1', \
+                            x.split('.')[0]+'.osm.pbf') for x in get_poly_files]
+            big_osm_paths = [os.path.join(DATA_RAW,'planet_osm', \
+                                x[:3]+'.osm.pbf') for x in get_poly_files]
 
     data_paths = [data_path]*len(polyPaths)
 
-    # allow for reversed order if you want to run two at the same time (convenient to work backwards for the second process, to prevent overlapping calculation)
+    # allow for reversed order if you want to run two at the same time
+    # (convenient to work backwards for the second process, to prevent
+    # overlapping calculation)
     if reversed_order == True:
         polyPaths = polyPaths[::-1]
         area_pbfs = area_pbfs[::-1]
@@ -686,13 +755,17 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
 
     # extract all country osm files through multiprocesing
     pool = Pool(cpu_count()-1)
-    pool.starmap(clip_osm, zip(data_paths,big_osm_paths,polyPaths,area_pbfs))
+    pool.starmap(clip_osm, zip(data_paths, big_osm_paths, polyPaths, area_pbfs))
 
 
 if __name__ == '__main__':
 
+    ###create 'global_countries.shp' if not already processed
+    ###create each 'national_outline.shp' if not already processed
     # process_country_shapes()
 
+    ###create 'global_regions.shp' if not already processed
+    ###create each subnational region .shp if not already processed
     # process_regional_shapes()
 
     # process_settlement_layer()
