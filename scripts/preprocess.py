@@ -30,7 +30,8 @@ DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 def process_country_shapes():
     """
-    Processes both country and regional shapes.
+    Created a set of global country shapes. Adds the single national boundary for
+    each country to each country folder.
 
     """
     path_processed = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
@@ -80,8 +81,11 @@ def process_country_shapes():
     return print('Completed processing of country shapes')
 
 
-def process_global_regions(level):
+def process_regions(level):
+    """
+    Function for processing subnational regions.
 
+    """
     filename = 'global_regions_{}.shp'.format(level)
     path_processed = os.path.join(DATA_INTERMEDIATE, filename)
 
@@ -124,26 +128,41 @@ def process_global_regions(level):
     return regions
 
 
-def process_regional_shapes():
+def assemble_global_regional_layer():
     """
-    Process sub-national regional shapes.
+    Assemble a single layer of sub-national regional shapes.
+
+    Set the desired level to be used in the 'global_information.csv' folder.
+
+    Write each sub-national region to an individual shape in each nation's
+    regions folder.
 
     """
     filename = 'global_regions.shp'
     path_processed = os.path.join(DATA_INTERMEDIATE, filename)
 
-    regions_1 = process_global_regions(1)
-    regions_2 = process_global_regions(2)
+    #load regions and process
+    regions_1 = process_regions(1)
+    regions_2 = process_regions(2)
 
+    #select desired regions
     regions_1 = regions_1.loc[regions_1['gid_region'] == 1]
-    print('len(regions_1) {}'.format(len(regions_1)))
-
     regions_2 = regions_2.loc[regions_2['gid_region'] == 2]
-    print('len(regions_2) {}'.format(len(regions_2)))
 
-    # regions = geopandas.GeoDataFrame(pd.concat([regions_1, regions_2], ignore_index=True))
+    #concatinate
     regions = pd.concat([regions_1, regions_2], sort=True)
-    print('len(regions) {}'.format(len(regions)))
+
+    # ###get missing small countries
+    # countries = geopandas.read_file(os.path.join(DATA_INTERMEDIATE, 'global_countries.shp'))
+
+    # for name in countries.ISO_3digit.unique():
+    #     if name in [
+    #         'ABW', 'AIA', 'BLM', 'BVT', 'CCK', 'COK', 'CUW', 'CXR', 'FLK', 'GIB', 'HMD',
+    #         'IOT', 'KIR', 'MAF', 'MCO', 'MDV', 'MHL', 'NFK', 'NIU', 'PCN', 'SGS', 'SXM',
+    #         'VAT']:
+    #         country = countries[countries.GID_0 == name]
+    #         regions = pd.concat([regions, country], sort=True)
+
     regions.reset_index(drop=True,inplace=True)
 
     print('Writing global_regions.shp to file')
@@ -152,6 +171,9 @@ def process_regional_shapes():
     print('Completed processing of regional shapes level')
 
     for name in regions.GID_0.unique():
+
+        # if not name == 'ABW':
+        #     continue
 
         path = os.path.join(DATA_INTERMEDIATE, name, 'regions')
 
@@ -171,6 +193,7 @@ def process_regional_shapes():
 
             single_country = regions[regions.GID_0 == name]
 
+            #try for level two regions
             try:
                 for name_region in single_country.GID_2.unique():
 
@@ -179,12 +202,25 @@ def process_regional_shapes():
                     shape_path = os.path.join(path, '{}.shp'.format(name_region))
                     single_region.to_file(shape_path)
             except:
-                for name_region in single_country.GID_1.unique():
+                pass
 
+            #try for level one regions
+            try:
+                for name_region in single_country.GID_1.unique():
                     single_region = single_country[single_country.GID_1 == name_region]
 
                     shape_path = os.path.join(path, '{}.shp'.format(name_region))
                     single_region.to_file(shape_path)
+            except:
+                pass
+
+            # #catch all small countries with no sub-national regions
+            # if name in ['ABW', 'AIA', 'BLM', 'BVT', 'CCK', 'COK', 'CUW', 'CXR',
+            #             'FLK', 'GIB', 'HMD', 'IOT', 'KIR', 'MAF', 'MCO', 'MDV',
+            #             'MHL', 'NFK', 'NIU', 'PCN', 'SGS', 'SXM', 'VAT']:
+            #     country_path = os.path.join(DATA_INTERMEDIATE, name, 'national_outline.shp')
+            #     country = geopandas.read_file(country_path)
+            #     country.to_file(path, driver='ESRI Shapefile')
         else:
             pass
 
@@ -193,6 +229,7 @@ def process_regional_shapes():
 
 def process_settlement_layer():
     """
+    Clip the settlement layer to each country boundary and place in each country folder.
 
     """
     path_settlements = os.path.join(DATA_RAW,'settlement_layer','ppp_2020_1km_Aggregated.tif')
@@ -243,6 +280,7 @@ def process_settlement_layer():
 
 def process_night_lights():
     """
+    Clip the nightlights layer and place in each country folder.
 
     """
     path_processed = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
@@ -301,7 +339,7 @@ def process_night_lights():
     return print('Completed processing of night lights layer')
 
 
-def get_regional_nightlight_values():
+def get_regional_data():
     """
     Extract luminosity values.
 
@@ -312,7 +350,7 @@ def get_regional_nightlight_values():
 
     for name in countries.GID_0.unique():
 
-        # if not name == 'GBR':
+        # if not name == 'ZWE':
         #     continue
 
         single_country = countries[countries.GID_0 == name]
@@ -325,6 +363,7 @@ def get_regional_nightlight_values():
             os.remove(os.path.join(path_country, '..', 'luminosity.csv'))
 
         path_night_lights = os.path.join(DATA_INTERMEDIATE, name, 'night_lights.tif')
+        path_settlements = os.path.join(DATA_INTERMEDIATE, name, 'settlements.tif')
 
         path_regions = glob.glob(os.path.join(path_country, '*.shp'))
 
@@ -334,30 +373,68 @@ def get_regional_nightlight_values():
 
             region = geopandas.read_file(path_region)
 
-            with rasterio.open(path_night_lights) as src:
-                affine = src.transform
-                array = src.read(1)
+            try:
+                #get night light values
+                with rasterio.open(path_night_lights) as src:
+                    affine = src.transform
+                    array = src.read(1)
 
-                #set missing data (-999) to 0
-                array[array < 0] = 0
+                    #set missing data (-999) to 0
+                    # array[array == 0] = 0
+                    array[array <= 0] = 0
 
-                #get luminosity values
-                median = [d['median'] for d in zonal_stats(
-                    region, array, stats=['median'], affine=affine)]
-                summation = [d['sum'] for d in zonal_stats(
-                    region, array, stats=['sum'], affine=affine)]
-                # print(median)
+                    # kwargs.update({'nodata': 0})
+                    #get luminosity values
+                    luminosity_median = [d['median'] for d in zonal_stats(
+                        region, array, stats=['median'], affine=affine)][0]
+                    luminosity_summation = [d['sum'] for d in zonal_stats(
+                        region, array, stats=['sum'], affine=affine)][0]
+
+                #get settlement values
+                with rasterio.open(path_settlements) as src:
+                    affine = src.transform
+                    array = src.read(1)
+
+                    #set missing data (-999) to 0
+                    # array[array == None] = 0
+                    array[array <= 0] = 0
+                    # kwargs.update({'nodata': 0})
+
+                    #get luminosity values
+                    population_summation = [d['sum'] for d in zonal_stats(
+                        region, array, stats=['sum'], affine=affine)][0]
+
+                #get geographic area
+                # print(region.crs)
+                # region.crs = {'init' :'epsg:4326'}
+                region = region.to_crs({'init': 'epsg:3857'})
+                # print(region.crs)
+                area_km2 = region['geometry'].area[0] / 10**6
+
+                if luminosity_median == None:
+                    luminosity_median = 0
+                if luminosity_summation == None:
+                    luminosity_summation = 0
+
                 results.append({
                     'GID_0': single_country.GID_0.values[0],
                     'GID_1': region.GID_1.values[0],
                     'GID_2': region.GID_2.values[0],
-                    'median_luminosity': median[0],
-                    'sum_luminosity': summation[0],
+                    'gid_region': region.gid_region,
+                    'median_luminosity': luminosity_median,
+                    'sum_luminosity': luminosity_summation,
+                    'mean_luminosity_km2': luminosity_summation / area_km2,
+                    'population': population_summation,
+                    'area_km2': area_km2,
+                    'population_km2': population_summation / area_km2,
                 })
+
+            except:
+                pass
 
         results_df = pd.DataFrame(results)
 
-        results_df.to_csv(os.path.join(path_country, '..', 'luminosity.csv'), index=False)
+        results_df.to_csv(os.path.join(path_country, '..', 'regional_data.csv'), index=False)
 
         print('Completed {}'.format(single_country.NAME_0.values[0]))
 
@@ -466,7 +543,7 @@ def planet_osm():
         print('Planet file is already downloaded')
 
 
-def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
+def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False):
 
     """
     This function will create the .poly files from the world shapefile. These
@@ -489,7 +566,6 @@ def poly_files(data_path,global_shape,save_shapefile=False,regionalized=False):
     Returns:
         *.poly file* for each country in a new dir in the working directory.
     """
-
 # =============================================================================
 #     """ Create output dir for .poly files if it is doesnt exist yet"""
 # =============================================================================
@@ -762,17 +838,17 @@ if __name__ == '__main__':
 
     ###create 'global_countries.shp' if not already processed
     ###create each 'national_outline.shp' if not already processed
-    # process_country_shapes()
+    process_country_shapes()
 
     ###create 'global_regions.shp' if not already processed
     ###create each subnational region .shp if not already processed
-    # process_regional_shapes()
+    assemble_global_regional_layer()
 
-    # process_settlement_layer()
+    process_settlement_layer()
 
-    # process_night_lights()
+    process_night_lights()
 
-    get_regional_nightlight_values()
+    get_regional_data()
 
     # planet_osm()
 
