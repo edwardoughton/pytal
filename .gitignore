@@ -105,4 +105,4 @@ venv.bak/
 
 # specific folders
 /data
-/visualise
+/vis/figures/**
