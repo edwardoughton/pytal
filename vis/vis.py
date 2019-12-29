@@ -15,8 +15,6 @@ from matplotlib.colors import LinearSegmentedColormap
 
 import matplotlib.gridspec as gridspec
 
-# from utils import load_config #,create_folder_lookup,map_roads,line_length
-
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), '..', 'scripts', 'script_config.ini'))
 BASE_PATH = CONFIG['file_locations']['base_path']
@@ -24,7 +22,10 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 DATA_RAW = os.path.join(BASE_PATH, 'raw')
 DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
+EXPORT_FIGURES = os.path.join(BASE_PATH, '..', 'vis', 'figures')
 
+if not os.path.exists(EXPORT_FIGURES):
+    os.makedirs(EXPORT_FIGURES)
 
 path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
 
@@ -33,118 +34,116 @@ if os.path.exists(path_countries):
 else:
     print('Must generate global_countries.shp first' )
 
-#GID_0	GID_1	GID_2	median_luminosity	sum_luminosity
-global_data = []
+def prepare_data():
 
-num = 0
-for name in countries.GID_0.unique():
+    global_data = []
 
-    # if name not in ('CAN' , 'USA'):
-    #     continue
-    print('working on {}'.format(name))
+    for name in countries.GID_0.unique():
 
-    path_results = os.path.join(DATA_INTERMEDIATE, name, 'luminosity.csv')
+        # if name not in ('CAN' , 'USA'):
+        #     continue
 
-    try:
-        luminosity = pd.read_csv(path_results)
+        print('working on {}'.format(name))
 
-        if len(luminosity) == 0:
-            continue
+        path_results = os.path.join(DATA_INTERMEDIATE, name, 'regional_data.csv')
 
-        global_data.append(luminosity)
+        try:
+            results = pd.read_csv(path_results)
 
-        # print(global_data)
+            if len(results) == 0:
+                continue
 
-    except:
+            global_data.append(results)
 
-        region_paths = glob.glob(os.path.join(DATA_INTERMEDIATE, name, 'regions', '*.shp'))
+        except:
 
-        for region_path in region_paths:
+            region_paths = glob.glob(os.path.join(DATA_INTERMEDIATE, name, 'regions', '*.shp'))
 
-            region = gpd.read_file(region_path)
+            for region_path in region_paths:
 
-            no_data = [{
-                'GID_0': region.GID_0.values[0],
-                'GID_1': region.GID_1.values[0],
-                'GID_2': region.GID_2.values[0],
-                'median_luminosity': float('NaN'),
-                'sum_luminosity': 0,
-            }]
+                region = gpd.read_file(region_path)
 
-            no_data = pd.DataFrame(no_data)
-            # print(no_data)
-            global_data.append(no_data)
+                try:
+                    no_data = [{
+                        'GID_0': region.GID_0.values[0],
+                        'GID_1': region.GID_1.values[0],
+                        'GID_2': region.GID_2.values[0],
+                        'median_luminosity': float('NaN'),
+                        'sum_luminosity': float('NaN'),
+                        'mean_luminosity_km2': float('NaN'),
+                        'population': float('NaN'),
+                        'area_km2': float('NaN'),
+                        'population_km2': float('NaN'),
+                    }]
 
-        print('{} failed'.format(name))
+                    no_data = pd.DataFrame(no_data)
+
+                    global_data.append(no_data)
+
+                except:
+                    print('{} failed'.format(name))
+
+            print('{} failed'.format(name))
+
+    global_df = pd.concat(global_data, axis=0)
+
+    return global_df
 
 
-global_df = pd.concat(global_data, axis=0)
+def plot_global_data(global_df, metric):
 
-metric = 'median_luminosity' # 'sum_luminosity' #
-global_df = global_df[['GID_2', metric]]
+    global_df = global_df[['GID_1', 'GID_2', metric]]
 
-data_to_bin = global_df[~global_df[metric].isna()]
-print(data_to_bin.describe())
-labels = [0, 1, 2, 3, 4, 5]
-# label_names = ['Very Low','Low','Medium','High','Very high']
-# bins = [-1, data_to_bin[metric].quantile(0.2),
-#             data_to_bin[metric].quantile(0.4),
-#             data_to_bin[metric].quantile(0.6),
-#             data_to_bin[metric].quantile(0.8),
-#             data_to_bin[metric].quantile(1)
-#             ]
-label_names = ['Very Low','Low','Medium','High', 'Very High', 'Maximum']
-bins = [
-    -1,
-    data_to_bin[metric].quantile(0.5),
-    data_to_bin[metric].quantile(0.6),
-    data_to_bin[metric].quantile(0.7),
-    data_to_bin[metric].quantile(0.8),
-    data_to_bin[metric].quantile(0.9),
-    data_to_bin[metric].quantile(1)
-]
-color_scheme_map =  ['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15', '#4b070a'] # ['#feedde','#fdbe85','#fd8d3
-cmap = LinearSegmentedColormap.from_list(name='continents', colors=color_scheme_map)
+    data_to_bin = global_df[~global_df[metric].isna()]
 
-coastlines = gpd.read_file(os.path.join(DATA_INTERMEDIATE,'global_regions.shp'))
+    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-# coastlines.crs = {'init' :'epsg:4326'}
+    bins = [
+        -1,
+        data_to_bin[metric].quantile(0.5),
+        data_to_bin[metric].quantile(0.55),
+        data_to_bin[metric].quantile(0.6),
+        data_to_bin[metric].quantile(0.65),
+        data_to_bin[metric].quantile(0.7),
+        data_to_bin[metric].quantile(0.75),
+        data_to_bin[metric].quantile(0.8),
+        data_to_bin[metric].quantile(0.85),
+        data_to_bin[metric].quantile(0.9),
+        data_to_bin[metric].quantile(0.95),
+        data_to_bin[metric].quantile(1)
+    ]
 
-# coastlines= coastlines.to_crs({'init': 'epsg:3857'})
+    regions = gpd.read_file(os.path.join(DATA_INTERMEDIATE,'global_regions.shp'))
 
-coastlines = coastlines.merge(global_df, on='GID_2')
+    regions_1 = regions.loc[regions['gid_region'] == 1]
+    regions_1 = regions_1.merge(global_df, on='GID_1')
 
-# coastlines["area_km2"] = coastlines['geometry'].area / 10**6
+    regions_2 = regions.loc[regions['gid_region'] == 2]
+    regions_2 = regions_2.merge(global_df, on='GID_2')
 
-# coastlines["sum_luminosity_km2"] = coastlines['sum_luminosity'] / coastlines["area_km2"]
+    regions = pd.concat([regions_1, regions_2], sort=True)
 
-# metric = 'sum_luminosity_km2'
+    regions.reset_index(drop=True,inplace=True)
 
-# coastlines= coastlines.to_crs({'init': 'epsg:4326'})
+    # missing_data = regions[regions[metric].isna()]
 
-print(coastlines.describe())
-missing_data = coastlines[coastlines[metric].isna()]
+    fig, ax = plt.subplots(1, 1, figsize=(20,12))
 
-fig, ax = plt.subplots(1, 1, figsize=(20,12))
+    regions['bin'] = pd.cut(regions[metric], bins=bins, labels=labels).fillna(0)
 
-coastlines['bin'] = pd.cut(coastlines[metric], bins=bins, labels=labels).fillna(0)
+    regions.plot(column='bin', ax=ax, cmap='inferno', linewidth=0, legend=True)
 
-coastlines.plot(column='bin',ax=ax,cmap=cmap,linewidth=0)
+    # missing_data.plot(ax=ax, facecolor='grey', linewidth=0)
 
-missing_data.plot(ax=ax, facecolor='grey' ,linewidth=0)
+    fig.savefig(os.path.join(EXPORT_FIGURES, '{}.pdf'.format(metric)))
 
-legend_elements = [
-    Patch(facecolor=color_scheme_map[0],label=label_names[0]),
-                  Patch(facecolor=color_scheme_map[1],label=label_names[1]),
-                  Patch(facecolor=color_scheme_map[2],label=label_names[2]),
-                  Patch(facecolor=color_scheme_map[3],label=label_names[3]),
-                  Patch(facecolor=color_scheme_map[4],label=label_names[4]),
-                  Patch(facecolor=color_scheme_map[5],label=label_names[5])
-                  ]
+    print('Completed plotting {}'.format(metric))
 
-legend = ax.legend(handles=legend_elements, shadow=True,
-                   fancybox=True, facecolor='#fefdfd', prop={'size':8}, loc='lower left')
 
-ax.set_facecolor('lightgrey')
+if __name__ == '__main__':
 
-plt.show()
+    global_df = prepare_data()
+
+    plot_global_data(global_df, 'mean_luminosity_km2')
+
+    plot_global_data(global_df, 'population_km2')
