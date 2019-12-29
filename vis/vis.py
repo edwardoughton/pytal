@@ -90,7 +90,7 @@ def prepare_data():
     return global_df
 
 
-def plot_global_data(global_df, metric):
+def plot_global_data(global_df, metric, title):
 
     global_df = global_df[['GID_1', 'GID_2', metric]]
 
@@ -129,9 +129,14 @@ def plot_global_data(global_df, metric):
 
     fig, ax = plt.subplots(1, 1, figsize=(20,12))
 
+    # from mpl_toolkits.axes_grid1 import make_axes_locatable
+    # divider = make_axes_locatable(ax)
+    # cax = divider.append_axes("right", size="5%", pad=0.1)
+
     regions['bin'] = pd.cut(regions[metric], bins=bins, labels=labels).fillna(0)
 
-    regions.plot(column='bin', ax=ax, cmap='inferno', linewidth=0, legend=True)
+    regions.plot(column='bin', ax=ax, cmap='inferno', linewidth=0, legend=True,
+                legend_kwds={'label': title, 'orientation': "horizontal"})
 
     # missing_data.plot(ax=ax, facecolor='grey', linewidth=0)
 
@@ -144,6 +149,6 @@ if __name__ == '__main__':
 
     global_df = prepare_data()
 
-    plot_global_data(global_df, 'mean_luminosity_km2')
+    plot_global_data(global_df, 'mean_luminosity_km2', 'Mean Night Time Luminosity (per km^2)')
 
-    plot_global_data(global_df, 'population_km2')
+    plot_global_data(global_df, 'population_km2', 'Population Density (Persons per km^2)')
