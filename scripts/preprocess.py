@@ -8,7 +8,8 @@ import pandas as pd
 import geopandas
 
 import urllib.request
-from shapely.geometry import MultiPolygon, mapping, box
+from shapely.geometry import MultiPolygon, Polygon, mapping, box
+from shapely.ops import cascaded_union
 from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
@@ -834,24 +835,135 @@ def all_countries(subset = [], regionalized=False, reversed_order=False):
     pool.starmap(clip_osm, zip(data_paths, big_osm_paths, polyPaths, area_pbfs))
 
 
+def clean_coverage(x):
+
+    # if its a single polygon, just return the polygon geometry
+    if x.geometry.geom_type == 'Polygon':
+        if x.geometry.area > 1e7:
+            return x.geometry
+
+    # if its a multipolygon, we start trying to simplify and remove shapes if its too big.
+    elif x.geometry.geom_type == 'MultiPolygon':
+
+        threshold = 1e7
+        hole_threshold_size = 1e7
+
+        # save remaining polygons as new multipolygon for the specific country
+        new_geom = []
+        for y in x.geometry:
+
+            if y.area > threshold:
+                # print(y.boundary)
+                # holes =[]
+
+                # for hole in y.interiors:
+                #     if Polygon(hole).area > hole_threshold_size:
+                #         holes.append(hole)
+                # # print(Polygon(y.exterior.coords,[holes]))
+                # poly = Polygon(y.exterior.coords,[holes])
+
+                new_geom.append(y)
+
+        return MultiPolygon(new_geom)
+
+
+def process_coverage_shapes():
+    """
+    Load in coverage maps, process and export for each country.
+
+    """
+    print('Working on coverage_2g.shp')
+    path_raw = os.path.join(DATA_RAW, 'coverage_maps', 'african_coverage_2g_tiles.shp')
+    coverage = geopandas.read_file(path_raw)
+
+    print('Setting crs for tiles')
+    coverage.crs = {'init': 'epsg:3857'}
+
+    print('Converting tiles to epsg 4326 (WGS84)')
+    coverage = coverage.to_crs({'init': 'epsg:4326'})
+
+    print('Importing global_countries.shp to get each country name')
+    path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
+    countries = geopandas.read_file(path_countries)
+
+    for name in countries.GID_0.unique():
+
+        print('Working on {}'.format(name))
+        path = os.path.join(DATA_INTERMEDIATE, name, 'national_outline.shp')
+        national_outline = geopandas.read_file(path)
+
+        print('Intersecting coverage tiles with country outline')
+        intersection = geopandas.overlay(coverage, national_outline, how='intersection')
+
+        if len(intersection) > 0:
+            print('Exporting country coverage shape')
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g.shp')
+            intersection.to_file(output_path, driver='ESRI Shapefile')
+        else:
+            print('Nothing to write for {}'.format(name))
+            continue
+
+    for name in countries.GID_0.unique():
+
+        path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g.shp')
+
+        if os.path.exists(path):
+
+            print('Working on {}'.format(name))
+
+            print('Loading coverage shape')
+            coverage = geopandas.read_file(path)
+
+            print('Dissolving polygons')
+            coverage['dissolve'] = 1
+            coverage = coverage.dissolve(by='dissolve', aggfunc='sum')
+
+            coverage = coverage.to_crs({'init': 'epsg:3857'})
+
+            print('Excluding small shapes')
+            coverage['geometry'] = coverage.apply(clean_coverage,axis=1)
+
+            print('Removing empty and null geometries')
+            coverage = coverage[~(coverage.is_empty)]
+            coverage = coverage[coverage['geometry'].notnull()]
+
+            if len(coverage) > 0:
+
+                print('Simplifying geometries')
+                coverage['geometry'] = coverage.simplify(tolerance = 0.005, \
+                    preserve_topology=True).buffer(0.01).simplify(tolerance = 0.005, \
+                    preserve_topology=True)
+
+                print('Exporting country coverage shape')
+                output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g_processed.shp')
+                coverage.to_file(output_path, driver='ESRI Shapefile')
+
+            else:
+                print('Nothing to write for {}'.format(name))
+                continue
+
+    print('Processed coverage shapes')
+
 if __name__ == '__main__':
 
-    ###create 'global_countries.shp' if not already processed
-    ###create each 'national_outline.shp' if not already processed
-    process_country_shapes()
+    # ###create 'global_countries.shp' if not already processed
+    # ###create each 'national_outline.shp' if not already processed
+    # process_country_shapes()
 
-    ###create 'global_regions.shp' if not already processed
-    ###create each subnational region .shp if not already processed
-    assemble_global_regional_layer()
+    # ###create 'global_regions.shp' if not already processed
+    # ###create each subnational region .shp if not already processed
+    # assemble_global_regional_layer()
 
-    process_settlement_layer()
+    # process_settlement_layer()
 
-    process_night_lights()
+    # process_night_lights()
 
-    get_regional_data()
+    # get_regional_data()
 
-    # planet_osm()
+    # # planet_osm()
 
-    # poly_files()
+    # # poly_files()
 
-    # all_countries(subset = [], regionalized=False, reversed_order=True)
+    # # all_countries(subset = [], regionalized=False, reversed_order=True)
+
+    process_coverage_shapes()
