@@ -105,4 +105,4 @@ venv.bak/
 
 # specific folders
 /data
-/vis/figures/**
+/vis/figures/*
