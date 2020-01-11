@@ -2,53 +2,46 @@
 # install.packages("tidyverse")
 library(tidyverse)
 
-#set directory for export 
-data_input_directory <- "C:\\Users\\edwar\\Dropbox\\Academic Projects\\WB 5G assessment"
+#get folder directory
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-setwd(data_input_directory)
-data <- read.csv("dutch_per_user_cost_results.csv")
+#load data
+data <- read.csv(file.path(folder, 'example_data.csv'))
 
-data <- select(data, scenario, strategy, geotype, metric, per_user_cost)
+#select desired columns
+data <- select(data, country, scenario, strategy, geotype, cost)
 
+#assuming the data is at the subregional level, aggregate by scenario, strategy etc..
+#cumulative_cost_data <- aggregate( . ~ Strategy + Scenario + geotype, FUN=sum, data=cumulative_cost_data)   
+
+#set factors 
 data$geotype = factor(data$geotype, levels=c("Urban",
                                              "Suburban 1",
                                              "Suburban 2",
                                              "Rural 1",
                                              "Rural 2",
                                              "Rural 3",
-                                             "Rural 4"))
-
+                                             "Rural 4"
+                                             ))
 data$strategy = factor(data$strategy, levels=c("Spectrum Integration",
                                                 "Small Cells",
                                                 "Hybrid"))
 
-data$metric = factor(data$metric, levels=c('Macro RAN',
-                                          'Macro Civil Works',
-                                          'Macro Backhaul',
-                                          'Small Cell RAN',
-                                          'Small Cell Civil Works'),
-                                 labels=c('Macro RAN',
-                                          'Macro Civil Works',
-                                          'Macro Backhaul',
-                                          'Small Cell RAN',
-                                          'Small Cell Civil Works'))
+data <- data %>%
+  group_by(country, scenario, strategy) %>%
+  mutate(cost_cum = cumsum(cost))
 
-totals <- data %>%
-  group_by(scenario, strategy, geotype) %>%
-  summarise(total_per_user_cost = (sum(round(per_user_cost, digits=0), na.rm=TRUE))) 
 
-cost_per_user <- ggplot(data, aes(x = geotype, y = (per_user_cost), 
-  fill=metric, label=per_user_cost)) + 
+panel <- ggplot(data, aes(x=geotype, y=cost_cum, colour=country, group=country)) + 
+  geom_line() +
   scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
-  geom_bar(stat="identity") +  labs(title = "Cost Per User By Geotype",
+  labs(title = "Cumulative Cost Per Country By Geotype",
   subtitle = "Results reported by scenario, strategy and cost type for users within each geotype",
   x = NULL, y = "Per User Cost (Euros)") +
-  facet_grid(scenario~strategy) + scale_y_continuous(expand = c(0, 0),limits = c(0, 1700)) +
-  geom_text(aes(geotype, total_per_user_cost + 60, label = total_per_user_cost,fill = NULL), data = totals,size=2)
+  facet_grid(scenario~strategy) + scale_y_continuous(expand = c(0, 0),limits = c(0, 1700)) 
 
-### EXPORT TO FOLDER
-setwd(data_input_directory)
-tiff('cost_per_user.tiff', units="in", width=8, height=8, res=500)
-print(cost_per_user)
+path = file.path(folder, 'figures', 'panel.png')
+ggsave(path, units="in", width=10, height=10)
+print(panel)
 dev.off()
