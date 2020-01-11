@@ -256,3 +256,8 @@ path = file.path(folder, 'figures', 'cluster_panel.tiff')
 tiff(path, units="in", width=10, height=10, res=300)
 print(cluster_panel)
 dev.off()
+
+path = file.path(folder, 'figures', 'cluster_panel.png')
+ggsave(path, units="in", width=10, height=10)
+print(cluster_panel)
+dev.off()
