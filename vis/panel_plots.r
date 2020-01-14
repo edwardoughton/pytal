@@ -6,7 +6,8 @@ library(tidyverse)
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #load data
-data <- read.csv(file.path(folder, 'example_data.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'results_regions_2.csv'))
+# data <- read.csv(file.path(folder, 'example_data.csv'))
 
 #select desired columns
 data <- select(data, country, scenario, strategy, geotype, cost)
