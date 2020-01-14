@@ -140,6 +140,50 @@ def process_regions(level):
     return regions
 
 
+def process_lowest_regions(country, gadm_level):
+    """
+    Function for processing subnational regions.
+
+    """
+    filename = 'regions_{}_{}.shp'.format(gadm_level, country)
+    path_processed = os.path.join(DATA_INTERMEDIATE, country, 'regions', filename)
+
+    if not os.path.exists(path_processed):
+
+        print('Working on regions')
+        filename = 'gadm36_{}.shp'.format(gadm_level)
+        path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
+        regions = geopandas.read_file(path_regions)
+
+        path_countries = os.path.join(DATA_INTERMEDIATE, country, 'national_outline.shp')
+        countries = geopandas.read_file(path_countries)
+
+        for name in countries.GID_0.unique():
+
+            if not name == country:
+                continue
+
+            print('Working on {}'.format(name))
+            regions = regions[regions.GID_0 == name]
+
+            print('Excluding small shapes')
+            regions['geometry'] = regions.apply(exclude_small_shapes,axis=1)
+
+            # print('Simplifying geometries')
+            # regions['geometry'] = regions.simplify(tolerance = 0.05, preserve_topology=True) \
+            #     .buffer(0.01).simplify(tolerance = 0.05, preserve_topology=True)
+
+            print('Writing global_regions.shp to file')
+            regions.to_file(path_processed, driver='ESRI Shapefile')
+
+        print('Completed processing of regional shapes level {}'.format(gadm_level))
+
+    else:
+        regions = geopandas.read_file(path_processed)
+
+    return regions
+
+
 def assemble_global_regional_layer():
     """
     Assemble a single layer of sub-national regional shapes.
@@ -901,6 +945,9 @@ def process_coverage_shapes():
 
     for name in countries.GID_0.unique():
 
+        # if not name == 'MWI':
+        #     continue
+
         print('Working on {}'.format(name))
         path = os.path.join(DATA_INTERMEDIATE, name, 'national_outline.shp')
         national_outline = geopandas.read_file(path)
@@ -910,7 +957,7 @@ def process_coverage_shapes():
 
         if len(intersection) > 0:
             print('Exporting country coverage shape')
-            output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g.shp')
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g_unprocessed.shp')
             intersection.to_file(output_path, driver='ESRI Shapefile')
         else:
             print('Nothing to write for {}'.format(name))
@@ -918,7 +965,10 @@ def process_coverage_shapes():
 
     for name in countries.GID_0.unique():
 
-        path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g.shp')
+        # if not name == 'MWI':
+        #     continue
+
+        path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g_unprocessed.shp')
 
         if os.path.exists(path):
 
@@ -948,8 +998,29 @@ def process_coverage_shapes():
                     preserve_topology=True)
 
                 print('Exporting country coverage shape')
-                output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g_processed.shp')
+                output_path = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2g.shp')
                 coverage.to_file(output_path, driver='ESRI Shapefile')
+
+
+                path1 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed.shp')
+                path2 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed.shx')
+                path3 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed')
+                path4 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed.dbf')
+                path5 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed.cpg')
+                path6 = os.path.join(DATA_INTERMEDIATE, name, 'coverage_2_unprocessed.prj')
+
+                if os.path.exists(path1):
+                    os.remove(path1)
+                if os.path.exists(path2):
+                    os.remove(path2)
+                if os.path.exists(path3):
+                    os.remove(path3)
+                if os.path.exists(path4):
+                    os.remove(path4)
+                if os.path.exists(path5):
+                    os.remove(path5)
+                if os.path.exists(path5):
+                    os.remove(path6)
 
             else:
                 print('Nothing to write for {}'.format(name))
@@ -966,6 +1037,8 @@ if __name__ == '__main__':
     # ###create 'global_regions.shp' if not already processed
     # ###create each subnational region .shp if not already processed
     # assemble_global_regional_layer()
+
+    # process_lowest_regions('MWI', 2)
 
     # process_settlement_layer()
 
