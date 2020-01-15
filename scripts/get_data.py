@@ -145,9 +145,8 @@ def process_wb_survey_data(path):
         'HouseholdGeovariables_csv/HouseholdGeovariablesIHS4.csv'))
 
     ##Subset household coordinates
-    df_cords = df_geo[['case_id', 'HHID', 'lat_modified', 'lon_modified']]
-    df_cords.rename(columns={
-        'lat_modified': 'lat', 'lon_modified': 'lon'}, inplace=True)
+    df_cords = df_geo[['case_id', 'HHID', 'lat_modified', 'lon_modified']] \
+        .rename(columns={'lat_modified': 'lat', 'lon_modified': 'lon'})
 
     ##Merge to add coordinates to aggregate consumption data
     df = pd.merge(df, df_cords[['case_id', 'HHID']], on='case_id')
@@ -187,6 +186,7 @@ def query_nightlight_data(filename, df_uniques, df_combined, path):
     Query the nighlight data and export results.
 
     """
+    df_uniques = df_uniques.copy()
     img = geoio.GeoImage(filename)
     ##Convert points in projection space to points in raster space.
     xPixel, yPixel = img.proj_to_raster(34.915074, -14.683761)
