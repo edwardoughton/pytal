@@ -140,48 +140,51 @@ def process_regions(level):
     return regions
 
 
-def process_lowest_regions(country, gadm_level):
+def process_lowest_regions(country_list, country_regional_levels):
     """
     Function for processing subnational regions.
 
     """
-    filename = 'regions_{}_{}.shp'.format(gadm_level, country)
-    path_processed = os.path.join(DATA_INTERMEDIATE, country, 'regions', filename)
+    regions = []
+    for country in country_list:
+        for country_regional_level in country_regional_levels:
+            if country_regional_level['country'] == country:
+                gadm_level = country_regional_level['regional_level']
 
-    if not os.path.exists(path_processed):
+        filename = 'regions_{}_{}.shp'.format(gadm_level, country)
+        path_processed = os.path.join(DATA_INTERMEDIATE, country, 'regions', filename)
 
-        print('Working on regions')
-        filename = 'gadm36_{}.shp'.format(gadm_level)
-        path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
-        regions = geopandas.read_file(path_regions)
+        if not os.path.exists(path_processed):
 
-        path_countries = os.path.join(DATA_INTERMEDIATE, country, 'national_outline.shp')
-        countries = geopandas.read_file(path_countries)
+            print('Working on regions')
+            filename = 'gadm36_{}.shp'.format(gadm_level)
+            path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
+            regions = geopandas.read_file(path_regions)
 
-        for name in countries.GID_0.unique():
+            path_countries = os.path.join(DATA_INTERMEDIATE, country, 'national_outline.shp')
+            countries = geopandas.read_file(path_countries)
 
-            if not name == country:
-                continue
+            for name in countries.GID_0.unique():
 
-            print('Working on {}'.format(name))
-            regions = regions[regions.GID_0 == name]
+                if not name == country:
+                    continue
 
-            print('Excluding small shapes')
-            regions['geometry'] = regions.apply(exclude_small_shapes,axis=1)
+                print('Working on {}'.format(name))
+                regions = regions[regions.GID_0 == name]
 
-            # print('Simplifying geometries')
-            # regions['geometry'] = regions.simplify(tolerance = 0.05, preserve_topology=True) \
-            #     .buffer(0.01).simplify(tolerance = 0.05, preserve_topology=True)
+                # print('Excluding small shapes')
+                # regions['geometry'] = regions.apply(exclude_small_shapes,axis=1)
 
-            print('Writing global_regions.shp to file')
-            regions.to_file(path_processed, driver='ESRI Shapefile')
+                # print('Simplifying geometries')
+                # regions['geometry'] = regions.simplify(tolerance = 0.005, preserve_topology=True) \
+                #     .buffer(0.01).simplify(tolerance = 0.005, preserve_topology=True)
+
+                print('Writing global_regions.shp to file')
+                regions.to_file(path_processed, driver='ESRI Shapefile')
 
         print('Completed processing of regional shapes level {}'.format(gadm_level))
 
-    else:
-        regions = geopandas.read_file(path_processed)
-
-    return regions
+    return print('complete')
 
 
 def assemble_global_regional_layer():
@@ -283,14 +286,16 @@ def assemble_global_regional_layer():
     return print('Completed processing of regional shapes')
 
 
-def process_settlement_layer():
+def process_settlement_layer(country_list):
     """
     Clip the settlement layer to each country boundary and place in each country folder.
 
     """
     path_settlements = os.path.join(DATA_RAW,'settlement_layer','ppp_2020_1km_Aggregated.tif')
 
-    settlements = rasterio.open(path_settlements)
+    settlements = rasterio.open(path_settlements, 'r+')
+    settlements.nodata = 255
+    settlements.crs = {"init": "epsg:4326"}
 
     path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
 
@@ -302,16 +307,24 @@ def process_settlement_layer():
     num = 0
     for name in countries.GID_0.unique():
 
+        if not name in country_list:
+            continue
+
         print('working on {}'.format(name))
 
         path_country = os.path.join(DATA_INTERMEDIATE, name)
+        shape_path = os.path.join(path_country, 'settlements.tif')
+
+        # if os.path.exists(shape_path):
+        #     continue
 
         single_country = countries[countries.GID_0 == name]
 
         bbox = single_country.envelope
         geo = geopandas.GeoDataFrame()
-
-        geo = geopandas.GeoDataFrame({'geometry': bbox}, index=[num], crs=from_epsg('4326'))
+        # print(bbox)
+        geo = geopandas.GeoDataFrame({'geometry': bbox})
+        # print(geo)
         num += 1
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
@@ -327,14 +340,13 @@ def process_settlement_layer():
                         "transform": out_transform,
                         "crs": 'epsg:4326'})
 
-        shape_path = os.path.join(path_country, 'settlements.tif')
         with rasterio.open(shape_path, "w", **out_meta) as dest:
                 dest.write(out_img)
 
     return print('Completed processing of settlement layer')
 
 
-def process_night_lights():
+def process_night_lights(country_list):
     """
     Clip the nightlights layer and place in each country folder.
 
@@ -351,7 +363,7 @@ def process_night_lights():
     # num = 0
     for name in countries.GID_0.unique():
 
-        if not name == 'MWI':
+        if not name in country_list:
             continue
 
         print('working on {}'.format(name))
@@ -373,12 +385,11 @@ def process_night_lights():
 
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
-        night_lights = rasterio.open(path_night_lights)
-        # print(night_lights.nodata)
-        #chop on coords
+        night_lights = rasterio.open(path_night_lights, "r+")
+        night_lights.nodata = 0
+
         out_img, out_transform = mask(night_lights, coords, crop=True)
-        # print(out_transform)
-        # Copy the metadata
+
         out_meta = night_lights.meta.copy()
 
         out_meta.update({"driver": "GTiff",
@@ -397,7 +408,7 @@ def process_night_lights():
     return print('Completed processing of night lights layer')
 
 
-def get_regional_data():
+def get_regional_data(country_list):
     """
     Extract luminosity values.
 
@@ -408,7 +419,7 @@ def get_regional_data():
 
     for name in countries.GID_0.unique():
 
-        if not name == 'MWI':
+        if not name in country_list:
             continue
 
         single_country = countries[countries.GID_0 == name]
@@ -1030,6 +1041,8 @@ def process_coverage_shapes():
 
 if __name__ == '__main__':
 
+    country_list = ['UGA', 'ETH', 'BGD', 'PER', 'MWI', 'ZAF']
+
     # ###create 'global_countries.shp' if not already processed
     # ###create each 'national_outline.shp' if not already processed
     # process_country_shapes()
@@ -1038,13 +1051,24 @@ if __name__ == '__main__':
     # ###create each subnational region .shp if not already processed
     # assemble_global_regional_layer()
 
-    # process_lowest_regions('MWI', 2)
+    country_regional_levels = [
+        {'country': 'UGA', 'regional_level': 3},
+        {'country': 'ETH', 'regional_level': 3},
+        {'country': 'BGD', 'regional_level': 3},
+        {'country': 'PER', 'regional_level': 3},
+        {'country': 'MWI', 'regional_level': 3},
+        {'country': 'ZAF', 'regional_level': 3},
+        ]
 
-    # process_settlement_layer()
+    print('Processing lowest regions')
+    process_lowest_regions(country_list, country_regional_levels)
 
-    # process_night_lights()
+    # print('Processing settlement layer')
+    # process_settlement_layer(country_list)
 
-    # get_regional_data()
+    process_night_lights(country_list)
+
+    # get_regional_data(country_list)
 
     # # planet_osm()
 
