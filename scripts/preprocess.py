@@ -147,17 +147,16 @@ def process_lowest_regions(country_list, country_regional_levels):
     """
     regions = []
     for country in country_list:
-        for country_regional_level in country_regional_levels:
-            if country_regional_level['country'] == country:
-                gadm_level = country_regional_level['regional_level']
 
-        filename = 'regions_{}_{}.shp'.format(gadm_level, country)
+        level = get_region_level(country, country_regional_levels)
+
+        filename = 'regions_{}_{}.shp'.format(level, country)
         path_processed = os.path.join(DATA_INTERMEDIATE, country, 'regions', filename)
 
         if not os.path.exists(path_processed):
 
             print('Working on regions')
-            filename = 'gadm36_{}.shp'.format(gadm_level)
+            filename = 'gadm36_{}.shp'.format(level)
             path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
             regions = geopandas.read_file(path_regions)
 
@@ -182,7 +181,7 @@ def process_lowest_regions(country_list, country_regional_levels):
                 print('Writing global_regions.shp to file')
                 regions.to_file(path_processed, driver='ESRI Shapefile')
 
-        print('Completed processing of regional shapes level {}'.format(gadm_level))
+        print('Completed processing of regional shapes level {}'.format(level))
 
     return print('complete')
 
@@ -356,11 +355,8 @@ def process_night_lights(country_list):
     filename = 'F182013.v4c_web.stable_lights.avg_vis.tif'
     path_night_lights = os.path.join(DATA_RAW, 'nightlights', '2013', filename)
 
-    # extents = load_extents(path_night_lights)
+    countries = geopandas.read_file(path_processed)
 
-    countries = geopandas.read_file(path_processed)#[:40]
-
-    # num = 0
     for name in countries.GID_0.unique():
 
         if not name in country_list:
@@ -370,7 +366,6 @@ def process_night_lights(country_list):
 
         path_country = os.path.join(DATA_INTERMEDIATE, name)
 
-        #remove old files first
         existing_files = glob.glob(os.path.join(path_country, 'night_lights*'))
         for existing_file in existing_files:
             if os.path.exists(existing_file):
@@ -381,7 +376,7 @@ def process_night_lights(country_list):
         bbox = single_country.envelope
 
         geo = geopandas.GeoDataFrame()
-        geo = geopandas.GeoDataFrame({'geometry': bbox}, crs=from_epsg('4326')) #index=[num],
+        geo = geopandas.GeoDataFrame({'geometry': bbox}, crs=from_epsg('4326'))
 
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
@@ -403,12 +398,13 @@ def process_night_lights(country_list):
         with rasterio.open(shape_path, "w", **out_meta) as dest:
                 dest.write(out_img)
 
-
-
     return print('Completed processing of night lights layer')
 
 
-def get_regional_data(country_list):
+
+
+
+def get_regional_data(country_list, country_regional_levels):
     """
     Extract luminosity values.
 
@@ -434,72 +430,78 @@ def get_regional_data(country_list):
         path_night_lights = os.path.join(DATA_INTERMEDIATE, name, 'night_lights.tif')
         path_settlements = os.path.join(DATA_INTERMEDIATE, name, 'settlements.tif')
 
-        path_regions = glob.glob(os.path.join(path_country, '*.shp'))
+        level = get_region_level(name, country_regional_levels)
+
+        filename_regions = 'regions_{}_{}.shp'.format(level, name)
+        path_regions = os.path.join(path_country, filename_regions)
+
+        regions = geopandas.read_file(path_regions)[:200]
+
+        region_level = 'GID_{}'.format(level)
 
         results = []
 
-        for path_region in path_regions:
+        for name in regions[region_level]:
 
-            region = geopandas.read_file(path_region)
+            print('Working on region {}'.format(name))
+            region_single = regions[regions[region_level] == name]
 
             try:
                 #get night light values
-                with rasterio.open(path_night_lights) as src:
-                    affine = src.transform
-                    array = src.read(1)
+                with rasterio.open(path_night_lights, 'r+') as src:
 
-                    #set missing data (-999) to 0
-                    # array[array == 0] = 0
-                    array[array <= 0] = 0
-
-                    # kwargs.update({'nodata': 0})
-                    #get luminosity values
+                    src.nodata = 0
                     luminosity_median = [d['median'] for d in zonal_stats(
-                        region, array, stats=['median'], affine=affine)][0]
+                        region_single, array, stats=['median'], affine=affine)][0]
                     luminosity_summation = [d['sum'] for d in zonal_stats(
-                        region, array, stats=['sum'], affine=affine)][0]
-
-                #get settlement values
-                with rasterio.open(path_settlements) as src:
-                    affine = src.transform
-                    array = src.read(1)
-
-                    #set missing data (-999) to 0
-                    # array[array == None] = 0
-                    array[array <= 0] = 0
-                    # kwargs.update({'nodata': 0})
-
-                    #get luminosity values
-                    population_summation = [d['sum'] for d in zonal_stats(
-                        region, array, stats=['sum'], affine=affine)][0]
-
-                #get geographic area
-                # print(region.crs)
-                # region.crs = {'init' :'epsg:4326'}
-                region = region.to_crs({'init': 'epsg:3857'})
-                # print(region.crs)
-                area_km2 = region['geometry'].area[0] / 10**6
-
-                if luminosity_median == None:
-                    luminosity_median = 0
-                if luminosity_summation == None:
-                    luminosity_summation = 0
-
-                results.append({
-                    'GID_0': single_country.GID_0.values[0],
-                    'GID_1': region.GID_1.values[0],
-                    'GID_2': region.GID_2.values[0],
-                    'gid_region': region.gid_region,
-                    'median_luminosity': luminosity_median,
-                    'sum_luminosity': luminosity_summation,
-                    'mean_luminosity_km2': luminosity_summation / area_km2,
-                    'population': population_summation,
-                    'area_km2': area_km2,
-                    'population_km2': population_summation / area_km2,
-                })
+                        region_single, array, stats=['sum'], affine=affine)][0]
 
             except:
-                pass
+                luminosity_median = 0
+                luminosity_summation = 0
+
+            try:
+                #get settlement values
+                with rasterio.open(path_settlements, 'r+') as src:
+                    src.nodata = 0
+                    population_summation = [d['sum'] for d in zonal_stats(
+                        region_single, array, stats=['sum'], affine=affine)][0]
+            except:
+                population_summation = 0
+
+            try:
+                region_single.crs = "epsg:4326"
+                region_single = region_single.to_crs("epsg:3857")
+                area_km2 = region_single['geometry'].area[0] / 10**6
+                print('area is {}'.format(area_km2))
+                print('---')
+
+                population_km2 = population_summation / area_km2
+                # print(population_km2)
+            except:
+                area_km2 = 0
+                population_km2 = 0
+
+            if luminosity_median == None:
+                luminosity_median = 0
+            if luminosity_summation == None:
+                luminosity_summation = 0
+
+            try:
+                mean_luminosity_km2 = luminosity_summation / area_km2
+            except:
+                mean_luminosity_km2 = 0
+
+            results.append({
+                'GID_0': single_country.GID_0.values[0],
+                'GID_{}'.format(region_level): name,
+                'median_luminosity': luminosity_median,
+                'sum_luminosity': luminosity_summation,
+                'mean_luminosity_km2': mean_luminosity_km2,
+                'population': population_summation,
+                'area_km2': area_km2,
+                'population_km2': population_km2,
+            })
 
         results_df = pd.DataFrame(results)
 
@@ -1039,9 +1041,19 @@ def process_coverage_shapes():
 
     print('Processed coverage shapes')
 
+
+def get_region_level(name, country_regional_levels):
+
+    for country_regional_level in country_regional_levels:
+        if country_regional_level['country'] == name:
+            level = country_regional_level['regional_level']
+
+    return level
+
+
 if __name__ == '__main__':
 
-    country_list = ['UGA', 'ETH', 'BGD', 'PER', 'MWI', 'ZAF']
+    country_list = ['UGA']#, 'ETH', 'BGD', 'PER', 'MWI', 'ZAF']
 
     # ###create 'global_countries.shp' if not already processed
     # ###create each 'national_outline.shp' if not already processed
@@ -1060,15 +1072,16 @@ if __name__ == '__main__':
         {'country': 'ZAF', 'regional_level': 3},
         ]
 
-    print('Processing lowest regions')
-    process_lowest_regions(country_list, country_regional_levels)
+    # print('Processing lowest regions')
+    # process_lowest_regions(country_list, country_regional_levels)
 
     # print('Processing settlement layer')
     # process_settlement_layer(country_list)
 
-    process_night_lights(country_list)
+    # print('Processing night lights')
+    # process_night_lights(country_list)
 
-    # get_regional_data(country_list)
+    get_regional_data(country_list, country_regional_levels)
 
     # # planet_osm()
 
