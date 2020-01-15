@@ -1,5 +1,5 @@
 pytal
-====
+=====
 
 Python Telecommunications Assessment Library
 
@@ -33,4 +33,4 @@ Alternatively, for development purposes, clone this repo and run:
 Thanks for the support
 ======================
 
-**pyTAL** was written and developed at the `Environmental Change Institute, University of Oxford <http://www.eci.ox.ac.uk>`_ within the EPSRC-sponsored MISTRAL programme, as part of the `Infrastructure Transition Research Consortium <http://www.itrc.org.uk/>`_.
+**pyTAL** was written and developed at the [Environmental Change Institute, University of Oxford](http://www.eci.ox.ac.uk) within the EPSRC-sponsored MISTRAL programme, as part of the [Infrastructure Transition Research Consortium](http://www.itrc.org.uk/).
