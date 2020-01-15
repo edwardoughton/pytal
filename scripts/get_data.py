@@ -96,6 +96,9 @@ def process_wb_survey_data(path):
 
     I've used the 2016-2017 Household LSMS survey data for Malawi from
     https://microdata.worldbank.org/index.php/catalog/lsms.
+
+    Description: https://microdata.worldbank.org/index.php/catalog/2936
+
     It should be in ../data/raw/LSMS/malawi-2016
 
     IHS4 Consumption Aggregate.csv contains:
@@ -118,7 +121,14 @@ def process_wb_survey_data(path):
     file_path = os.path.join(path, 'IHS4 Consumption Aggregate.csv')
 
     ##Read results
-    df = pd.read_csv(file_path)
+    try:
+        df = pd.read_csv(file_path)
+    except FileNotFoundError as ex:
+        raise Exception(
+            "\n\nUser registration and manual download is required for Living Standards " +
+            "Measurement Survey. \n\nDownload from https://microdata.worldbank.org/index.php/catalog/2936 " +
+            "and extract zip to data/raw/LMSM/malawi_2016\n"
+        ) from ex
 
     ##Estimate daily consumption accounting for adult equivalence
     df['cons'] = df['rexpagg'] / (365 * df['adulteq'])
