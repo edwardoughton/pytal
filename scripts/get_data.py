@@ -1,14 +1,16 @@
-import os
 import configparser
-import pandas as pd
-import numpy as np
-import requests
-import tarfile
-import gzip
-import shutil
 import glob
-import geoio
+import gzip
 import math
+import os
+import shutil
+import tarfile
+import zipfile
+
+import geoio
+import numpy as np
+import pandas as pd
+import requests
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -17,6 +19,20 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 DATA_RAW = os.path.join(BASE_PATH, 'raw')
 DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
+
+
+def get_admin_data():
+    url = "https://biogeo.ucdavis.edu/data/gadm3.6/gadm36_levels_shp.zip"
+    target = os.path.join(DATA_RAW, 'gadm36_levels_shp.zip')
+    target_dir = os.path.join(DATA_RAW, 'gadm36_levels_shp')
+    target_dir
+    if not os.path.exists(target):
+        r = requests.get(url, stream=True)
+        with open(target, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+
+    with zipfile.ZipFile(target, 'r') as z:
+        z.extractall(target_dir)
 
 
 def get_nightlight_data(path, data_year):
@@ -269,6 +285,9 @@ if __name__ == '__main__':
         get_nightlight_data(path_nightlights, year)
     else:
         print('Nightlight data already exists in data folder')
+
+    print("Admin data")
+    get_admin_data()
 
     print('Processing World Bank Living Standards Measurement Survey')
     path = os.path.join(DATA_RAW, 'LSMS', 'malawi_2016')
