@@ -6,19 +6,21 @@ Written by Ed Oughton.
 Winter 2020
 
 """
-import os
 import configparser
+import glob
+import gzip
 import json
 import math
-import glob
-import requests
-import tarfile
-import gzip
+import os
 import shutil
+import tarfile
+import warnings
+
 import geoio
+import geopandas
 import numpy as np
 import pandas as pd
-import geopandas
+import requests
 
 import urllib.request
 from shapely.geometry import MultiPolygon, Polygon, mapping, box
@@ -29,6 +31,7 @@ from rasterio.mask import mask
 from rasterstats import zonal_stats
 from geopy.distance import distance
 from pathos.multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
 from pytal.utils import load_config #,create_folder_lookup,map_roads,line_length
 
@@ -76,9 +79,7 @@ def process_country_shapes():
     else:
         countries = geopandas.read_file(path_processed)
 
-    for name in countries.GID_0.unique():
-
-        print('working on {}'.format(name))
+    for name in tqdm(countries.GID_0.unique()):
 
         path = os.path.join(DATA_INTERMEDIATE, name)
 
@@ -124,10 +125,10 @@ def process_regions(level):
         glob_info_path = os.path.join(BASE_PATH, 'global_information.csv')
         load_glob_info = pd.read_csv(glob_info_path, encoding = "ISO-8859-1")
 
-        regions = regions.merge(load_glob_info,left_on='GID_0',right_on='ISO_3digit')
+        regions = regions.merge(load_glob_info,left_on='GID_0', right_on='ISO_3digit')
         regions.rename(columns={'coordinates':'coordinate'}, inplace=True)
 
-        regions.reset_index(drop=True,inplace=True)
+        regions.reset_index(drop=True, inplace=True)
 
         print('Writing global_regions.shp to file')
         regions.to_file(path_processed, driver='ESRI Shapefile')
@@ -182,7 +183,7 @@ def assemble_global_regional_layer():
 
     print('Completed processing of regional shapes level')
 
-    for name in regions.GID_0.unique():
+    for name in tqdm(regions.GID_0.unique()):
 
         # if not name == 'ABW':
         #     continue
@@ -200,8 +201,6 @@ def assemble_global_regional_layer():
 
         if not os.path.exists(path):
             os.makedirs(path)
-
-            print('working on {}'.format(name))
 
             single_country = regions[regions.GID_0 == name]
 
@@ -246,7 +245,7 @@ def process_settlement_layer():
     """
     path_settlements = os.path.join(DATA_RAW,'settlement_layer','ppp_2020_1km_Aggregated.tif')
 
-    settlements = rasterio.open(path_settlements)
+    settlements = rasterio.open(path_settlements, nodata=0)
 
     path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
 
@@ -256,18 +255,21 @@ def process_settlement_layer():
         print('Must generate global_countries.shp first' )
 
     num = 0
-    for name in countries.GID_0.unique():
-
-        print('working on {}'.format(name))
+    for name in tqdm(countries.GID_0.unique()):
 
         path_country = os.path.join(DATA_INTERMEDIATE, name)
+        try:
+            os.mkdir(path_country)
+        except FileExistsError:
+            pass
 
         single_country = countries[countries.GID_0 == name]
 
         bbox = single_country.envelope
         geo = geopandas.GeoDataFrame()
 
-        geo = geopandas.GeoDataFrame({'geometry': bbox}, index=[num], crs=from_epsg('4326'))
+        geo = geopandas.GeoDataFrame({'geometry': bbox}, index=[num])
+        geo.crs = 'epsg:4326'
         num += 1
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
@@ -287,7 +289,7 @@ def process_settlement_layer():
         with rasterio.open(shape_path, "w", **out_meta) as dest:
                 dest.write(out_img)
 
-    return print('Completed processing of settlement layer')
+    print('Completed processing of settlement layer')
 
 
 def process_night_lights():
@@ -305,12 +307,7 @@ def process_night_lights():
     countries = geopandas.read_file(path_processed)#[:40]
 
     # num = 0
-    for name in countries.GID_0.unique():
-
-        if not name == 'MWI':
-            continue
-
-        print('working on {}'.format(name))
+    for name in tqdm(countries.GID_0.unique()):
 
         path_country = os.path.join(DATA_INTERMEDIATE, name)
 
@@ -325,11 +322,12 @@ def process_night_lights():
         bbox = single_country.envelope
 
         geo = geopandas.GeoDataFrame()
-        geo = geopandas.GeoDataFrame({'geometry': bbox}, crs=from_epsg('4326')) #index=[num],
+        geo = geopandas.GeoDataFrame({'geometry': bbox}) #index=[num],
+        geo.crs = 'epsg:4326'
 
         coords = [json.loads(geo.to_json())['features'][0]['geometry']]
 
-        night_lights = rasterio.open(path_night_lights)
+        night_lights = rasterio.open(path_night_lights, nodata=0)
         # print(night_lights.nodata)
         #chop on coords
         out_img, out_transform = mask(night_lights, coords, crop=True)
@@ -362,14 +360,9 @@ def get_regional_data():
 
     countries = geopandas.read_file(path_processed)
 
-    for name in countries.GID_0.unique():
-
-        if not name == 'MWI':
-            continue
+    for name in tqdm(countries.GID_0.unique()):
 
         single_country = countries[countries.GID_0 == name]
-
-        print('working on {}'.format(name))
 
         path_country = os.path.join(DATA_INTERMEDIATE, name, 'regions')
 
@@ -389,7 +382,7 @@ def get_regional_data():
 
             try:
                 #get night light values
-                with rasterio.open(path_night_lights) as src:
+                with rasterio.open(path_night_lights, nodata=0) as src:
                     affine = src.transform
                     array = src.read(1)
 
@@ -399,13 +392,17 @@ def get_regional_data():
 
                     # kwargs.update({'nodata': 0})
                     #get luminosity values
-                    luminosity_median = [d['median'] for d in zonal_stats(
-                        region, array, stats=['median'], affine=affine)][0]
-                    luminosity_summation = [d['sum'] for d in zonal_stats(
-                        region, array, stats=['sum'], affine=affine)][0]
+                    luminosity_median = [
+                        d['median']
+                        for d in zonal_stats(region, array, stats=['median'], affine=affine, nodata=0)
+                    ][0]
+                    luminosity_summation = [
+                        d['sum']
+                        for d in zonal_stats(region, array, stats=['sum'], affine=affine, nodata=0)
+                    ][0]
 
                 #get settlement values
-                with rasterio.open(path_settlements) as src:
+                with rasterio.open(path_settlements, nodata=0) as src:
                     affine = src.transform
                     array = src.read(1)
 
@@ -415,13 +412,15 @@ def get_regional_data():
                     # kwargs.update({'nodata': 0})
 
                     #get luminosity values
-                    population_summation = [d['sum'] for d in zonal_stats(
-                        region, array, stats=['sum'], affine=affine)][0]
+                    population_summation = [
+                        d['sum']
+                        for d in zonal_stats(region, array, stats=['sum'], affine=affine, nodata=0)
+                    ][0]
 
                 #get geographic area
                 # print(region.crs)
-                # region.crs = {'init' :'epsg:4326'}
-                region = region.to_crs({'init': 'epsg:3857'})
+                # region.crs = 'epsg:4326'
+                region = region.to_crs('epsg:3857')
                 # print(region.crs)
                 area_km2 = region['geometry'].area[0] / 10**6
 
@@ -449,8 +448,6 @@ def get_regional_data():
         results_df = pd.DataFrame(results)
 
         results_df.to_csv(os.path.join(path_country, '..', 'regional_data.csv'), index=False)
-
-        print('Completed {}'.format(single_country.NAME_0.values[0]))
 
     return print('Completed night lights data querying')
 
@@ -580,9 +577,9 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
     Returns:
         *.poly file* for each country in a new dir in the working directory.
     """
-# =============================================================================
-#     """ Create output dir for .poly files if it is doesnt exist yet"""
-# =============================================================================
+    # =============================================================================
+    #     """ Create output dir for .poly files if it is doesnt exist yet"""
+    # =============================================================================
     poly_dir = os.path.join(data_path,'country_poly_files')
 
     if regionalized == True:
@@ -591,17 +588,17 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
     if not os.path.exists(poly_dir):
         os.makedirs(poly_dir)
 
-# =============================================================================
-#     """ Set the paths for the files we are going to use """
-# =============================================================================
+    # =============================================================================
+    #     """ Set the paths for the files we are going to use """
+    # =============================================================================
     wb_poly_out = os.path.join(data_path,'input_data','country_shapes.shp')
 
     if regionalized == True:
         wb_poly_out = os.path.join(data_path,'input_data','regional_shapes.shp')
 
-# =============================================================================
-#   """Load country shapes and country list and only keep the required countries"""
-# =============================================================================
+    # =============================================================================
+    #   """Load country shapes and country list and only keep the required countries"""
+    # =============================================================================
     wb_poly = geopandas.read_file(global_shape)
 
     # filter polygon file
@@ -614,7 +611,7 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
         wb_poly = wb_poly.loc[wb_poly['GID_0'] != '-']
         # wb_poly = wb_poly.loc[wb_poly['ISO_3digit'] != '-']
 
-    wb_poly.crs = {'init' :'epsg:4326'}
+    wb_poly.crs = 'epsg:4326'
 
     # and save the new country shapefile if requested
     if save_shapefile == True:
@@ -622,12 +619,12 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
 
     # we need to simplify the country shapes a bit. If the polygon is too diffcult,
     # osmconvert cannot handle it.
-#    wb_poly['geometry'] = wb_poly.simplify(tolerance = 0.1, preserve_topology=False)
+    #wb_poly['geometry'] = wb_poly.simplify(tolerance = 0.1, preserve_topology=False)
 
-# =============================================================================
-#   """ The important part of this function: create .poly files to clip the country
-#   data from the openstreetmap file """
-# =============================================================================
+    # =============================================================================
+    #   """ The important part of this function: create .poly files to clip the country
+    #   data from the openstreetmap file """
+    # =============================================================================
     num = 0
     # iterate over the counties (rows) in the world shapefile
     for f in wb_poly.iterrows():
@@ -635,7 +632,6 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
         num = num + 1
         geom=f.geometry
 
-#        try:
         # this will create a list of the different subpolygons
         if geom.geom_type == 'MultiPolygon':
             polygons = geom
@@ -698,8 +694,6 @@ def poly_files(data_path, global_shape, save_shapefile=False, regionalized=False
         # close the file when done
         f.write("END" +"\n")
         f.close()
-#        except:
-#            print(f['GID_1'])
 
 
 def clip_osm(data_path,planet_path,area_poly,area_pbf):
@@ -890,10 +884,10 @@ def process_coverage_shapes():
     coverage = geopandas.read_file(path_raw)
 
     print('Setting crs for tiles')
-    coverage.crs = {'init': 'epsg:3857'}
+    coverage.crs = 'epsg:3857'
 
     print('Converting tiles to epsg 4326 (WGS84)')
-    coverage = coverage.to_crs({'init': 'epsg:4326'})
+    coverage = coverage.to_crs('epsg:4326')
 
     print('Importing global_countries.shp to get each country name')
     path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
@@ -931,7 +925,7 @@ def process_coverage_shapes():
             coverage['dissolve'] = 1
             coverage = coverage.dissolve(by='dissolve', aggfunc='sum')
 
-            coverage = coverage.to_crs({'init': 'epsg:3857'})
+            coverage = coverage.to_crs('epsg:3857')
 
             print('Excluding small shapes')
             coverage['geometry'] = coverage.apply(clean_coverage,axis=1)
@@ -959,24 +953,26 @@ def process_coverage_shapes():
 
 if __name__ == '__main__':
 
-    # ###create 'global_countries.shp' if not already processed
-    # ###create each 'national_outline.shp' if not already processed
-    # process_country_shapes()
+    ###create 'global_countries.shp' if not already processed
+    ###create each 'national_outline.shp' if not already processed
+    process_country_shapes()
 
-    # ###create 'global_regions.shp' if not already processed
-    # ###create each subnational region .shp if not already processed
-    # assemble_global_regional_layer()
+    ###create 'global_regions.shp' if not already processed
+    ###create each subnational region .shp if not already processed
+    assemble_global_regional_layer()
 
-    # process_settlement_layer()
+    process_settlement_layer()
 
-    # process_night_lights()
+    process_night_lights()
 
-    # get_regional_data()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        get_regional_data()
 
-    # # planet_osm()
+    # planet_osm()
 
-    # # poly_files()
+    # poly_files()
 
-    # # all_countries(subset = [], regionalized=False, reversed_order=True)
+    # all_countries(subset = [], regionalized=False, reversed_order=True)
 
-    # process_coverage_shapes()
+    process_coverage_shapes()
