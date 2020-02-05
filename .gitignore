@@ -106,3 +106,4 @@ venv.bak/
 # specific folders
 /data
 /vis/figures/*
+/results/*

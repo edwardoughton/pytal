@@ -13,6 +13,8 @@ import matplotlib.patches
 import matplotlib.transforms as transforms
 from matplotlib.colors import LinearSegmentedColormap
 
+import contextily as ctx
+
 import matplotlib.gridspec as gridspec
 
 CONFIG = configparser.ConfigParser()
@@ -57,7 +59,7 @@ def prepare_data():
 
         except:
 
-            region_paths = glob.glob(os.path.join(DATA_INTERMEDIATE, name, 'regions', '*.shp'))
+            region_paths = glob.glob(os.path.join(DATA_INTERMEDIATE, name, 'lowest_regions', '*.shp'))
 
             for region_path in region_paths:
 
@@ -145,10 +147,118 @@ def plot_global_data(global_df, metric, title):
     print('Completed plotting {}'.format(metric))
 
 
+def find_country_list(continent_list):
+    """
+
+    """
+    path_processed = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
+
+    countries = gpd.read_file(path_processed)
+
+    subset = countries.loc[countries['continent'].isin(continent_list)]
+
+    country_list = []
+
+    for name in subset.GID_0.unique():
+
+        country_list.append(name)
+
+    return country_list
+
+
+def vis(metric, continent, country_list):
+
+    path_results = os.path.join(BASE_PATH, '..', 'results',
+        'results_business_model_options_72.csv')
+
+    results = pd.read_csv(path_results)
+
+    subset = results.loc[results['strategy'] == '5G_nsa_microwave_baseline']
+
+    subset = subset.loc[subset['country'].isin(country_list)]
+
+    region_path = os.path.join(DATA_INTERMEDIATE, 'global_regions_2.shp')#[:100]
+
+    regions = gpd.read_file(region_path)
+
+    regions['region_id'] = regions.apply(find_region_level, axis=1)
+
+    regions = regions.merge(subset, left_on='region_id', right_on='region_level')
+
+    regions.reset_index(drop=True, inplace=True)
+
+    # if metric == 'viability':
+    #     regions[metric] == (regions[metric]-regions[metric].min())/(regions[metric].max()-regions[metric].min())
+
+    labels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+    bins = [
+        -1,
+        regions[metric].quantile(0),
+        regions[metric].quantile(0.1),
+        regions[metric].quantile(0.2),
+        regions[metric].quantile(0.3),
+        regions[metric].quantile(0.4),
+        regions[metric].quantile(0.5),
+        regions[metric].quantile(0.6),
+        regions[metric].quantile(0.7),
+        regions[metric].quantile(0.8),
+        regions[metric].quantile(0.9),
+        regions[metric].quantile(1)
+    ]
+
+    fig, ax = plt.subplots(1, 1, figsize=(8,12))
+    # print(pd.cut(regions[metric], bins=10))
+    # regions['bin'] = pd.qcut(regions['viability'], 4, labels=['Delta', "Gamma", "Beta", "Alpha"])
+
+    regions['bin'] = pd.cut(regions[metric], bins=bins, labels=labels).fillna(0)
+
+    regions.plot(column='bin', ax=ax, cmap='inferno', linewidth=0, legend=True)
+
+    ctx.add_basemap(ax, crs=regions.crs)
+
+    fig.savefig(os.path.join(EXPORT_FIGURES, '{}_{}.pdf'.format(metric, continent)))
+
+    return 0
+
+
+def find_region_level(x):
+
+    # if 'GID_4' in x:
+    #     if x['GID_4'] is not None:
+    #         return x['GID_4']
+    # elif 'GID_3' in x:
+    #     if x['GID_3'] is not None:
+    #         return x['GID_3']
+    if x.GID_2 is not None:
+        return x.GID_2
+    elif x.GID_1 is not None:
+        return x.GID_1
+    else:
+        return x['GID_0']
+
+
 if __name__ == '__main__':
+
+    # graphics = [
+    #     ('Africa', 'cost_km2'),
+    #     # ('Africa', 'viability'),
+    #     ('South America', 'cost_km2'),
+    #     # ('South America', 'cost_km2'),
+    # ]
+
+    # for graphic in graphics:
+
+    #     continent = graphic[0]
+
+    #     country_list = find_country_list([continent])
+
+    #     metric = graphic[1]
+
+    #     global_df = vis(metric, continent, country_list)
 
     global_df = prepare_data()
 
     plot_global_data(global_df, 'mean_luminosity_km2', 'Mean Night Time Luminosity (per km^2)')
 
-    plot_global_data(global_df, 'population_km2', 'Population Density (Persons per km^2)')
+    # plot_global_data(global_df, 'population_km2', 'Population Density (Persons per km^2)')
