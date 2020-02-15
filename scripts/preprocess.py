@@ -690,7 +690,8 @@ def process_coverage_shapes():
 
     """
     print('Working on coverage_2g.shp')
-    path_raw = os.path.join(DATA_RAW, 'coverage_maps', 'african_coverage_2g_tiles.shp')
+    # path_raw = os.path.join(DATA_RAW, 'coverage_maps', 'african_coverage_2g_tiles.shp')
+    path_raw = os.path.join(DATA_RAW, 'Mobile Coverage Explorer WGS84 v201812 - ESRI SHAPE', 'african_coverage_2g_tiles.shp')
     coverage = geopandas.read_file(path_raw)
 
     print('Setting crs for tiles')
@@ -787,6 +788,131 @@ def process_coverage_shapes():
                 continue
 
     print('Processed coverage shapes')
+
+
+def process_opencellid():
+    """
+    Load in site data, process and export for each country.
+
+    """
+    print('Loading sites')
+    path_raw = os.path.join(DATA_RAW, 'opencellid', 'cell_towers_2020-02-12-T000000.csv')
+    sites = pd.read_csv(path_raw, encoding = "ISO-8859-1")#[:1000]
+
+    print('Loading mobile country codes')
+    path_raw = os.path.join(DATA_RAW, 'opencellid', 'mcc_codes.csv')
+    mcc = pd.read_csv(path_raw, encoding = "ISO-8859-1")
+
+    print('Converting mobile country codes to ints')
+    sites['mcc'] = sites['mcc'].astype(int)
+    mcc['mcc'] = mcc['mcc'].astype(int)
+
+    print('Merging on mobile country codes')
+    sites = sites.merge(mcc, left_on='mcc', right_on='mcc')
+
+    print('Importing global_countries.shp to get each country name')
+    path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
+    countries = geopandas.read_file(path_countries)
+
+    for name in countries.GID_0.unique():
+
+        # if not name == 'SEN':
+        #     continue
+
+        print('Working on {}'.format(name))
+        # path = os.path.join(DATA_INTERMEDIATE, name)
+
+        sites_by_country = sites[sites.ISO_3digit == name]
+
+        if len(sites_by_country) > 0:
+
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'sites_opencellid.csv')
+
+            if not os.path.exists(output_path):
+
+                print('Exporting sites for {} as .csv'.format(name))
+
+                sites_by_country.to_csv(output_path, index=False)
+
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'sites_opencellid.shp')
+
+            if not os.path.exists(output_path):
+
+                print('Exporting sites for {} as .shp'.format(name))
+                gdf = geopandas.GeoDataFrame(
+                    sites_by_country, geometry=geopandas.points_from_xy(
+                        sites_by_country.lon, sites_by_country.lat))
+                gdf.crs = {'init': 'epsg:4326'}
+                gdf.to_file(output_path)
+
+        else:
+            print('Nothing to write for {}'.format(name))
+            continue
+
+    print('Processed sites')
+
+
+def process_mozilla():
+    """
+    Load in site data, process and export for each country.
+
+    """
+    print('Loading sites')
+    path_raw = os.path.join(DATA_RAW, 'mozilla_location_service',
+        'MLS-full-cell-export-2020-02-13T000000.csv')
+    sites = pd.read_csv(path_raw, encoding = "ISO-8859-1")#[:1000]
+
+    print('Loading mobile country codes')
+    path_raw = os.path.join(DATA_RAW, 'opencellid', 'mcc_codes.csv')
+    mcc = pd.read_csv(path_raw, encoding = "ISO-8859-1")
+
+    print('Converting mobile country codes to ints')
+    sites['mcc'] = sites['mcc'].astype(int)
+    mcc['mcc'] = mcc['mcc'].astype(int)
+
+    print('Merging on mobile country codes')
+    sites = sites.merge(mcc, left_on='mcc', right_on='mcc')
+
+    print('Importing global_countries.shp to get each country name')
+    path_countries = os.path.join(DATA_INTERMEDIATE,'global_countries.shp')
+    countries = geopandas.read_file(path_countries)
+
+    for name in countries.GID_0.unique():
+
+        if not name == 'SEN':
+            continue
+
+        print('Working on {}'.format(name))
+        # path = os.path.join(DATA_INTERMEDIATE, name)
+
+        sites_by_country = sites[sites.ISO_3digit == name]
+
+        if len(sites_by_country) > 0:
+
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'sites_mozilla.csv')
+
+            if not os.path.exists(output_path):
+
+                print('Exporting sites for {} as .csv'.format(name))
+
+                sites_by_country.to_csv(output_path, index=False)
+
+            output_path = os.path.join(DATA_INTERMEDIATE, name, 'sites_mozilla.shp')
+
+            if not os.path.exists(output_path):
+
+                print('Exporting sites for {} as .shp'.format(name))
+                gdf = geopandas.GeoDataFrame(
+                    sites_by_country, geometry=geopandas.points_from_xy(
+                        sites_by_country.lon, sites_by_country.lat))
+                gdf.crs = {'init': 'epsg:4326'}
+                gdf.to_file(output_path)
+
+        else:
+            print('Nothing to write for {}'.format(name))
+            continue
+
+    print('Processed sites')
 
 
 def load_extents(glob_interator):
@@ -963,9 +1089,9 @@ if __name__ == '__main__':
     # # ###create each subnational region .shp if not already processed
     # assemble_global_regional_layer()
 
-    create_full_regional_layer_2()
+    # create_full_regional_layer_2()
 
-    country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
+    # country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     # # print('Processing lowest regions')
     # process_lowest_regions(country_list, country_regional_levels)
@@ -978,6 +1104,10 @@ if __name__ == '__main__':
     # print('Processing night lights')
     # process_night_lights(country_list)
 
-    get_regional_data(country_list, country_regional_levels)
+    # get_regional_data(country_list, country_regional_levels)
 
-    # # # process_coverage_shapes()
+    # process_coverage_shapes()
+
+    # process_opencellid()
+
+    process_mozilla()
