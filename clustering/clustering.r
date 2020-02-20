@@ -1,6 +1,7 @@
 ###VISUALISE MODEL OUTPUTS###
 # install.packages("tidyverse")
 library(tidyverse)
+library(dplyr)
 library(ggrepel)
 
 #get folder directory
@@ -12,11 +13,20 @@ cluster_num <- 6
 #read in data
 mydata <- read.csv(file.path(folder, 'data_inputs', 'country_data.csv'))
 
+#exclude certain outlier countries
+# mydata <- mydata[which(mydata$country != 'Macao SAR, China' & mydata$country != 'Maldives' & mydata$country != 'Bangladesh'),]
+
 #split high income countries
 high_income <- mydata[which(mydata$income == 'High income'),]
 
 #drop high income countries
 mydata <- mydata[which(mydata$income != 'High income'), ]
+
+#drop countries <1000km
+mydata <- mydata[which(mydata$area >= 5000), ]
+
+#drop countries <1000km
+mydata <- mydata[which(mydata$pop_density < 1000), ]
 
 #get statistical summary
 summary(mydata)
@@ -28,7 +38,7 @@ mydata <- na.omit(mydata)
 rownames(mydata) <- mydata$country
 
 #subset country info df
-country_info = select(mydata, income, region)
+country_info <- select(mydata, income, region)
 
 ### subset 3 main variables
 subset <- select(mydata, coverage_4g, pop_density, gdp_per_cap)
@@ -231,7 +241,7 @@ map_data$cluster[is.na(map_data$cluster)] <- "No Data"
 #create map
 cluster_map <- ggplot() +
   geom_polygon(data = map_data, aes(fill = factor(cluster), 
-              x = long, y = lat, group = group), colour='grey', size = 0.4) +
+              x = long, y = lat, group = group), colour='grey', size = 0.2) +
   coord_equal() +  theme_map() +
   labs(x = NULL, y = NULL,  fill = 'Cluster', title = "Global Countries by Cluster", 
        subtitle = "Clustering based on GDP Per Capita, Population Density and 4G Coverage") +
