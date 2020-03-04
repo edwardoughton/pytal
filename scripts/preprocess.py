@@ -879,8 +879,8 @@ def process_mozilla():
 
     for name in countries.GID_0.unique():
 
-        if not name == 'SEN':
-            continue
+        # if not name == 'SEN':
+        #     continue
 
         print('Working on {}'.format(name))
         # path = os.path.join(DATA_INTERMEDIATE, name)
@@ -1093,8 +1093,9 @@ if __name__ == '__main__':
 
     # country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
 
-    # # print('Processing lowest regions')
+    # print('Processing lowest regions')
     # process_lowest_regions(country_list, country_regional_levels)
+    # process_lowest_regions(['AUS'], [{'country': 'AUS', 'regional_level': 2}])
 
     # segment_lowest_layer(country_list, country_regional_levels)
 
