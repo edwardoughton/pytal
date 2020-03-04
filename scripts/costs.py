@@ -9,9 +9,13 @@ https://github.com/edwardoughton/pysim5g
 """
 import math
 
+from utils import discount_capex_and_opex, discount_opex
+
+
 def find_single_network_cost(sites_per_km2, strategy, geotype, costs, parameters):
     """
     Calculates the annual total cost using capex and opex.
+
     Parameters
     ----------
     sites_per_km2 : int
@@ -64,15 +68,15 @@ def baseline(backhaul, geotype, costs, sites_per_km2, parameters):
 
     cost_breakdown = {
         'single_sector_antenna': (
-            discount(costs['single_sector_antenna'], parameters, 1) *
+            discount_capex_and_opex(costs['single_sector_antenna'], parameters) *
             parameters['sectorization'] * sites_per_km2
         ),
         'single_remote_radio_unit': (
-            discount(costs['single_remote_radio_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_remote_radio_unit'], parameters) *
             parameters['sectorization'] * sites_per_km2
         ),
         'single_baseband_unit': (
-            discount(costs['single_baseband_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_baseband_unit'], parameters) *
             sites_per_km2
         ),
         'tower': (
@@ -88,21 +92,21 @@ def baseline(backhaul, geotype, costs, sites_per_km2, parameters):
             costs['installation'] * sites_per_km2
         ),
         'site_rental': (
-            discount(costs['site_rental'], parameters, 0) * sites_per_km2
+            discount_opex(costs['site_rental'], parameters) * sites_per_km2
         ),
         'power_generator_battery_system': (
-            discount(costs['power_generator_battery_system'], parameters, 1) *
+            discount_capex_and_opex(costs['power_generator_battery_system'], parameters) *
             sites_per_km2
         ),
         'high_speed_backhaul_hub': (
-            discount(costs['high_speed_backhaul_hub'], parameters, 1) *
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], parameters) *
             sites_per_km2
         ),
         'router': (
-            discount(costs['router'], parameters, 1) * sites_per_km2
+            discount_capex_and_opex(costs['router'], parameters) * sites_per_km2
         ),
         '{}_backhaul'.format(backhaul): (
-            discount(backhaul_cost, parameters, 1) * sites_per_km2
+            discount_capex_and_opex(backhaul_cost, parameters) * sites_per_km2
         )
     }
 
@@ -232,38 +236,6 @@ def active(backhaul, geotype, costs, sites_per_km2, parameters):
     }
 
     return cost_breakdown
-
-
-def discount(cost, parameters, capex):
-    """
-    Discount costs based on asset_lifetime.
-
-    """
-    # asset_lifetime = parameters['return_period']
-    # discount_rate = parameters['discount_rate'] / 100
-
-    # if capex == 1:
-    #     capex = cost
-
-    #     opex = round(capex * (parameters['opex_percentage_of_capex'] / 100))
-
-    #     total_cost_of_ownership = 0
-    #     total_cost_of_ownership += capex
-
-    #     for i in range(0, asset_lifetime ):
-    #         total_cost_of_ownership += (
-    #             opex / (1 + discount_rate) ** i
-    #         )
-    # else:
-    #     opex = cost
-    #     total_cost_of_ownership = 0
-
-    #     for i in range(0, asset_lifetime ):
-    #         total_cost_of_ownership += (
-    #             opex / (1 + discount_rate) ** i
-    #         )
-
-    return cost*10 #total_cost_of_ownership
 
 
 def get_strategy_options(strategy):

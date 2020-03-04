@@ -9,23 +9,14 @@ Winter 2020
 import os
 import csv
 import configparser
-import numpy as np
 import pandas as pd
 import geopandas
-import pyproj
-import fiona
-from shapely.geometry import MultiPolygon, Polygon, mapping, box, shape
-from shapely.ops import cascaded_union, transform
-import rasterio
-from rasterio.mask import mask
-from rasterstats import zonal_stats
 from tqdm import tqdm
 from collections import OrderedDict
-from rtree import index
-from itertools import tee
 
-from options import OPTIONS
-from costs import find_single_network_cost
+from options import OPTIONS, COUNTRY_PARAMETERS
+from demand import estimate_demand
+from supply import estimate_supply
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -80,93 +71,6 @@ def define_geotype(x):
         return 'rural 5'
 
 
-def estimate_demand(regions, option, parameters):
-    """
-    Estimate the total revenue based on current demand.
-
-    arpu : int
-        Average Revenue Per User for cellular per month.
-    cell_penetration : float
-        Number of cell phones per membeer of the population.
-    phones : int
-        Total number of phones in a region.
-    return_period : int
-        Total revenue based on 12 months and the specifies
-        number of years as the return period (5).
-    user_demand : float
-        Total demand in mbps / km^2.
-
-    """
-    #economic demand
-    #ARPU discounting really needs to be the same as the cost discounting
-    regions['arpu'] = regions.apply(estimate_arpu, axis=1)
-
-    regions['cell_pen'] = parameters['penetration']
-
-    regions['phones'] =  (
-        regions['population'] * regions['cell_pen'] / parameters['networks']
-        )
-
-    regions['revenue'] = (regions['arpu'] * regions['phones'])
-
-    regions['revenue_km2'] = regions['revenue'] / regions['area_km2']
-
-    #data demand
-    obf = parameters['overbooking_factor']
-    user_demand = option['scenario'].split('_')[1]
-    regions['smartphone_pen'] = parameters['smartphone_pen']
-
-    regions['demand_mbps_km2'] = (
-        regions['population'] * regions['cell_pen'] * regions['smartphone_pen']
-        / parameters['networks'] * int(user_demand) / obf / regions['area_km2']
-        )
-
-    return regions
-
-
-def estimate_arpu(x):
-    """
-    Allocate consumption category given a specific luminosity.
-
-    """
-    arpu = 0
-    if x['mean_luminosity_km2'] > 5:
-        # #10 year time horizon
-        # for i in range(0, 10):
-        #     #discounted_arpu = (arpu*months) / (1 + discount_rate) ** year
-        #     arpu += (
-        #         (20*12) / (1 + 0.03) ** i
-        #     )
-        return 20 * 12 * 10#arpu
-    elif x['mean_luminosity_km2'] > 1:
-        # for i in range(0, 10):
-        #     #discounted_arpu = (arpu*months) / (1 + discount_rate) ** year
-        #     arpu += (
-        #         (5*12) / (1 + 0.03) ** i
-        #     )
-        return 5 * 12 * 10#arpu
-    else:
-        # for i in range(0, 10):
-        #     #discounted_arpu = (arpu*months) / (1 + discount_rate) ** year
-        #     arpu += (
-        #         (2*12) / (1 + 0.03) ** i
-        #     )
-        return 2 * 12 * 10#arpu
-
-
-def estimate_phones(x):
-    """
-    Allocate consumption category given a specific luminosity.
-
-    """
-    if x['mean_luminosity_km2'] > 5:
-        return 10
-    elif x['mean_luminosity_km2'] > 1:
-        return 5
-    else:
-        return 1
-
-
 def read_capacity_lookup(path):
     """
 
@@ -205,158 +109,6 @@ def read_capacity_lookup(path):
     return capacity_lookup_table
 
 
-def estimate_supply(regions, lookup, option, parameters, costs):
-    """
-
-    """
-    output = []
-
-    regions = regions.to_dict('records')
-
-    for region in regions:
-
-        network = optimize_network(region, option, parameters, costs)
-
-        region['network'] = network[0][4]
-
-        all_costs_km2 = find_single_network_cost(
-            network[0][4], option['strategy'], region['geotype'].split(' ')[0], costs, parameters)
-
-        cost_km2 = all_costs_km2['total_deployment_costs_km2']
-
-        region['total_cost'] = cost_km2 * region['area_km2'] #/ 1e6
-
-        region['viability'] = region['revenue'] - region['total_cost']
-
-        # if region['phones']:
-        #     region['cost_per_user'] = region['total_cost'] / region['phones']
-        # else:
-        #     region['cost_per_user'] = 0
-
-        # if region['population'] > 0:
-        #     region['cost_by_total_potential_users'] = (
-        #         region['total_cost'] / region['population'])
-        # # print(region['cost_by_total_potential_users'])
-        region_id = find_lowest_region(region)
-
-        output.append({
-            'country': region['GID_0'],
-            'scenario': option['scenario'],
-            'strategy': option['strategy'],
-            'region_level': region_id,
-            'population': region['population'],
-            'area_km2': region['area_km2'],
-            'population_km2': region['population_km2'],
-            'mean_luminosity_km2': region['mean_luminosity_km2'],
-            'geotype': region['geotype'],
-            'decile': region['decile'],
-            'arpu': region['arpu'],
-            'phones': region['phones'],
-            'revenue': region['revenue'],
-            # 'revenue_km2': region['revenue_km2'],
-            # 'demand_mbps_km2': region['demand_mbps_km2'],
-            # 'network': region['network'],
-            # 'cost_km2': cost_km2,
-            'total_cost': region['total_cost'],
-            'viability': region['viability'],
-            # 'cost_per_user': region['cost_per_user'],
-            # 'cost_by_total_potential_users': region['cost_by_total_potential_users'],
-        })
-
-    return output
-
-
-def find_lowest_region(region):
-
-    if 'GID_4' in region:
-        return region['GID_4']
-    elif 'GID_3' in region:
-        return region['GID_3']
-    elif 'GID_2' in region:
-        return region['GID_2']
-    elif 'GID_1' in region:
-        return region['GID_1']
-
-
-def optimize_network(region, option, parameters, costs):
-    """
-
-    """
-    demand = region['demand_mbps_km2']
-    geotype = region['geotype'].split(' ')[0]
-    ant_type = 'macro'
-    frequencies = option['frequencies']
-
-    generation, core, backhaul, sharing = get_strategy_options(option['strategy'])
-
-    networks = parameters['networks']
-
-    network = []
-
-    capacity = 0
-
-    for item in frequencies:
-
-        if capacity > demand:
-            break
-
-        frequency = str(item['frequency'])
-        bandwidth = str(item['bandwidth'])
-
-        density_capacities = lookup_capacity(
-            lookup,
-            geotype,
-            ant_type,
-            frequency,
-            bandwidth,
-            generation,
-            )
-
-        bandwidth = str(int(float(bandwidth) * round(4 / networks, 1)))
-
-        max_density, max_capacity = density_capacities[-1]
-
-        if demand > max_capacity:
-            network.append((str(frequency), str(bandwidth), geotype, demand, max_density))
-            capacity += max_capacity
-
-        for a, b in pairwise(density_capacities):
-
-            lower_density, lower_capacity  = a
-            upper_density, upper_capacity  = b
-
-            #networks takes into account how spectrum is shared across networks
-            lower_capacity = lower_capacity * (4 / networks)
-            upper_capacity = upper_capacity * (4 / networks)
-
-            if lower_capacity <= demand and demand < upper_capacity:
-
-                optimal_density = interpolate(
-                    lower_capacity, lower_density,
-                    upper_capacity, upper_density,
-                    demand
-                )
-
-                network.append((str(frequency), str(bandwidth), geotype, demand, optimal_density))
-                capacity += upper_capacity
-
-    if not len(network) > 1:
-        network.append((str(frequency), str(bandwidth), geotype, demand, 0))
-
-    return network
-
-
-def get_strategy_options(strategy):
-
-    #strategy is 'generation_core_backhaul_sharing'
-    generation = strategy.split('_')[0]
-    core = strategy.split('_')[1]
-    backhaul = strategy.split('_')[2]
-    sharing = strategy.split('_')[3]
-
-    return generation, core, backhaul, sharing
-
-
 def lookup_cost(lookup, strategy, environment):
     """
     Find cost of network.
@@ -371,46 +123,6 @@ def lookup_cost(lookup, strategy, environment):
     ]
 
     return density_capacities
-
-
-def lookup_capacity(lookup, environment, ant_type, frequency,
-    bandwidth, generation):
-    """
-    Use lookup table to find the combination of spectrum bands
-    which meets capacity by clutter environment geotype, frequency,
-    bandwidth, technology generation and site density.
-
-    """
-    if (environment, ant_type, frequency, bandwidth, generation) not in lookup:
-        raise KeyError("Combination %s not found in lookup table",
-                       (environment, ant_type, frequency, bandwidth, generation))
-
-    density_capacities = lookup[
-        (environment, ant_type,  frequency, bandwidth, generation)
-    ]
-
-    return density_capacities
-
-
-def interpolate(x0, y0, x1, y1, x):
-    """
-    Linear interpolation between two values.
-
-    """
-    y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0)
-
-    return y
-
-
-def pairwise(iterable):
-    """
-    Return iterable of 2-tuples in a sliding window.
-    >>> list(pairwise([1,2,3,4]))
-    [(1,2),(2,3),(3,4)]
-    """
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def find_country_list(continent_list):
@@ -522,13 +234,10 @@ if __name__ == '__main__':
         'fiber_backhaul_rural': 60000,
     }
 
-    PARAMETERS = {
+    GLOBAL_PARAMETERS = {
         'overbooking_factor': 50,
-        'penetration': 0.3,
-        'smartphone_pen': 0.15,
-        'networks': 2,
         'return_period': 10,
-        'discount_rate': 3,
+        'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
         }
@@ -537,11 +246,18 @@ if __name__ == '__main__':
     lookup = read_capacity_lookup(path)
 
     # country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
-    country_list = ['UGA', 'ETH', 'BGD', 'PER', 'MWI', 'ZAF']
+    country_list = [
+        # 'UGA',
+        # 'ETH',
+        # 'BGD',
+        # 'PER',
+        'MWI',
+        # 'ZAF'
+    ]
 
     decision_options = [
         'technology_options',
-        'business_model_options'
+        # 'business_model_options'
     ]
 
     for decision_option in decision_options:
@@ -552,6 +268,8 @@ if __name__ == '__main__':
 
         for country in country_list:
 
+            country_parameters = COUNTRY_PARAMETERS[country]
+
             # if not country == 'ESH':
             #     continue
 
@@ -560,16 +278,30 @@ if __name__ == '__main__':
             print(' ')
 
             for option in options:
+                if not option['strategy'] == '4G_epc_microwave_baseline':
+                    continue
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
                 try:
                     path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
-                    data = load_regions(path)#[:100]
+                    data = load_regions(path)[:1]
 
-                    data = estimate_demand(data, option, PARAMETERS)
+                    data = estimate_demand(
+                        data,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters
+                    )
 
-                    data = estimate_supply(data, lookup, option, PARAMETERS, COSTS)
+                    data = estimate_supply(
+                        data,
+                        lookup,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                        COSTS
+                    )
 
                     data_to_write = data_to_write + data
 
