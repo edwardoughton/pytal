@@ -124,15 +124,15 @@ def passive(backhaul, geotype, costs, sites_per_km2, parameters):
 
     cost_breakdown = {
         'single_sector_antenna': (
-            discount(costs['single_sector_antenna'], parameters, 1) *
+            discount_capex_and_opex(costs['single_sector_antenna'], parameters) *
             parameters['sectorization'] * sites_per_km2
         ),
         'single_remote_radio_unit': (
-            discount(costs['single_remote_radio_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_remote_radio_unit'], parameters) *
             parameters['sectorization'] * sites_per_km2
         ),
         'single_baseband_unit': (
-            discount(costs['single_baseband_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_baseband_unit'], parameters) *
             sites_per_km2
         ),
         'tower': (
@@ -148,23 +148,23 @@ def passive(backhaul, geotype, costs, sites_per_km2, parameters):
             costs['installation'] * sites_per_km2 / parameters['networks']
         ),
         'site_rental': (
-            discount(costs['site_rental'], parameters, 0) *
+            discount_opex(costs['site_rental'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'power_generator_battery_system': (
-            discount(costs['power_generator_battery_system'], parameters, 1) *
+            discount_capex_and_opex(costs['power_generator_battery_system'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'high_speed_backhaul_hub': (
-            discount(costs['high_speed_backhaul_hub'], parameters, 1) *
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'router': (
-            discount(costs['router'], parameters, 1) *
+            discount_capex_and_opex(costs['router'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         '{}_backhaul'.format(backhaul): (
-            discount(backhaul_cost, parameters, 1) *
+            discount_capex_and_opex(backhaul_cost, parameters) *
             sites_per_km2 / parameters['networks']
         )
     }
@@ -184,17 +184,17 @@ def active(backhaul, geotype, costs, sites_per_km2, parameters):
 
     cost_breakdown = {
         'single_sector_antenna': (
-            discount(costs['single_sector_antenna'], parameters, 1) *
+            discount_capex_and_opex(costs['single_sector_antenna'], parameters) *
             parameters['sectorization'] * sites_per_km2 /
             parameters['networks']
         ),
         'single_remote_radio_unit': (
-            discount(costs['single_remote_radio_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_remote_radio_unit'], parameters) *
             parameters['sectorization'] * sites_per_km2 /
             parameters['networks']
         ),
         'single_baseband_unit': (
-            discount(costs['single_baseband_unit'], parameters, 1) *
+            discount_capex_and_opex(costs['single_baseband_unit'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'tower': (
@@ -214,23 +214,23 @@ def active(backhaul, geotype, costs, sites_per_km2, parameters):
             sites_per_km2 / parameters['networks']
         ),
         'site_rental': (
-            discount(costs['site_rental'], parameters, 0) *
+            discount_opex(costs['site_rental'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'power_generator_battery_system': (
-            discount(costs['power_generator_battery_system'], parameters, 1) *
+            discount_capex_and_opex(costs['power_generator_battery_system'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'high_speed_backhaul_hub': (
-            discount(costs['high_speed_backhaul_hub'], parameters, 1) *
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         'router': (
-            discount(costs['router'], parameters, 1) *
+            discount_capex_and_opex(costs['router'], parameters) *
             sites_per_km2 / parameters['networks']
         ),
         '{}_backhaul'.format(backhaul): (
-            discount(backhaul_cost, parameters, 1) *
+            discount_capex_and_opex(backhaul_cost, parameters) *
             sites_per_km2 / parameters['networks']
         )
     }

@@ -80,16 +80,13 @@ def read_capacity_lookup(path):
     with open(path, 'r') as capacity_lookup_file:
         reader = csv.DictReader(capacity_lookup_file)
         for row in reader:
-            if float(row["capacity_mbps_km2"]) <= 0:
+            if float(row["capacity_mbps_km2_50ci"]) <= 0:
                 continue
             environment = row["environment"].lower()
             ant_type = row["ant_type"]
             frequency_GHz = str(int(float(row["frequency_GHz"]) * 1e3))
             bandwidth_MHz = str(row["bandwidth_MHz"])
             generation = str(row["generation"])
-
-            sites_per_km2 = float(row["sites_per_km2"])
-            capacity_mbps_km2 = float(row["capacity_mbps_km2"])
 
             if (environment, ant_type, frequency_GHz, bandwidth_MHz, generation) \
                 not in capacity_lookup_table:
@@ -98,9 +95,19 @@ def read_capacity_lookup(path):
                     ] = []
 
             capacity_lookup_table[(
-                environment, ant_type, frequency_GHz, bandwidth_MHz, generation
-                )].append((
-                    sites_per_km2, capacity_mbps_km2
+                environment,
+                ant_type,
+                frequency_GHz,
+                bandwidth_MHz,
+                generation)].append((
+                    float(row["sites_per_km2"]),
+                    {
+                        'capacity_mbps_km2_1ci': float(row["capacity_mbps_km2_1ci"]),
+                        'capacity_mbps_km2_10ci': float(row["capacity_mbps_km2_10ci"]),
+                        'capacity_mbps_km2_50ci': float(row["capacity_mbps_km2_50ci"]),
+                        'capacity_mbps_km2_90ci': float(row["capacity_mbps_km2_90ci"]),
+                        'capacity_mbps_km2_99ci': float(row["capacity_mbps_km2_99ci"]),
+                    }
                 ))
 
         for key, value_list in capacity_lookup_table.items():
@@ -240,9 +247,10 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
+        'confidence': [1, 10, 50]
         }
 
-    path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency_50.csv')
+    path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
     lookup = read_capacity_lookup(path)
 
     # country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
@@ -283,32 +291,32 @@ if __name__ == '__main__':
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
-                try:
-                    path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
-                    data = load_regions(path)[:1]
+                # try:
+                path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
+                data = load_regions(path)[:1]
 
-                    data = estimate_demand(
-                        data,
-                        option,
-                        GLOBAL_PARAMETERS,
-                        country_parameters
-                    )
+                data = estimate_demand(
+                    data,
+                    option,
+                    GLOBAL_PARAMETERS,
+                    country_parameters
+                )
 
-                    data = estimate_supply(
-                        data,
-                        lookup,
-                        option,
-                        GLOBAL_PARAMETERS,
-                        country_parameters,
-                        COSTS
-                    )
+                data = estimate_supply(
+                    data,
+                    lookup,
+                    option,
+                    GLOBAL_PARAMETERS,
+                    country_parameters,
+                    COSTS
+                )
 
-                    data_to_write = data_to_write + data
+                data_to_write = data_to_write + data
 
-                except:
-                    print('Unable to process {} for {} and {}'.format(
-                        country, option['scenario'], option['strategy']))
-                    pass
+                # except:
+                #     print('Unable to process {} for {} and {}'.format(
+                #         country, option['scenario'], option['strategy']))
+                #     pass
 
         path_results = os.path.join(BASE_PATH, '..', 'results')
 
