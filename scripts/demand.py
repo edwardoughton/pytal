@@ -8,6 +8,7 @@ Winter 2020
 """
 from utils import discount_revenue
 
+
 def estimate_demand(regions, option, global_parameters, country_parameters):
     """
     Estimate the total revenue based on current demand.
@@ -17,7 +18,7 @@ def estimate_demand(regions, option, global_parameters, country_parameters):
     regions : dataframe
         Geopandas dataframe of all regions.
     option : dict
-        Contains the scenario, strategy, and frequencies with bandwidths.
+        Contains the scenario and strategy information.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict
@@ -36,33 +37,41 @@ def estimate_demand(regions, option, global_parameters, country_parameters):
     regions['arpu'] = regions.apply(estimate_arpu, axis=1)
 
     #cell_penetration : float
-    #Number of cell phones per membeer of the population.
-    regions['cell_pen'] = country_parameters['penetration']
+    #Number of cell phones per member of the population.
+    regions['population_with_phones'] = (
+        regions['population'] * country_parameters['penetration'])
 
     #phones : int
-    #Total number of phones in a region.
-    regions['phones'] =  (
-        regions['population'] * regions['cell_pen'] / country_parameters['networks']
+    #Total number of phones on the network being modeled.
+    regions['phones_on_network'] =  (
+        regions['population_with_phones'] / country_parameters['networks']
         )
 
-    regions['revenue'] = discount_revenue(
-        (regions['arpu'] * regions['phones']).values[0],
-        global_parameters
-    )
+    #phones : int
+    #Total number of smartphones on the network being modeled.
+    regions['population_with_smartphones'] = (
+        regions['population'] * country_parameters['smartphone_pen'])
 
-    regions['revenue_km2'] = regions['revenue'] / regions['area_km2']
-
-    #data demand
-    obf = global_parameters['overbooking_factor']
-    user_demand = option['scenario'].split('_')[1]
-    regions['smartphone_pen'] = country_parameters['smartphone_pen']
+    #phones : int
+    #Total number of smartphones on the network being modeled.
+    regions['smartphones_on_network'] = (
+        regions['population_with_smartphones'] / country_parameters['networks'])
 
     # demand_mbps_km2 : float
     # Total demand in mbps / km^2.
     regions['demand_mbps_km2'] = (
-        regions['population'] * regions['cell_pen'] * regions['smartphone_pen']
-        / country_parameters['networks'] * int(user_demand) / obf / regions['area_km2']
+        regions['smartphones_on_network'] *
+        int(option['scenario'].split('_')[1]) / #User demand in Mbps
+        global_parameters['overbooking_factor'] /
+        regions['area_km2']
         )
+
+    regions['revenue'] = discount_revenue(
+        (regions['arpu'] * regions['phones_on_network']).values[0],
+        global_parameters
+    )
+
+    regions['revenue_km2'] = regions['revenue'] / regions['area_km2']
 
     return regions
 
