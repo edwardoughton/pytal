@@ -23,111 +23,94 @@ DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 
-def generate_grid(country):
-    """
-    Generate a 10x10km spatial grid for the chosen country.
+def test_func(population_threshold_km2):
 
-    """
-    filename = 'national_outline.shp'
-    country_outline = gpd.read_file(os.path.join(DATA_INTERMEDIATE, country, filename))
+    path = os.path.join(DATA_INTERMEDIATE, 'MWI', 'settlements.tif')
 
-    country_outline.crs = "epsg:4326"
-    country_outline = country_outline.to_crs("epsg:3857")
+    with rasterio.open(path) as src:
+        data = src.read()
+        threshold = population_threshold_km2
+        data[data < threshold] = 0
+        data[data >= threshold] = 1
+        shapes = rasterio.features.shapes(data, transform=src.transform)
+        shapes_df = gpd.GeoDataFrame.from_features(
+            [
+                {'geometry': shape, 'properties':{'value':value}}
+                for shape, value in shapes
+                if value > 0
+            ],
+            crs='epsg:4326'
+        )
 
-    xmin,ymin,xmax,ymax = country_outline.total_bounds
+    stats = zonal_stats(shapes_df['geometry'], path, stats=['count', 'sum'])
 
-    #10km sides, leading to 100km^2 area
-    length = 1e5
-    wide = 1e5
+    stats_df = pd.DataFrame(stats)
 
-    cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax)), int(wide)))
-    rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax)), int(length)))
-    rows.reverse()
+    df = pd.concat([shapes_df, stats_df], axis=1).drop(columns='value')
 
-    polygons = []
-    for x in cols:
-        for y in rows:
-            # print(x, y)
-            # polygons.append(Point(x, y))
-            polygons.append(Polygon([(x,y), (x+wide, y), (x+wide, y-length), (x, y-length)]))
+    df = df[df['sum'] >= 20000]
 
-    grid = gpd.GeoDataFrame({'geometry': polygons})
-    intersection = gpd.overlay(grid, country_outline, how='intersection')
-    intersection.crs = "epsg:3857"
-    intersection = intersection.to_crs("epsg:4326")
-
-    final_grid = query_settlement_layer(intersection)
-
-    final_grid = final_grid[final_grid.geometry.notnull()]
-
-    points = final_grid.to_dict('records')
-
-    to_cluster = []
-
-    for point in points:
-        to_cluster.append({
-            'type': 'Point',
-            'geometry': mapping(point['geometry'].representative_point()),
-            'properties': {
-                'population': point['population'],
-            }
-        })
-
-    points = np.vstack([[float(i) for i in point['geometry']['coordinates']] for point in to_cluster])
-
-    db = DBSCAN(eps=1, min_samples=1).fit(points)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    labels = db.labels_
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    clusters = [points[labels == i] for i in range(n_clusters_)]
-
-    agglomerations = []
-    for idx, cluster in enumerate(clusters):
-        geom = MultiPoint(cluster)
-        rep_point = geom.representative_point()
-        agglomerations.append({
-                'type': "Feature",
-                'geometry': {
-                    "type": "Point",
-                    "coordinates": [rep_point.x, rep_point.y]
-                },
-                'properties': {
-                }
-            })
-
-    final_grid = gpd.GeoDataFrame([i['geometry'] for i in agglomerations])
-    final_grid.to_file(os.path.join(DATA_INTERMEDIATE, country, 'grid.shp'))
-
-    print('Completed grid generation process')
+    df.to_file(os.path.join(DATA_INTERMEDIATE, 'MWI', 'grid.shp'))
 
 
-def query_settlement_layer(grid):
-    """
-    Query the settlement layer to get an estimated population for each grid square.
+def design_network(nodes):
 
-    """
-    path = os.path.join(DATA_INTERMEDIATE, country, 'settlements.tif')
+    links = []
 
-    grid['population'] = pd.DataFrame(
-        zonal_stats(vectors=grid['geometry'], raster=path, stats='sum'))['sum']
+    edges = []
+    for node1_id, node1 in enumerate(nodes):
+        for node2_id, node2 in enumerate(nodes):
+            if node1_id != node2_id:
+                geom1 = Point(node1['geometry']['coordinates'])
+                geom2 = Point(node2['geometry']['coordinates'])
+                line = LineString([geom1, geom2])
+                edges.append({
+                    'type': 'Feature',
+                    'geometry': mapping(line),
+                    'properties':{
+                        'from': node1['properties']['OLO'],
+                        'to':  node2['properties']['OLO'],
+                        'length': line.length,
+                    }
+                })
 
-    grid = grid.replace([np.inf, -np.inf], np.nan)
+    G = nx.Graph()
 
-    return grid
+    for node in nodes:
+        G.add_node(node['properties']['OLO'], object=node)
 
+    for edge in edges:
+        G.add_edge(edge['properties']['from'], edge['properties']['to'],
+            object=edge, weight=edge['properties']['length'])
+
+    tree = nx.minimum_spanning_edges(G)
+
+    for branch in tree:
+        link = branch[2]['object']
+        if link['properties']['length'] > 0:
+            links.append(link)
+
+    return links
 
 if __name__ == '__main__':
 
-    country_list = [
-        # 'UGA',
-        # 'ETH',
-        # 'BGD',
-        # 'PER',
-        'MWI',
-        # 'ZAF'
-    ]
+    population_density_threshold_km2 = 1000
 
-    for country in country_list:
+    test_func(population_density_threshold_km2)
 
-        generate_grid(country)
+    # country_list = [
+    #     # 'UGA',
+    #     # 'ETH',
+    #     # 'BGD',
+    #     # 'PER',
+    #     'MWI',
+    #     # 'ZAF'
+    # ]
+
+    # for country in country_list:
+
+    #     generate_grid(country, population_density_threshold_km2)
+
+        # nodes = urban_areas()
+
+        # links = design_network(nodes)
