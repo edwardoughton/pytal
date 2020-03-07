@@ -51,13 +51,18 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
             costs_by_site_densities['site_density_{}'.format(item['confidence'])] = (
                 item['site_density']
             )
+
             all_costs_km2 = find_single_network_cost(
+                region,
                 item['site_density'],
                 option['strategy'],
                 region['geotype'].split(' ')[0],
                 costs,
-                global_parameters
+                global_parameters,
+                country_parameters,
             )
+
+            costs_by_site_densities['spectrum'] = all_costs_km2['spectrum']
 
             costs_by_site_densities['cost_km2_{}'.format(item['confidence'])] = (
                 all_costs_km2['total_deployment_costs_km2']
@@ -109,6 +114,10 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
             ),
             'site_density_{}'.format(confidence_intervals[2]): (
                 costs_by_site_densities['site_density_{}'.format(confidence_intervals[2])]
+            ),
+            'spectrum_total_cost_usd': costs_by_site_densities['spectrum'],
+            'spectrum_total_cost_usd_km2': (
+                costs_by_site_densities['spectrum'] / region['area_km2']
             ),
             'cost_km2_{}'.format(confidence_intervals[0]): (
                 costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[0])]
