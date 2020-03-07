@@ -185,6 +185,7 @@ OPTIONS = {
 
 COUNTRY_PARAMETERS = {
     'MWI': {
+        'population': 18620000,
         # Unique mobile subscribers = 30% (GSMA, 2019)
         # https://www.gsma.com/mobilefordevelopment/wp-content/uploads/2019/02/Digital-Identity-Country-Report.pdf
         'penetration': 0.3,
@@ -233,5 +234,9 @@ COUNTRY_PARAMETERS = {
                     },
                 ],
             },
+        'costs': {
+            'spectrum_coverage_usd_mhz_pop': 0.5,
+            'spectrum_capacity_usd_mhz_pop': 0.1,
+        }
         },
     }
