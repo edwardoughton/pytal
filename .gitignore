@@ -107,3 +107,4 @@ venv.bak/
 /data
 /vis/figures/*
 /results/*
+/spectrum/figures/*
