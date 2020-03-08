@@ -1,0 +1,206 @@
+year,dollars/mhz/pop,country,iso3,group,type,income
+2008.375712,1.372337026,Canada,CAN,Extreme outlier,capacity,High
+2008.375712,0.201369284,Canada,CAN,Median,capacity,High
+2008.38425,0.147177572,Sweden,SWE,Median,capacity,High
+2008.392789,0.083308441,,,Low,capacity,Unknown
+2008.401328,0,,,Low,capacity,Unknown
+2008.597723,0.230449287,USA,USA,Median,capacity,High
+2008.631879,0.085295342,,,Low,capacity,Unknown
+2008.939279,0.000200159,,,Low,capacity,Unknown
+2009.23814,0.532522495,Hong Kong,HKG,High,capacity,High
+2009.314991,0.064151925,,,Low,capacity,Unknown
+2009.323529,0.002218278,,,Low,capacity,Unknown
+2009.417457,0.008044929,,,Low,capacity,Unknown
+2009.519924,0.654518577,Hong Kong,HKG,High,capacity,High
+2009.759013,0.414569994,France,FRA,High,capacity,High
+2009.83,0.3,Italy ,ITA,Median,capacity,High
+2009.844402,0.002330293,,,Low,capacity,Unknown
+2010.322581,0,,,Low,capacity,Unknown
+2010.365275,0.124377793,,,Low,capacity,Unknown
+2010.382353,0.199865336,Denmark,DNK,Median,capacity,High
+2010.382353,0.029542756,,,Low,capacity,Unknown
+2010.390892,0.495996205,France,FRA,High,capacity,High
+2010.390892,0.050834915,,,Low,capacity,Unknown
+2010.416509,0.000517843,,,Low,capacity,Unknown
+2010.416509,0.012130746,,,Low,capacity,Unknown
+2010.450664,0.335363898,India,IND,Median,capacity,Lower Middle
+2010.476281,0.848272633,India,IND,Outlier,capacity,Lower Middle
+2010.629981,0.108950848,,,Low,capacity,Unknown
+2010.766603,0.410915713,Singapore,SGP,High,capacity,High
+2010.79222,0.018017996,,,Low,capacity,Unknown
+2010.79222,0.000598641,,,Low,capacity,Unknown
+2010.800759,0.041245639,,,Low,capacity,Unknown
+2011.082543,0.314209463,Costa Rice,CRI,Median,capacity,Upper Middle
+2011.210626,0.43036604,Singapore,SGP,High,capacity,High
+2011.304554,0.482644304,Israel,ISR,High,capacity,High
+2011.389943,0.054920732,,,Low,capacity,Unknown
+2011.560721,0.029796168,,,Low,capacity,Unknown
+2011.594877,0.77302932,South Korea,KOR,High,capacity,High
+2011.611954,1.73690396,South Korea,KOR,Extreme outlier,capacity,High
+2011.620493,0.502067087,Belgium,BEL,High,capacity,High
+2011.697343,0.339502969,Italy,ITA,Median,capacity,High
+2011.697343,0.126599743,,,Low,capacity,Unknown
+2011.697343,0.068535227,,,Low,capacity,Unknown
+2011.697343,0.047244904,,,Low,capacity,Unknown
+2011.774194,0.18661627,Sweden,SWE,Median,capacity,High
+2011.842505,0.291147089,Greece,GRC,Median,capacity,High
+2011.851044,0.047277958,,,Low,capacity,Unknown
+2011.851044,0.016310216,,,Low,capacity,Unknown
+2011.868121,0.062765502,,,Low,capacity,Unknown
+2011.936433,0.273747934,Bulgaria,BGR,Median,capacity,Upper Middle
+2012.064516,0.02409806,,,Low,capacity,Unknown
+2012.141366,0.151856522,Switzerland,CHE,Median,capacity,High
+2012.158444,0.045408582,,,Low,capacity,Unknown
+2012.158444,0.072505356,,,Low,capacity,Unknown
+2012.243833,0.196394687,Hong Kong,HKG,Median,capacity,High
+2012.414611,0.0299798,,,Low,capacity,Unknown
+2012.491461,0.057093102,,,Low,capacity,Unknown
+2012.679317,0.014552855,,,Low,capacity,Unknown
+2012.679317,0.00681092,,,Low,capacity,Unknown
+2012.713472,0.035850523,,,Low,capacity,Unknown
+2012.833017,0.3397472,India,IND,Median,capacity,Lower Middle
+2012.918406,0.150088143,Netherlands,NLD,Median,capacity,High
+2012.926945,0.285573851,Ireland,IRL,Median,capacity,High
+2012.935484,0.008801494,,,Low,capacity,Unknown
+2013.148956,0.175299015,Norway,NOR,Median,capacity,High
+2013.234345,0.11144641,,,Low,capacity,Unknown
+2013.251423,0.03015976,,,Low,capacity,Unknown
+2013.379507,0.016638918,,,Low,capacity,Unknown
+2013.413662,1.067614005,Hong Kong,HKG,Outlier,capacity,High
+2013.464896,0.144399217,Colombia,COL,Median,capacity,Upper Middle
+2013.464896,0.082463733,,,Low,capacity,Unknown
+2013.473435,0.045691375,,,Low,capacity,Unknown
+2013.533207,0.229575197,Singapore,SGP,Median,capacity,High
+2013.541746,0.363125421,Singapore,SGP,High,capacity,High
+2013.780835,0.065112322,,,Low,capacity,Unknown
+2013.823529,0.771573116,Austria,AUT,High,capacity,High
+2013.90038,1.39481545,Jordon,JOR,Extreme outlier,capacity,Upper Middle
+2013.90038,0.082557385,,,Low,capacity,Unknown
+2013.908918,0.06707535,,,Low,capacity,Unknown
+2013.917457,0.322561058,Norway,NOR,Median,capacity,High
+2013.925996,0.038046765,,,Low,capacity,Unknown
+2013.934535,0.003209892,,,Low,capacity,Unknown
+2014.156546,0.641967313,India,IND,High,capacity,Lower Middle
+2014.182163,0,,,Low,capacity,Unknown
+2014.276091,0.427154312,Slovenia,SVK,High,capacity,High
+2014.276091,0.067154312,,,Low,capacity,Unknown
+2014.301708,0.268450144,Slovenia,SVK,Median,capacity,High
+2014.327324,0,,,Low,capacity,Unknown
+2014.66888,0.804658138,Hungary,HUN,High,capacity,High
+2014.694497,0.049824937,,,Low,capacity,Unknown
+2014.779886,0.016940075,,,Low,capacity,Unknown
+2014.788425,0.071135459,,,Low,capacity,Unknown
+2015.070209,0.409905735,USA,USA,High,capacity,High
+2015.087287,0.063457795,,,Low,capacity,Unknown
+2015.087287,0.051844892,,,Low,capacity,Unknown
+2015.129981,0.28991859,Argentina,ARG,Median,capacity,Upper Middle
+2015.13852,0.243468813,Argentina,ARG,Median,capacity,Upper Middle
+2015.21537,1.164775663,Hong Kong,HKG,Outlier,capacity,High
+2015.223909,0.626712983,India,IND,High,capacity,Lower Middle
+2015.223909,0.450583951,India,IND,High,capacity,Lower Middle
+2015.377609,0.38868152,Germany,DEU,High,capacity,High
+2015.394687,0.117717451,,,Low,capacity,Unknown
+2015.591082,0.202920977,Turkey,TUR,Median,capacity,Upper Middle
+2015.616698,0.088732938,,,Low,capacity,Unknown
+2015.616698,0.073249067,,,Low,capacity,Unknown
+2015.616698,0.011313583,,,Low,capacity,Unknown
+2015.625237,0.044218645,,,Low,capacity,Unknown
+2015.702087,0.15842872,Albania,ALB,Median,capacity,Upper Middle
+2015.770398,0.01328212,,,Low,capacity,Unknown
+2015.83871,1.509425843,Thailand,THA,Extreme outlier,capacity,Upper Middle
+2015.889943,0.218469119,Canada,CAN,Median,capacity,High
+2015.898482,0.667503214,Taiwan,TWN,High,capacity,High
+2015.91556,0.34428108,Taiwan,TWN,Median,capacity,High
+2015.924099,0.061702271,,,Low,capacity,Unknown
+2016.026565,0.830111404,Norway,NOR,Outlier,capacity,High
+2016.043643,0.166244108,Senegal,SEN,Median,capacity,Lower Middle
+2016.154649,0.133364755,Czech Republic,CZE,Median,capacity,High
+2016.154649,0.257235723,Mexico,MEX,Median,capacity,Upper Middle
+2016.163188,0.065624656,,,Low,capacity,Unknown
+2016.180266,0.683047683,Australia,AUS,High,capacity,High
+2016.214421,0.725635674,South Korea,KOR,High,capacity,High
+2016.22296,0.613379445,Thailand,THA,High,capacity,Upper Middle
+2016.231499,0.336607088,South Korea,KOR,Median,capacity,High
+2016.29981,0.044363714,,,Low,capacity,Unknown
+2016.368121,0.355991308,Czech Republic,CZE,High,capacity,High
+2016.368121,0.162442921,,,Low,capacity,Unknown
+2016.385199,0.315349819,Czech Republic,CZE,Median,capacity,High
+2016.590133,0.203135827,Malaysia ,MYS,Median,capacity,Upper Middle
+2016.6926,0.193480443,Denmark,DNK,Median,capacity,High
+2016.709677,0.112193793,,,Low,capacity,Unknown
+2016.743833,0.38316888,India,IND,High,capacity,Lower Middle
+2016.752372,0.468332007,India,IND,High,capacity,Lower Middle
+2016.752372,0.627041685,India,IND,High,capacity,Lower Middle
+2016.760911,0.565108037,Thailand,THA,High,capacity,Upper Middle
+2016.777989,0.247692355,India,IND,Median,capacity,Lower Middle
+2008.22,0.823921424,USA,USA,Median,coverage,High
+2009.3,0.119728746,,,Low,coverage,Unknown
+2010.39,0.867928737,Germany,DEU,Median,coverage,High
+2010.77,0.020510515,,,Low,coverage,Unknown
+2011.08,0.320672272,,,Low,coverage,Unknown
+2011.24,0.292186566,,,Low,coverage,Unknown
+2011.3,2.463647838,Hong Kong,HKG,High,coverage,High
+2011.31,3.054124691,Hong Kong,HKG,High,coverage,High
+2011.53,0.611385875,Spain,ESP,Median,coverage,High
+2011.62,0.906669701,South Korea,KOR,Median,coverage,High
+2011.68,1.054324225,Italy,ITA,High,coverage,High
+2011.82,0.74487069,Portugal,PRT,Median,coverage,High
+2011.84,0.492504588,,,Low,coverage,Unknown
+2011.85,0.611557384,Greece,GRC,Median,coverage,High
+2011.85,0.468700081,,,Low,coverage,Unknown
+2011.94,0.721126716,France,FRA,Median,coverage,High
+2012.15,0.792666345,Switzerland,CHE,Median,coverage,High
+2012.16,0.197432626,,,Low,coverage,Unknown
+2012.46,0.278546519,,,Low,coverage,Unknown
+2012.56,0.588121119,Russia,RUS,Median,coverage,Upper Middle
+2012.69,0.145334102,,,Low,coverage,Unknown
+2012.69,0.102476911,,,Low,coverage,Unknown
+2012.78,0.869189836,Croatia,HRV,Median,coverage,High
+2012.91,1.845452028,Netherlands,NLD,High,coverage,High
+2012.92,0.940694154,Ireland,IRL,High,coverage,High
+2012.93,1.707366724,Ireland,IRL,High,coverage,High
+2012.93,2.68831516,Netherlands,NLD,High,coverage,High
+2013.24,0.621817687,UK,GBR,Median,coverage,High
+2013.34,0.488534648,,,Low,coverage,Unknown
+2013.38,0.807602802,Australia,AUS,Median,coverage,High
+2013.79,0.322104881,,,Low,coverage,Unknown
+2013.79,0.103057016,,,Low,coverage,Unknown
+2013.79,0.050676005,,,Low,coverage,Unknown
+2013.8,0.026871499,,,Low,coverage,Unknown
+2013.84,0.707844821,Croatia,HRV,Median,coverage,High
+2013.85,1.4316602,Austria,AUT,High,coverage,High
+2013.86,1.374522324,Austria,AUT,High,coverage,High
+2013.86,0.584050292,,,Low,coverage,Unknown
+2013.93,0.412656839,,,Low,coverage,Unknown
+2013.94,0.784090871,Slovakia,SVK,Median,coverage,High
+2013.94,0.384090422,,,Low,coverage,Unknown
+2014.08,0.236546875,,,Low,coverage,Unknown
+2014.16,3.008013864,Canada,CAN,High,coverage,High
+2014.16,3.579443076,India,IND,High,coverage,Lower Middle
+2014.16,1.17944543,India,IND,High,coverage,Lower Middle
+2014.24,0.027103541,,,Low,coverage,Unknown
+2014.27,0.450933718,,,Low,coverage,Unknown
+2014.33,0.550964096,,,Low,coverage,Unknown
+2014.49,0.432002098,,,Low,coverage,Unknown
+2014.53,0.951070477,Brazil,BRA,High,coverage,Upper Middle
+2014.7,0.808303973,Hungary,HUN,Median,coverage,High
+2014.78,0.779772868,Greece,GRC,Median,coverage,High
+2015.08,2.632312273,Poland,POL,High,coverage,High
+2015.15,0.522826454,,,Low,coverage,Unknown
+2015.23,1.156200852,India,IND,High,coverage,Lower Middle
+2015.24,1.81334949,India,IND,High,coverage,Lower Middle
+2015.37,0.237227869,,,Low,coverage,Unknown
+2015.38,0.275328194,,,Low,coverage,Unknown
+2015.6,1.246873876,Oman,OMN,High,coverage,High
+2015.61,0.161163417,,,Low,coverage,Unknown
+2015.62,0.232597113,,,Low,coverage,Unknown
+2015.82,0.104131473,,,Low,coverage,Unknown
+2015.86,0.732723783,France,FRA,Median,coverage,High
+2015.86,0.442247267,,,Low,coverage,Unknown
+2015.86,0.185104122,,,Low,coverage,Unknown
+2015.94,3.937529636,Thailand,THA,High,coverage,Upper Middle
+2016.08,0.275696435,,,Low,coverage,Unknown
+2016.16,0.151932172,,,Low,coverage,Unknown
+2016.39,0.861577842,Czech Republic,CZE,Median,coverage,High
+2016.62,0.95693711,Malaysia,MYS,High,coverage,Upper Middle
+2016.78,0.814165562,India,IND,Median,coverage,Lower Middle

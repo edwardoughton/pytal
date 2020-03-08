@@ -233,5 +233,9 @@ COUNTRY_PARAMETERS = {
                     },
                 ],
             },
+        'costs': {
+            'spectrum_coverage_usd_mhz_pop': 0.5,
+            'spectrum_capacity_usd_mhz_pop': 0.1,
+        }
         },
     }
