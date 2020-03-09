@@ -38,24 +38,23 @@ def estimate_demand(regions, option, global_parameters, country_parameters):
 
     #cell_penetration : float
     #Number of cell phones per member of the population.
-    regions['population_with_phones'] = int(round(
-        regions['population'] * country_parameters['penetration']))
+    regions['population_with_phones'] = round(
+        regions['population'] * country_parameters['penetration'])
 
     #phones : int
     #Total number of phones on the network being modeled.
-    regions['phones_on_network'] =  int(round(
-        regions['population_with_phones'] / country_parameters['networks']
-        ))
+    regions['phones_on_network'] = round(
+        regions['population_with_phones'] / country_parameters['networks'])
 
     #phones : int
     #Total number of smartphones on the network being modeled.
-    regions['population_with_smartphones'] = int(round(
-        regions['population'] * country_parameters['smartphone_pen']))
+    regions['population_with_smartphones'] = round(
+        regions['population'] * country_parameters['smartphone_pen'])
 
     #phones : int
     #Total number of smartphones on the network being modeled.
-    regions['smartphones_on_network'] = int(round(
-        regions['population_with_smartphones'] / country_parameters['networks']))
+    regions['smartphones_on_network'] = round(
+        regions['population_with_smartphones'] / country_parameters['networks'])
 
     # demand_mbps_km2 : float
     # Total demand in mbps / km^2.
