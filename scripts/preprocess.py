@@ -1071,15 +1071,23 @@ def aggregate_population(population_data, region_id):
 
 if __name__ == '__main__':
 
-    # country_list = ['UGA', 'ETH', 'BGD', 'PER', 'MWI', 'ZAF']
-    # country_regional_levels = [
-    #     {'country': 'UGA', 'regional_level': 3},
-    #     {'country': 'ETH', 'regional_level': 3},
-    #     {'country': 'BGD', 'regional_level': 3},
-    #     {'country': 'PER', 'regional_level': 3},
-    #     {'country': 'MWI', 'regional_level': 3},
-    #     {'country': 'ZAF', 'regional_level': 3},
-    #     ]
+    country_list = [
+        # 'UGA',
+        # 'ETH',
+        # 'BGD',
+        # 'PER',
+        'MWI',
+        # 'ZAF'
+    ]
+
+    country_regional_levels = [
+        # {'country': 'UGA', 'regional_level': 3},
+        # {'country': 'ETH', 'regional_level': 3},
+        # {'country': 'BGD', 'regional_level': 3},
+        # {'country': 'PER', 'regional_level': 3},
+        {'country': 'MWI', 'regional_level': 3},
+        # {'country': 'ZAF', 'regional_level': 3},
+        ]
 
     # ###create 'global_countries.shp' if not already processed
     # ###create each 'national_outline.shp' if not already processed
@@ -1105,10 +1113,10 @@ if __name__ == '__main__':
     # print('Processing night lights')
     # process_night_lights(country_list)
 
-    # get_regional_data(country_list, country_regional_levels)
+    get_regional_data(country_list, country_regional_levels)
 
     # process_coverage_shapes()
 
     # process_opencellid()
 
-    process_mozilla()
+    # process_mozilla()
