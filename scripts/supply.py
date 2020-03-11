@@ -36,8 +36,6 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
 
     confidence_intervals = global_parameters['confidence']
 
-    regions = regions.to_dict('records')
-
     for region in regions:
 
         network = optimize_network(region, option, global_parameters,
@@ -141,9 +139,11 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
                 # 'cost_per_user': region['cost_per_user'],
                 # 'cost_by_total_potential_users': region['cost_by_total_potential_users'],
             })
+
         except:
-            print('Could not write supply lut for the following region:')
-            print(region)
+            pass
+            # print('Could not write supply lut for the following region:')
+            # print(region)
 
     return output
 
@@ -160,10 +160,12 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
     geotype = region['geotype'].split(' ')[0]
     ant_type = 'macro'
 
-    frequencies = country_parameters['frequencies']
-    frequencies = frequencies['{}_networks'.format(networks)]
-
     generation, core, backhaul, sharing = get_strategy_options(option['strategy'])
+
+    frequencies = country_parameters['frequencies']
+    frequencies = frequencies[generation]
+
+    frequencies = frequencies['{}_networks'.format(networks)]
 
     network = []
 
