@@ -41,8 +41,8 @@ def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
     """
     generation, core, backhaul, sharing = get_strategy_options(strategy)
 
-    cost_breakdown = get_costs(region, sharing, backhaul, geotype, costs, sites_per_km2,
-        global_parameters, country_parameters)
+    cost_breakdown = get_costs(region, generation, sharing, backhaul, geotype, costs,
+        sites_per_km2, global_parameters, country_parameters)
 
     total_deployment_costs_km2 = 0
     for key, value in cost_breakdown.items():
@@ -53,25 +53,25 @@ def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
     return cost_breakdown
 
 
-def get_costs(region, sharing, backhaul, geotype, costs, sites_per_km2,
+def get_costs(region, generation, sharing, backhaul, geotype, costs, sites_per_km2,
     global_parameters, country_parameters):
 
     if sharing == 'baseline':
-        costs = baseline(region, backhaul, geotype, costs, sites_per_km2,
+        costs = baseline(region, generation, backhaul, geotype, costs, sites_per_km2,
             global_parameters, country_parameters)
 
     if sharing == 'passive':
-        costs = passive(region, backhaul, geotype, costs, sites_per_km2,
+        costs = passive(region, generation, backhaul, geotype, costs, sites_per_km2,
             global_parameters, country_parameters)
 
     if sharing == 'active':
-        costs = active(region, backhaul, geotype, costs, sites_per_km2,
+        costs = active(region, generation, backhaul, geotype, costs, sites_per_km2,
             global_parameters, country_parameters)
 
     return costs
 
 
-def baseline(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
+def baseline(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
     country_parameters):
     """
     No sharing takes place.
@@ -123,13 +123,13 @@ def baseline(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
         '{}_backhaul'.format(backhaul): (
             discount_capex_and_opex(backhaul_cost, global_parameters) * sites_per_km2
         ),
-        'spectrum': get_spectrum_costs(region, country_parameters)
+        'spectrum': get_spectrum_costs(region, generation, country_parameters)
     }
 
     return cost_breakdown
 
 
-def passive(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
+def passive(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
     country_parameters):
     """
     Sharing of:
@@ -184,13 +184,13 @@ def passive(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
             discount_capex_and_opex(backhaul_cost, global_parameters) *
             sites_per_km2 / global_parameters['networks']
         ),
-        'spectrum': get_spectrum_costs(region, country_parameters)
+        'spectrum': get_spectrum_costs(region, generation, country_parameters)
     }
 
     return cost_breakdown
 
 
-def active(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
+def active(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
     country_parameters):
     """
     Sharing of:
@@ -252,7 +252,7 @@ def active(region, backhaul, geotype, costs, sites_per_km2, global_parameters,
             discount_capex_and_opex(backhaul_cost, global_parameters) *
             sites_per_km2 / global_parameters['networks']
         ),
-        'spectrum': get_spectrum_costs(region, country_parameters)
+        'spectrum': get_spectrum_costs(region, generation, country_parameters)
     }
 
     return cost_breakdown
@@ -285,13 +285,14 @@ def get_backhaul_costs(backhaul, geotype, costs):
     return cost
 
 
-def get_spectrum_costs(region, country_parameters):
+def get_spectrum_costs(region, generation, country_parameters):
     """
     Calculate spectrum costs.
 
     """
     population = int(round(region['population']))
     frequencies = country_parameters['frequencies']
+    frequencies = frequencies[generation]
     networks = country_parameters['networks']
     frequencies = frequencies['{}_networks'.format(networks)]
 
