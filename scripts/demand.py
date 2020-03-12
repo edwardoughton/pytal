@@ -6,7 +6,6 @@ Written by Ed Oughton.
 Winter 2020
 
 """
-from utils import discount_arpu
 
 
 def estimate_demand(regions, option, global_parameters, country_parameters,
@@ -134,3 +133,31 @@ def estimate_phones(x):
     else:
 
         return 1
+
+
+def discount_arpu(arpu, timestep, global_parameters):
+    """
+    Discount arpu based on return period.
+
+    192,744 = 23,773 / (1 + 0.05) ** (0:9)
+
+    Parameters
+    ----------
+    arpu : float
+        Average revenue per user.
+    timestep : int
+        Time period (year) to discount against.
+    global_parameters : dict
+        All global model parameters.
+
+    Returns
+    -------
+    discounted_arpu : float
+        The discounted revenue over the desired time period.
+
+    """
+    discount_rate = global_parameters['discount_rate'] / 100
+
+    discounted_arpu = arpu / (1 + discount_rate) ** timestep
+
+    return discounted_arpu
