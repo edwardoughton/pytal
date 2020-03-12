@@ -30,6 +30,43 @@ Alternatively, for development purposes, clone this repo and run:
 
     python setup.py develop
 
+
+Download necessary data
+=======================
+
+You will need numerous input data sets.
+
+First, download the WorldPop global settlement data from:
+
+- https://www.worldpop.org/geodata/summary?id=24777.
+
+and place the data in `data/raw/settlement_layer`.
+
+Then download the Global Administrative Database (GADM), following the link below and making
+sure you download the "six separate layers.":
+
+- https://gadm.org/download_world.html
+
+Placing the data into `data/raw/gadm36_levels_shp`.
+
+
+
+Using the model
+===============
+
+First run the following initial preprocessing script to extract the necessary files:
+
+    python scripts/preprocess.py
+
+Then
+
+
+    python scripts/core.py
+    python scripts/preprocess.py
+
+
+
+
 Thanks for the support
 ======================
 
