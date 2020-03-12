@@ -9,8 +9,6 @@ https://github.com/edwardoughton/pysim5g
 """
 import math
 
-from utils import discount_capex_and_opex, discount_opex
-
 
 def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
     global_parameters, country_parameters):
@@ -305,3 +303,59 @@ def get_spectrum_costs(region, generation, country_parameters):
     cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
 
     return cost
+
+
+def discount_capex_and_opex(capex, global_parameters):
+    """
+    Discount costs based on return period.
+
+    Parameters
+    ----------
+    cost : float
+        Financial cost.
+    global_parameters : dict
+        All global model parameters.
+
+    Returns
+    -------
+    discounted_cost : float
+        The discounted cost over the desired time period.
+
+    """
+    return_period = global_parameters['return_period']
+    discount_rate = global_parameters['discount_rate'] / 100
+
+    costs_over_time_period = []
+
+    costs_over_time_period.append(capex)
+
+    opex = round(capex * (global_parameters['opex_percentage_of_capex'] / 100))
+
+    for i in range(0, return_period):
+        costs_over_time_period.append(
+            opex / (1 + discount_rate)**i
+        )
+
+    discounted_cost = sum(costs_over_time_period)
+
+    return discounted_cost
+
+
+def discount_opex(opex, global_parameters):
+    """
+    Discount opex based on return period.
+
+    """
+    return_period = global_parameters['return_period']
+    discount_rate = global_parameters['discount_rate'] / 100
+
+    costs_over_time_period = []
+
+    for i in range(0, return_period):
+        costs_over_time_period.append(
+            opex / (1 + discount_rate)**i
+        )
+
+    discounted_cost = sum(costs_over_time_period)
+
+    return discounted_cost
