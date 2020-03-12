@@ -36,18 +36,15 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
 
     confidence_intervals = global_parameters['confidence']
 
-    regions = regions.to_dict('records')
-
     for region in regions:
 
-        network = optimize_network(region, option, global_parameters, country_parameters, costs, lookup)
+        network = optimize_network(region, option, global_parameters,
+            country_parameters, costs, lookup)
 
         costs_by_site_densities = {}
 
         for item in network:
 
-            # site_density = 'site_density_{}'.format(item['confidence'])
-            # region[site_density] = site_density
             costs_by_site_densities['site_density_{}'.format(item['confidence'])] = (
                 item['site_density']
             )
@@ -73,7 +70,7 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
                 region['area_km2']
             )
 
-
+            # print(costs_by_site_densities)
             # region['viability'] = region['revenue'] - region['total_cost']
 
         # if region['phones']:
@@ -87,60 +84,66 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
 
         region_id = find_lowest_region(region)
 
-        output.append({
-            'country': region['GID_0'],
-            'scenario': option['scenario'],
-            'strategy': option['strategy'],
-            'region_level': region_id,
-            'population': region['population'],
-            'area_km2': region['area_km2'],
-            'population_km2': region['population_km2'],
-            'mean_luminosity_km2': region['mean_luminosity_km2'],
-            'geotype': region['geotype'],
-            'decile': region['decile'],
-            'arpu': region['arpu'],
-            'population_with_phones': region['population_with_phones'],
-            'phones_on_network': region['phones_on_network'],
-            'population_with_smartphones': region['population_with_smartphones'],
-            'smartphones_on_network': region['smartphones_on_network'],
-            'revenue': region['revenue'],
-            'revenue_km2': region['revenue_km2'],
-            'demand_mbps_km2': region['demand_mbps_km2'],
-            'site_density_{}'.format(confidence_intervals[0]): (
-                costs_by_site_densities['site_density_{}'.format(confidence_intervals[0])]
-            ),
-            'site_density_{}'.format(confidence_intervals[1]): (
-                costs_by_site_densities['site_density_{}'.format(confidence_intervals[1])]
-            ),
-            'site_density_{}'.format(confidence_intervals[2]): (
-                costs_by_site_densities['site_density_{}'.format(confidence_intervals[2])]
-            ),
-            'spectrum_total_cost_usd': costs_by_site_densities['spectrum'],
-            'spectrum_total_cost_usd_km2': (
-                costs_by_site_densities['spectrum'] / region['area_km2']
-            ),
-            'cost_km2_{}'.format(confidence_intervals[0]): (
-                costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[0])]
-            ),
-            'cost_km2_{}'.format(confidence_intervals[1]): (
-                costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[1])]
-            ),
-            'cost_km2_{}'.format(confidence_intervals[2]): (
-                costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[2])]
-            ),
-            'total_cost_{}'.format(confidence_intervals[0]): (
-                costs_by_site_densities['total_cost_{}'.format(confidence_intervals[0])]
-            ),
-            'total_cost_{}'.format(confidence_intervals[1]): (
-                costs_by_site_densities['total_cost_{}'.format(confidence_intervals[1])]
-            ),
-            'total_cost_{}'.format(confidence_intervals[2]): (
-                costs_by_site_densities['total_cost_{}'.format(confidence_intervals[2])]
-            ),
-            # 'viability': region['viability'],
-            # 'cost_per_user': region['cost_per_user'],
-            # 'cost_by_total_potential_users': region['cost_by_total_potential_users'],
-        })
+        try:
+            output.append({
+                'country': region['GID_0'],
+                'scenario': option['scenario'],
+                'strategy': option['strategy'],
+                'region_level': region_id,
+                'population': region['population'],
+                'area_km2': region['area_km2'],
+                'population_km2': region['population_km2'],
+                'mean_luminosity_km2': region['mean_luminosity_km2'],
+                'geotype': region['geotype'],
+                'decile': region['decile'],
+                'arpu': region['arpu'],
+                'population_with_phones': region['population_with_phones'],
+                'phones_on_network': region['phones_on_network'],
+                'population_with_smartphones': region['population_with_smartphones'],
+                'smartphones_on_network': region['smartphones_on_network'],
+                'revenue': region['revenue'],
+                'revenue_km2': region['revenue_km2'],
+                'demand_mbps_km2': region['demand_mbps_km2'],
+                'site_density_{}'.format(confidence_intervals[0]): (
+                    costs_by_site_densities['site_density_{}'.format(confidence_intervals[0])]
+                ),
+                'site_density_{}'.format(confidence_intervals[1]): (
+                    costs_by_site_densities['site_density_{}'.format(confidence_intervals[1])]
+                ),
+                'site_density_{}'.format(confidence_intervals[2]): (
+                    costs_by_site_densities['site_density_{}'.format(confidence_intervals[2])]
+                ),
+                'spectrum_total_cost_usd': costs_by_site_densities['spectrum'],
+                'spectrum_total_cost_usd_km2': (
+                    costs_by_site_densities['spectrum'] / region['area_km2']
+                ),
+                'cost_km2_{}'.format(confidence_intervals[0]): (
+                    costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[0])]
+                ),
+                'cost_km2_{}'.format(confidence_intervals[1]): (
+                    costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[1])]
+                ),
+                'cost_km2_{}'.format(confidence_intervals[2]): (
+                    costs_by_site_densities['cost_km2_{}'.format(confidence_intervals[2])]
+                ),
+                'total_cost_{}'.format(confidence_intervals[0]): (
+                    costs_by_site_densities['total_cost_{}'.format(confidence_intervals[0])]
+                ),
+                'total_cost_{}'.format(confidence_intervals[1]): (
+                    costs_by_site_densities['total_cost_{}'.format(confidence_intervals[1])]
+                ),
+                'total_cost_{}'.format(confidence_intervals[2]): (
+                    costs_by_site_densities['total_cost_{}'.format(confidence_intervals[2])]
+                ),
+                # 'viability': region['viability'],
+                # 'cost_per_user': region['cost_per_user'],
+                # 'cost_by_total_potential_users': region['cost_by_total_potential_users'],
+            })
+
+        except:
+            pass
+            # print('Could not write supply lut for the following region:')
+            # print(region)
 
     return output
 
@@ -157,10 +160,12 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
     geotype = region['geotype'].split(' ')[0]
     ant_type = 'macro'
 
-    frequencies = country_parameters['frequencies']
-    frequencies = frequencies['{}_networks'.format(networks)]
-
     generation, core, backhaul, sharing = get_strategy_options(option['strategy'])
+
+    frequencies = country_parameters['frequencies']
+    frequencies = frequencies[generation]
+
+    frequencies = frequencies['{}_networks'.format(networks)]
 
     network = []
 
@@ -185,6 +190,7 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                 )
 
             max_density, max_capacities = density_capacities[-1]
+            min_density, min_capacities = density_capacities[0]
 
             if demand > max_capacities[confidence_str]:
                 network.append(
@@ -199,31 +205,33 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                 )
                 capacity += max_capacities[confidence_str]
 
-            for a, b in pairwise(density_capacities):
 
-                lower_density, lower_capacities  = a
-                upper_density, upper_capacities  = b
+            else:
+                for a, b in pairwise(density_capacities):
 
-                if (lower_capacities[confidence_str] <= demand and
-                    demand < upper_capacities[confidence_str]):
+                    lower_density, lower_capacities  = a
+                    upper_density, upper_capacities  = b
 
-                    site_density = interpolate(
-                        lower_capacities[confidence_str], lower_density,
-                        upper_capacities[confidence_str], upper_density,
-                        demand
-                    )
+                    if (lower_capacities[confidence_str] <= demand and
+                        demand < upper_capacities[confidence_str]):
 
-                    network.append(
-                        {
-                            'frequency': str(frequency),
-                            'bandwidth': str(bandwidth),
-                            'geotype': geotype,
-                            'demand': demand,
-                            'site_density': site_density,
-                            'confidence': confidence_int,
-                        }
-                    )
-                    capacity += upper_capacities[confidence_str]
+                        site_density = interpolate(
+                            lower_capacities[confidence_str], lower_density,
+                            upper_capacities[confidence_str], upper_density,
+                            demand
+                        )
+
+                        network.append(
+                            {
+                                'frequency': str(frequency),
+                                'bandwidth': str(bandwidth),
+                                'geotype': geotype,
+                                'demand': demand,
+                                'site_density': site_density,
+                                'confidence': confidence_int,
+                            }
+                        )
+                        capacity += upper_capacities[confidence_str]
 
         if not len(network) >= 1:
             network.append(
@@ -233,7 +241,7 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                             'geotype': geotype,
                             'demand': demand,
                             'site_density': 0,
-                            'confidence': 0,
+                            'confidence': confidence_int,
                         }
                     )
 

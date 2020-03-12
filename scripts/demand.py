@@ -6,10 +6,11 @@ Written by Ed Oughton.
 Winter 2020
 
 """
-from utils import discount_revenue
+from utils import discount_arpu
 
 
-def estimate_demand(regions, option, global_parameters, country_parameters):
+def estimate_demand(regions, option, global_parameters, country_parameters,
+    timesteps, penetration_lut):
     """
     Estimate the total revenue based on current demand.
 
@@ -23,6 +24,10 @@ def estimate_demand(regions, option, global_parameters, country_parameters):
         All global model parameters.
     country_parameters : dict
         All country specific parameters.
+    timesteps : list
+        All years for the assessment period.
+    penetration_lut : list of dicts
+        Contains annual penetration values.
 
     Returns
     -------
@@ -30,68 +35,87 @@ def estimate_demand(regions, option, global_parameters, country_parameters):
         Geopandas dataframe of all regions.
 
     """
-    #arpu : int
-    #Average Revenue Per User for cellular per month.
-    #economic demand
-    #ARPU discounting really needs to be the same as the cost discounting
-    regions['arpu'] = regions.apply(estimate_arpu, axis=1)
+    output = []
 
-    #cell_penetration : float
-    #Number of cell phones per member of the population.
-    regions['population_with_phones'] = int(round(
-        regions['population'] * country_parameters['penetration']))
+    for region in regions:
 
-    #phones : int
-    #Total number of phones on the network being modeled.
-    regions['phones_on_network'] =  int(round(
-        regions['population_with_phones'] / country_parameters['networks']
-        ))
+        revenue = []
+        demand_mbps_km2 = []
 
-    #phones : int
-    #Total number of smartphones on the network being modeled.
-    regions['population_with_smartphones'] = int(round(
-        regions['population'] * country_parameters['smartphone_pen']))
+        for timestep in timesteps:
 
-    #phones : int
-    #Total number of smartphones on the network being modeled.
-    regions['smartphones_on_network'] = int(round(
-        regions['population_with_smartphones'] / country_parameters['networks']))
+            penetration = penetration_lut[timestep]
 
-    # demand_mbps_km2 : float
-    # Total demand in mbps / km^2.
-    regions['demand_mbps_km2'] = (
-        regions['smartphones_on_network'] *
-        int(option['scenario'].split('_')[1]) / #User demand in Mbps
-        global_parameters['overbooking_factor'] /
-        regions['area_km2']
-        )
+            #arpu : int
+            #Average Revenue Per User for cellular per month.
+            #economic demand
+            #ARPU discounting really needs to be the same as the cost discounting
+            # regions['arpu'] = region.apply(estimate_arpu, axis=1)
+            region['arpu'] = estimate_arpu(
+                region,
+                timestep,
+                global_parameters,
+                country_parameters
+            )
 
-    regions['revenue'] = discount_revenue(
-        (regions['arpu'] * regions['phones_on_network']).values[0],
-        global_parameters
-    )
+            #cell_penetration : float
+            #Number of cell phones per member of the population.
+            region['population_with_phones'] = (
+                region['population'] * (penetration / 100))
 
-    regions['revenue_km2'] = regions['revenue'] / regions['area_km2']
+            #phones : int
+            #Total number of phones on the network being modeled.
+            region['phones_on_network'] = (
+                region['population_with_phones'] / country_parameters['networks'])
 
-    return regions
+            #phones : int
+            #Total number of smartphones on the network being modeled.
+            region['population_with_smartphones'] = (
+               region['phones_on_network'] * country_parameters['smartphone_pen'])
+
+            #phones : int
+            #Total number of smartphones on the network being modeled.
+            region['smartphones_on_network'] = (
+                region['population_with_smartphones'] / country_parameters['networks'])
+
+            # demand_mbps_km2 : float
+            # Total demand in mbps / km^2.
+            demand_mbps_km2.append(
+                (region['smartphones_on_network'] *
+                int(option['scenario'].split('_')[1]) / #User demand in Mbps
+                global_parameters['overbooking_factor'] /
+                region['area_km2']
+                ))
+
+            revenue.append(region['arpu'] * region['phones_on_network'])
+
+        region['revenue'] = sum(revenue)
+        region['revenue_km2'] = sum(revenue) / region['area_km2']
+        region['demand_mbps_km2'] = sum(demand_mbps_km2) / len(demand_mbps_km2)
+
+        output.append(region)
+
+    return output
 
 
-def estimate_arpu(x):
+def estimate_arpu(region, timestep, global_parameters, country_parameters):
     """
     Allocate consumption category given a specific luminosity.
 
     """
-    if x['mean_luminosity_km2'] > 5:
+    timestep = timestep - 2020
 
-        return 20
+    if region['mean_luminosity_km2'] > country_parameters['luminosity']['high']:
+        arpu = country_parameters['arpu']['high']
+        return discount_arpu(arpu, timestep, global_parameters)
 
-    elif x['mean_luminosity_km2'] > 1:
-
-        return 5
+    elif region['mean_luminosity_km2'] > country_parameters['luminosity']['medium']:
+        arpu = country_parameters['arpu']['medium']
+        return discount_arpu(arpu, timestep, global_parameters)
 
     else:
-
-        return 2
+        arpu = country_parameters['arpu']['low']
+        return discount_arpu(arpu, timestep, global_parameters)
 
 
 def estimate_phones(x):

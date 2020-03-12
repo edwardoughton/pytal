@@ -7,38 +7,66 @@ Spring 2020.
 
 """
 
-def discount_revenue(revenue, global_parameters):
+def discount_arpu(arpu, timestep, global_parameters):
     """
-    Discount revenue based on return period.
+    Discount arpu based on return period.
 
     192,744 = 23,773 / (1 + 0.05) ** (0:9)
 
     Parameters
     ----------
-    revenue : float
-        Financial revenue.
+    arpu : float
+        Average revenue per user.
+    timestep : int
+        Time period (year) to discount against.
     global_parameters : dict
         All global model parameters.
 
     Returns
     -------
-    discounted_revenue : float
+    discounted_arpu : float
         The discounted revenue over the desired time period.
 
     """
-    return_period = global_parameters['return_period']
     discount_rate = global_parameters['discount_rate'] / 100
 
-    revenue_over_time_period = []
+    discounted_arpu = arpu / (1 + discount_rate) ** timestep
 
-    for i in range(0, return_period):
-        revenue_over_time_period.append(
-            revenue / (1 + discount_rate) ** i
-        )
+    return discounted_arpu
 
-    discounted_revenue = sum(revenue_over_time_period)
 
-    return discounted_revenue
+# def discount_revenue(revenue, timestep, global_parameters):
+#     """
+#     Discount revenue based on return period.
+
+#     192,744 = 23,773 / (1 + 0.05) ** (0:9)
+
+#     Parameters
+#     ----------
+#     revenue : float
+#         Financial revenue.
+#     global_parameters : dict
+#         All global model parameters.
+
+#     Returns
+#     -------
+#     discounted_revenue : float
+#         The discounted revenue over the desired time period.
+
+#     """
+#     return_period = global_parameters['return_period']
+#     discount_rate = global_parameters['discount_rate'] / 100
+
+#     revenue_over_time_period = []
+
+#     for i in range(0, return_period):
+#         revenue_over_time_period.append(
+#             revenue / (1 + discount_rate) ** i
+#         )
+
+#     discounted_revenue = sum(revenue_over_time_period)
+
+#     return discounted_revenue
 
 
 def discount_capex_and_opex(capex, global_parameters):

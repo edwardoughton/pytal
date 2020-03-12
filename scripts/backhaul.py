@@ -13,7 +13,7 @@ import numpy as np
 import rasterio
 from rasterstats import zonal_stats
 from rtree import index
-# import networkx as nx
+import networkx as nx
 from collections import OrderedDict
 from pyproj import Transformer
 import fiona
@@ -27,8 +27,26 @@ DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 
-def extract_large_settlements(country_id, population_threshold_km2, overall_settlement_size):
+def estimate_core_nodes(country_id, population_threshold_km2,
+    overall_settlement_size):
     """
+    This function identifies settlements which exceed a desired settlement
+    size. It is assumed fiber exists at settlements over, for example,
+    20,000 inhabitants.
+
+    Parameters
+    ----------
+    country_id : string
+        ISO 3 digit country code.
+    population_threshold_km2 : int
+        Population density threshold for identifying built up areas.
+    overall_settlement_size : int
+        Overall sittelement size assumption, e.g. 20,000 inhabitants.
+
+    Returns
+    -------
+    output : list of dicts
+        Identified major settlements as Geojson objects.
 
     """
     path = os.path.join(DATA_INTERMEDIATE, country_id, 'settlements.tif')
@@ -52,13 +70,13 @@ def extract_large_settlements(country_id, population_threshold_km2, overall_sett
 
     stats_df = pd.DataFrame(stats)
 
-    df = pd.concat([shapes_df, stats_df], axis=1).drop(columns='value')
+    nodes = pd.concat([shapes_df, stats_df], axis=1).drop(columns='value')
 
-    df = df[df['sum'] >= overall_settlement_size]
+    nodes = nodes[nodes['sum'] >= overall_settlement_size]
 
-    df['geometry'] = df['geometry'].centroid
+    nodes['geometry'] = nodes['geometry'].centroid
 
-    df = get_points_inside_country(df, country_id)
+    nodes = get_points_inside_country(nodes, country_id)
 
     path = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul')
     filename = 'backhaul_routing_locations.shp'
@@ -66,48 +84,82 @@ def extract_large_settlements(country_id, population_threshold_km2, overall_sett
     if not os.path.exists(path):
         os.mkdir(path)
 
-    df.to_file(os.path.join(path, filename))
+    nodes.to_file(os.path.join(path, filename))
 
-    lst = [i for i in df['geometry'].values]
+    output = []
 
-    return lst
+    for index, item in enumerate(nodes.to_dict('records')):
+        output.append({
+            'type': 'Feature',
+            'geometry': mapping(item['geometry']),
+            'properties': {
+                'network_layer': 'core',
+                'id': index,
+            }
+        })
+
+    return output
 
 
-def get_points_inside_country(df, country_id):
+def get_points_inside_country(nodes, country_id):
     """
-    Check routing locations lie inside country.
+    Check settlement locations lie inside target country.
+
+    Parameters
+    ----------
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    country_id : string
+        ISO 3 digit country code.
+
+    Returns
+    -------
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
 
     """
-
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'national_outline.shp')
+    filename = 'national_outline.shp'
+    path = os.path.join(DATA_INTERMEDIATE, country_id, filename)
 
     national_outline = gpd.read_file(path)
 
-    bool_list = df.intersects(national_outline.unary_union)
+    bool_list = nodes.intersects(national_outline.unary_union)
 
-    df = pd.concat([df, bool_list], axis=1)
+    nodes = pd.concat([nodes, bool_list], axis=1)
 
-    df = df[df[0] == True].drop(columns=0)
+    nodes = nodes[nodes[0] == True].drop(columns=0)
 
-    return df
+    return nodes
 
 
-def design_network(nodes):
+def fit_edges(nodes):
+    """
+    Fit edges to the identified nodes using a minimum spanning tree.
 
-    links = []
+    Parameters
+    ----------
+    nodes : list of dicts
+        Core nodes as Geojson objects.
 
-    edges = []
+    Returns
+    -------
+    edges : list of dicts
+        Minimum spanning tree connecting all provided nodes.
+
+    """
+    all_possible_edges = []
 
     for node1_id, node1 in enumerate(nodes):
         for node2_id, node2 in enumerate(nodes):
             if node1_id != node2_id:
-                # geom1 = Point(node1['geometry']['coordinates'])
-                # geom2 = Point(node2['geometry']['coordinates'])
-                line = LineString([node1, node2])
-                edges.append({
+                geom1 = shape(node1['geometry'])
+                geom2 = shape(node2['geometry'])
+                line = LineString([geom1, geom2])
+                all_possible_edges.append({
                     'type': 'Feature',
                     'geometry': mapping(line),
                     'properties':{
+                        'network_layer': 'core',
                         'from': node1_id,
                         'to':  node2_id,
                         'length': line.length,
@@ -116,25 +168,138 @@ def design_network(nodes):
 
     G = nx.Graph()
 
-    for node in nodes:
-        G.add_node(node['properties']['OLO'], object=node)
+    for node_id, node in enumerate(nodes):
+        G.add_node(node_id, object=node)
 
-    for edge in edges:
+    for edge in all_possible_edges:
         G.add_edge(edge['properties']['from'], edge['properties']['to'],
             object=edge, weight=edge['properties']['length'])
 
     tree = nx.minimum_spanning_edges(G)
 
+    edges = []
+
     for branch in tree:
         link = branch[2]['object']
         if link['properties']['length'] > 0:
-            links.append(link)
+            edges.append(link)
 
-    return links
+    return edges
+
+
+def estimate_regional_hubs(path, nodes, regional_hubs_level, country_id):
+    """
+    Identify new regional hub locations to connect.
+
+    Parameters
+    ----------
+    path : string
+        Path to the GADM regions to be used in the analysis.
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    regional_hubs_level : int
+        Relates to the GADM regional levels to be used.
+    country_id : string
+        ISO 3 digit country code.
+
+    Returns
+    -------
+    output : list of dicts
+        Contains new regional hub nodes as Geojson objects.
+
+    """
+    output = []
+
+    regions = gpd.read_file(path)
+
+    nodes = gpd.GeoDataFrame.from_features(nodes)
+
+    for index2, region in regions.iterrows():
+
+        if not region['GID_0'] == country_id:
+            continue
+
+        indicator = 0
+        for index1, node in nodes.iterrows():
+            if node['geometry'].intersects(region['geometry']):
+                indicator = 1
+
+        if indicator == 0:
+            output.append({
+                'type': 'Feature',
+                'geometry': mapping(region['geometry'].centroid),
+                'properties': {
+                    'id': region['GID_{}'.format(regional_hubs_level)]
+                }
+            })
+        else:
+            pass
+
+    return output
+
+
+def fit_regional_edges(core_nodes, regional_hubs):
+    """
+    Fit edges to the identified nodes using a minimum spanning tree.
+
+    Parameters
+    ----------
+    core_nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    regional_hubs :
+
+    Returns
+    -------
+    edges : list of dicts
+        Minimum spanning tree connecting all provided nodes.
+
+    """
+    idx = index.Index()
+
+    fibre_points_with_id = []
+
+    for node in core_nodes:
+        # fibre_points_with_id.append(fibre_point)
+        idx.insert(
+            node['properties']['id'],
+            shape(node['geometry']).bounds,
+            node)
+
+    # transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857")
+
+    output = []
+
+    for regional_hub in regional_hubs:
+
+        geom1 = shape(regional_hub['geometry'])
+
+        nearest = [i for i in idx.nearest((geom1.bounds))][0]
+
+        for core_node in core_nodes:
+            if nearest == core_node['properties']['id']:
+                geom2 = shape(core_node['geometry'])
+                output.append({
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': (
+                            (list(geom1.coords)[0][0], list(geom1.coords)[0][1]),
+                            (list(geom2.coords)[0][0], list(geom2.coords)[0][1])
+                            )
+                        },
+                    'properties': {
+                        'regional_hub': regional_hub['properties']['id'],
+                        'core_node': core_node['properties']['id'],
+                        },
+                    })
+
+    return output
 
 
 def backhaul_distance(nodes, country, path_regions):
     """
+
+
 
     """
     country_id = country['country']
@@ -151,10 +316,10 @@ def backhaul_distance(nodes, country, path_regions):
 
     fibre_points_with_id = []
     point_id = 0
-    for geom in nodes:
+    for node in nodes:
         fibre_point = {
             'type': 'Polygon',
-            'geom': geom,
+            'geometry': node['geometry'],
             'properties': {
                 'point_id': point_id,
             }
@@ -162,7 +327,7 @@ def backhaul_distance(nodes, country, path_regions):
         fibre_points_with_id.append(fibre_point)
         idx.insert(
             point_id,
-            geom.bounds,
+            shape(node['geometry']).bounds,
             fibre_point)
         point_id += 1
 
@@ -180,7 +345,8 @@ def backhaul_distance(nodes, country, path_regions):
 
         for fibre_point in fibre_points_with_id:
             if nearest == fibre_point['properties']['point_id']:
-                geom1 = fibre_point['geom']
+
+                geom1 = shape(fibre_point['geometry'])
 
                 x1 = list(geom1.coords)[0][0]
                 y1 = list(geom1.coords)[0][1]
@@ -260,12 +426,12 @@ if __name__ == '__main__':
     overall_settlement_size = 20000
 
     country_list = [
-        {'country': 'UGA', 'regional_level': 3},
-        {'country': 'ETH', 'regional_level': 3},
-        {'country': 'BGD', 'regional_level': 3},
-        {'country': 'PER', 'regional_level': 3},
-        {'country': 'MWI', 'regional_level': 3},
-        {'country': 'ZAF', 'regional_level': 3},
+        {'country': 'UGA', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country': 'ETH', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country': 'BGD', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country': 'PER', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country': 'MWI', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country': 'ZAF', 'regional_level': 3, 'regional_hubs_level': 2},
         ]
 
     for country in country_list:
@@ -274,19 +440,50 @@ if __name__ == '__main__':
 
         print('Working on {}'.format(country_id))
 
-        nodes = extract_large_settlements(
+        print('Generating core nodes')
+        core_nodes = estimate_core_nodes(
             country_id,
             population_density_threshold_km2,
             overall_settlement_size
         )
 
-        # links = design_network(nodes)
+        folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
+        write_shapefile(core_nodes, folder, 'core_nodes.shp', 'epsg:4326')
+
+        print('Generating core edges')
+        core_edges = fit_edges(core_nodes)
+
+        folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
+        write_shapefile(core_edges, folder, 'core_edges.shp', 'epsg:4326')
+
+        print('Generating regional hubs')
+        filename = 'global_regions_{}.shp'.format(country['regional_hubs_level'])
+        path = os.path.join(DATA_INTERMEDIATE, filename)
+
+        regional_hubs = estimate_regional_hubs(path, core_nodes,
+            country['regional_hubs_level'], country_id)
+
+        #Countries like Bangladesh with have a node in every region unless the
+        #settlement size is adapted (hence there will be no regional hubs)
+        if len(regional_hubs) > 0:
+
+            folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
+            write_shapefile(regional_hubs, folder, 'regional_hubs.shp', 'epsg:4326')
+
+            print('Generating regional edges')
+            regional_edges = fit_regional_edges(core_nodes, regional_hubs)
+
+            folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
+            write_shapefile(regional_edges, folder, 'regional_edges.shp', 'epsg:4326')
 
         path = os.path.join(DATA_INTERMEDIATE, country_id, 'regions_lowest')
 
         if os.path.exists(path):
 
-            output_csv, output_shapes = backhaul_distance(nodes, country, path)
+            all_nodes = core_nodes + regional_hubs
+
+            print('Estimating backhaul distance for all areas')
+            output_csv, output_shapes = backhaul_distance(all_nodes, country, path)
 
             folder = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul')
 
@@ -297,5 +494,6 @@ if __name__ == '__main__':
             write_shapefile(output_shapes, folder, 'backhaul.shp', 'epsg:4326')
 
         else:
-
             print('Regions not found for {}: Run preprocess.py first'.format(country_id))
+
+        print('Completed {}'.format(country_id))

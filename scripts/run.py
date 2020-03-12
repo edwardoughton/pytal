@@ -161,6 +161,21 @@ def find_country_list(continent_list):
     return country_list, country_regional_levels
 
 
+def load_penetration(path):
+    """
+    Load penetration forecast.
+
+    """
+    output = {}
+
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            output[int(row['year'])] = float(row['penetration'])
+
+    return output
+
+
 def csv_writer(data, directory, filename):
     """
     Write data to a CSV file path.
@@ -220,6 +235,11 @@ def write_shapefile(data, directory, filename, crs):
 
 if __name__ == '__main__':
 
+    BASE_YEAR = 2020
+    END_YEAR = 2030
+    TIMESTEP_INCREMENT = 1
+    TIMESTEPS = [t for t in range(BASE_YEAR, END_YEAR + 1, TIMESTEP_INCREMENT)]
+
     COSTS = {
         #all costs in $USD
         'single_sector_antenna': 1500,
@@ -278,6 +298,10 @@ if __name__ == '__main__':
 
             country_parameters = COUNTRY_PARAMETERS[country]
 
+            folder = os.path.join(DATA_INTERMEDIATE, country, 'subscriptions')
+            filename = 'subs_forecast.csv'
+            penetration_lut = load_penetration(os.path.join(folder, filename))
+
             # if not country == 'ESH':
             #     continue
 
@@ -286,6 +310,7 @@ if __name__ == '__main__':
             print(' ')
 
             for option in options:
+
                 if not option['strategy'] == '4G_epc_microwave_baseline':
                     continue
 
@@ -295,11 +320,16 @@ if __name__ == '__main__':
                 path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
                 data = load_regions(path)[:1]
 
+
+                data = data.to_dict('records')
+
                 data = estimate_demand(
                     data,
                     option,
                     GLOBAL_PARAMETERS,
-                    country_parameters
+                    country_parameters,
+                    TIMESTEPS,
+                    penetration_lut
                 )
 
                 data = estimate_supply(

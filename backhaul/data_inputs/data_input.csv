@@ -1,0 +1,57 @@
+Technology,Region,Value,Year
+Copper,Europe,7,2017
+Fiber,Europe,14,2017
+Microwave,Europe,77,2017
+Satellite,Europe,2,2017
+Copper,Europe,0,2025
+Fiber,Europe,33,2025
+Microwave,Europe,65,2025
+Satellite,Europe,2,2025
+Copper,NE Asia,0,2017
+Fiber,NE Asia,81,2017
+Microwave,NE Asia,18,2017
+Satellite,NE Asia,1,2017
+Copper,NE Asia,0,2025
+Fiber,NE Asia,81,2025
+Microwave,NE Asia,18,2025
+Satellite,NE Asia,1,2025
+Copper,S&SE Asia,3,2017
+Fiber,S&SE Asia,1,2017
+Microwave,S&SE Asia,94,2017
+Satellite,S&SE Asia,2,2017
+Copper,S&SE Asia,3,2025
+Fiber,S&SE Asia,17,2025
+Microwave,S&SE Asia,78,2025
+Satellite,S&SE Asia,2,2025
+Copper,N America,3,2017
+Fiber,N America,70,2017
+Microwave,N America,26,2017
+Satellite,N America,1,2017
+Copper,N America,1,2025
+Fiber,N America,73,2025
+Microwave,N America,25,2025
+Satellite,N America,1,2025
+Copper,LAC,4,2017
+Fiber,LAC,9,2017
+Microwave,LAC,83,2017
+Satellite,LAC,4,2017
+Copper,LAC,1,2025
+Fiber,LAC,21,2025
+Microwave,LAC,75,2025
+Satellite,LAC,3,2025
+Copper,MENA,5,2017
+Fiber,MENA,6,2017
+Microwave,MENA,84,2017
+Satellite,MENA,5,2017
+Copper,MENA,1,2025
+Fiber,MENA,20,2025
+Microwave,MENA,75,2025
+Satellite,MENA,4,2025
+Copper,SSA,6,2017
+Fiber,SSA,4,2017
+Microwave,SSA,84,2017
+Satellite,SSA,6,2017
+Copper,SSA,1,2025
+Fiber,SSA,15,2025
+Microwave,SSA,79,2025
+Satellite,SSA,5,2025
