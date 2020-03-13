@@ -17,9 +17,8 @@ from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
 from rasterstats import zonal_stats
-from shapely.ops import transform
-
-from core import create_core
+import networkx as nx
+from rtree import index
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -46,6 +45,7 @@ def find_country_list(continent_list):
         the stated continent.
 
     """
+    print('----')
     print('Loading all countries')
     path = os.path.join(DATA_RAW, 'gadm36_levels_shp', 'gadm36_0.shp')
     countries = gpd.read_file(path)
@@ -90,6 +90,8 @@ def process_country_shapes(country):
         Three digit ISO country code.
 
     """
+    print('----')
+
     iso3 = country['iso3']
 
     print('Loading all country shapes')
@@ -196,6 +198,8 @@ def process_settlement_layer(country):
         Three digit ISO country code.
 
     """
+    print('----')
+
     path_settlements = os.path.join(DATA_RAW,'settlement_layer',
         'ppp_2020_1km_Aggregated.tif')
 
@@ -261,6 +265,7 @@ def process_night_lights(country):
 
     country = gpd.read_file(path_country)
 
+    print('----')
     print('working on {}'.format(iso3))
 
     path_country = os.path.join(DATA_INTERMEDIATE, iso3)
@@ -314,6 +319,7 @@ def process_coverage_shapes(country):
 
     for tech in technologies:
 
+        print('----')
         print('Working on {} in {}'.format(tech, iso3))
 
         filename = 'Inclusions_201812_{}.shp'.format(tech)
@@ -392,6 +398,7 @@ def get_regional_data(country):
 
     single_country = gpd.read_file(path_country)
 
+    print('----')
     print('working on {}'.format(iso3))
 
     path_night_lights = os.path.join(DATA_INTERMEDIATE, iso3,
@@ -400,15 +407,14 @@ def get_regional_data(country):
         'settlements.tif')
 
     filename = 'regions_{}_{}.shp'.format(level, iso3)
-    folder = os.path.join(DATA_INTERMEDIATE, iso3,
-        'regions_lowest')
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
     path = os.path.join(folder, filename)
 
     path_regions = gpd.read_file(path)
 
     project = pyproj.Transformer.from_proj(
-        pyproj.Proj(init='epsg:4326'), # source coordinate system
-        pyproj.Proj(init='epsg:3857')) # destination coordinate system
+        pyproj.Proj("EPSG:4326"), #"EPSG:4326" # source coordinate system
+        pyproj.Proj("EPSG:3857")) #"EPSG:3857" # destination coordinate system
 
     results = []
 
@@ -570,6 +576,331 @@ def clean_coverage(x):
         return MultiPolygon(new_geom)
 
 
+def estimate_core_nodes(iso3, pop_density_km2, settlement_size):
+    """
+    This function identifies settlements which exceed a desired settlement
+    size. It is assumed fiber exists at settlements over, for example,
+    20,000 inhabitants.
+
+    Parameters
+    ----------
+    iso3 : string
+        ISO 3 digit country code.
+    pop_density_km2 : int
+        Population density threshold for identifying built up areas.
+    settlement_size : int
+        Overall sittelement size assumption, e.g. 20,000 inhabitants.
+
+    Returns
+    -------
+    output : list of dicts
+        Identified major settlements as Geojson objects.
+
+    """
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'settlements.tif')
+
+    with rasterio.open(path) as src:
+        data = src.read()
+        threshold = pop_density_km2
+        data[data < threshold] = 0
+        data[data >= threshold] = 1
+        polygons = rasterio.features.shapes(data, transform=src.transform)
+        shapes_df = gpd.GeoDataFrame.from_features(
+            [
+                {'geometry': poly, 'properties':{'value':value}}
+                for poly, value in polygons
+                if value > 0
+            ],
+            crs='epsg:4326'
+        )
+
+    stats = zonal_stats(shapes_df['geometry'], path, stats=['count', 'sum'])
+
+    stats_df = pd.DataFrame(stats)
+
+    nodes = pd.concat([shapes_df, stats_df], axis=1).drop(columns='value')
+
+    nodes = nodes[nodes['sum'] >= settlement_size]
+
+    nodes['geometry'] = nodes['geometry'].centroid
+
+    nodes = get_points_inside_country(nodes, iso3)
+
+    output = []
+
+    for index, item in enumerate(nodes.to_dict('records')):
+        output.append({
+            'type': 'Feature',
+            'geometry': mapping(item['geometry']),
+            'properties': {
+                'network_layer': 'core',
+                'id': index,
+            }
+        })
+
+    return output
+
+
+def get_points_inside_country(nodes, iso3):
+    """
+    Check settlement locations lie inside target country.
+
+    Parameters
+    ----------
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    iso3 : string
+        ISO 3 digit country code.
+
+    Returns
+    -------
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+
+    """
+    filename = 'national_outline.shp'
+    path = os.path.join(DATA_INTERMEDIATE, iso3, filename)
+
+    national_outline = gpd.read_file(path)
+
+    bool_list = nodes.intersects(national_outline.unary_union)
+
+    nodes = pd.concat([nodes, bool_list], axis=1)
+
+    nodes = nodes[nodes[0] == True].drop(columns=0)
+
+    return nodes
+
+
+def fit_edges(nodes):
+    """
+    Fit edges to the identified nodes using a minimum spanning tree.
+
+    Parameters
+    ----------
+    nodes : list of dicts
+        Core nodes as Geojson objects.
+
+    Returns
+    -------
+    edges : list of dicts
+        Minimum spanning tree connecting all provided nodes.
+
+    """
+    all_possible_edges = []
+
+    for node1_id, node1 in enumerate(nodes):
+        for node2_id, node2 in enumerate(nodes):
+            if node1_id != node2_id:
+                geom1 = shape(node1['geometry'])
+                geom2 = shape(node2['geometry'])
+                line = LineString([geom1, geom2])
+                all_possible_edges.append({
+                    'type': 'Feature',
+                    'geometry': mapping(line),
+                    'properties':{
+                        'network_layer': 'core',
+                        'from': node1_id,
+                        'to':  node2_id,
+                        'length': line.length,
+                    }
+                })
+
+    G = nx.Graph()
+
+    for node_id, node in enumerate(nodes):
+        G.add_node(node_id, object=node)
+
+    for edge in all_possible_edges:
+        G.add_edge(edge['properties']['from'], edge['properties']['to'],
+            object=edge, weight=edge['properties']['length'])
+
+    tree = nx.minimum_spanning_edges(G)
+
+    edges = []
+
+    for branch in tree:
+        link = branch[2]['object']
+        if link['properties']['length'] > 0:
+            edges.append(link)
+
+    return edges
+
+
+def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
+    """
+    Identify new regional hub locations to connect.
+
+    Parameters
+    ----------
+    path : string
+        Path to the GADM regions to be used in the analysis.
+    nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    regional_hubs_level : int
+        Relates to the GADM regional levels to be used.
+    iso3 : string
+        ISO 3 digit country code.
+
+    Returns
+    -------
+    output : list of dicts
+        Contains new regional hub nodes as Geojson objects.
+
+    """
+    output = []
+
+    regions = gpd.read_file(path)
+
+    nodes = gpd.GeoDataFrame.from_features(nodes)
+
+    for index2, region in regions.iterrows():
+
+        if not region['GID_0'] == iso3:
+            continue
+
+        indicator = 0
+        for index1, node in nodes.iterrows():
+            if node['geometry'].intersects(region['geometry']):
+                indicator = 1
+
+        if indicator == 0:
+            output.append({
+                'type': 'Feature',
+                'geometry': mapping(region['geometry'].centroid),
+                'properties': {
+                    'id': region['GID_{}'.format(regional_hubs_level)]
+                }
+            })
+        else:
+            pass
+
+    return output
+
+
+def fit_regional_edges(core_nodes, regional_hubs):
+    """
+    Fit edges to the identified nodes using a minimum spanning tree.
+
+    Parameters
+    ----------
+    core_nodes : dataframe
+        A geopandas dataframe containing settlement nodes.
+    regional_hubs :
+
+    Returns
+    -------
+    edges : list of dicts
+        Minimum spanning tree connecting all provided nodes.
+
+    """
+    idx = index.Index()
+
+    for node in core_nodes:
+        idx.insert(
+            node['properties']['id'],
+            shape(node['geometry']).bounds,
+            node)
+
+    output = []
+
+    for regional_hub in regional_hubs:
+
+        geom1 = shape(regional_hub['geometry'])
+
+        nearest = [i for i in idx.nearest((geom1.bounds))][0]
+
+        for core_node in core_nodes:
+            if nearest == core_node['properties']['id']:
+                geom2 = shape(core_node['geometry'])
+                output.append({
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': (
+                            (list(geom1.coords)[0][0], list(geom1.coords)[0][1]),
+                            (list(geom2.coords)[0][0], list(geom2.coords)[0][1])
+                            )
+                        },
+                    'properties': {
+                        'regional_hub': regional_hub['properties']['id'],
+                        'core_node': core_node['properties']['id'],
+                        },
+                    })
+
+    return output
+
+
+def create_network(country, pop_density_km2, settlement_size):
+    """
+    Create a core network and any necessary regional hubs.
+
+    Parameters
+    ----------
+    country : dict
+        Contains specific country information.
+    pop_density_km2 : int
+        Population density threshold per km^2.
+    settlement_size : int
+        Overall settlement size.
+
+    """
+    print('---')
+
+    iso3 = country['iso3']
+    regional_hubs_level = country['regional_hubs_level']
+
+    print('Working on {}'.format(iso3))
+
+    print('Generating core nodes')
+    core_nodes = estimate_core_nodes(
+        iso3,
+        pop_density_km2,
+        settlement_size
+    )
+
+    print('Generating core edges')
+    core_edges = fit_edges(core_nodes)
+
+    print('Generating regional hubs')
+    filename = 'regions_{}_{}.shp'.format(regional_hubs_level, iso3)
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
+    path = os.path.join(folder, filename)
+
+    regional_hubs = estimate_regional_hubs(path, core_nodes,
+        regional_hubs_level, iso3)
+
+    #Countries like Bangladesh with have a node in every region unless the
+    #settlement size is adapted (hence there will be no regional hubs)
+    if len(regional_hubs) > 0:
+
+        print('Generating regional edges')
+        regional_edges = fit_regional_edges(core_nodes, regional_hubs)
+
+        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs')
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        regional_hubs = gpd.GeoDataFrame.from_features(regional_hubs, crs='epsg:4326')
+        regional_hubs.to_file(os.path.join(path, 'regional_hubs.shp'))
+
+        regional_edges = gpd.GeoDataFrame.from_features(regional_edges, crs='epsg:4326')
+        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs', 'regional_edges.shp')
+        regional_edges.to_file(path)
+
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    core_nodes = gpd.GeoDataFrame.from_features(core_nodes, crs='epsg:4326')
+    core_nodes.to_file(os.path.join(path, 'core_nodes.shp'))
+
+    core_edges = gpd.GeoDataFrame.from_features(core_edges, crs='epsg:4326')
+    core_edges.to_file(os.path.join(path, 'core_edges.shp'))
+
+    print('Completed {}'.format(iso3))
+
+
 if __name__ == '__main__':
 
     # countries = find_country_list(['Africa'])
@@ -584,27 +915,28 @@ if __name__ == '__main__':
         # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 3, 'regional_hubs_level':2},
         ]
 
-    population_density_threshold_km2 = 1000
-    overall_settlement_size = 20000
+    pop_density_km2 = 1000
+    settlement_size = 20000
 
     for country in countries:
 
-        # print('Processing country boundary')
-        # process_country_shapes(country)
+        print('Processing country boundary')
+        process_country_shapes(country)
 
-        # print('Processing regions')
-        # process_regions(country)
+        print('Processing regions')
+        process_regions(country)
 
-        # print('Processing settlement layer')
-        # process_settlement_layer(country)
+        print('Processing settlement layer')
+        process_settlement_layer(country)
 
-        # print('Processing night lights')
-        # process_night_lights(country)
+        print('Processing night lights')
+        process_night_lights(country)
 
-        # print('Processing coverage shapes')
-        # process_coverage_shapes(country)
+        print('Processing coverage shapes')
+        process_coverage_shapes(country)
 
-        # print('Getting regional data')
-        # get_regional_data(country)
+        print('Getting regional data')
+        get_regional_data(country)
 
-        create_core(country, population_density_threshold_km2, overall_settlement_size)
+        print('Creating network')
+        create_network(country, pop_density_km2, settlement_size)
