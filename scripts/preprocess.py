@@ -19,6 +19,8 @@ from rasterio.mask import mask
 from rasterstats import zonal_stats
 from shapely.ops import transform
 
+from core import create_core
+
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
 BASE_PATH = CONFIG['file_locations']['base_path']
@@ -70,8 +72,8 @@ def find_country_list(continent_list):
 
         countries.append({
             'country_name': country['country'],
-            'country_code_ISO3': country['GID_0'],
-            'country_code_ISO2': country['ISO_2digit'],
+            'iso3': country['GID_0'],
+            'iso2': country['ISO_2digit'],
             'regional_level': regional_level,
         })
 
@@ -88,14 +90,14 @@ def process_country_shapes(country):
         Three digit ISO country code.
 
     """
-    country_code_ISO3 = country['country_code_ISO3']
+    iso3 = country['iso3']
 
     print('Loading all country shapes')
     path = os.path.join(DATA_RAW, 'gadm36_levels_shp', 'gadm36_0.shp')
     countries = gpd.read_file(path)
 
-    print('Getting specific country shape for {}'.format(country_code_ISO3))
-    single_country = countries[countries.GID_0 == country_code_ISO3]
+    print('Getting specific country shape for {}'.format(iso3))
+    single_country = countries[countries.GID_0 == iso3]
 
     print('Excluding small shapes')
     single_country['geometry'] = single_country.apply(
@@ -116,7 +118,7 @@ def process_country_shapes(country):
         load_glob_info,left_on='GID_0', right_on='ISO_3digit')
 
     print('Exporting processed country shape')
-    path = os.path.join(DATA_INTERMEDIATE, country_code_ISO3)
+    path = os.path.join(DATA_INTERMEDIATE, iso3)
     if not os.path.exists(path):
         print('Creating directory {}'.format(path))
         os.makedirs(path)
@@ -126,7 +128,7 @@ def process_country_shapes(country):
     return print('Processing country shape complete')
 
 
-def process_lowest_regions(country):
+def process_regions(country):
     """
     Function for processing the lowest desired subnational regions for the
     chosen country.
@@ -139,51 +141,44 @@ def process_lowest_regions(country):
     """
     regions = []
 
-    country_code_ISO3 = country['country_code_ISO3']
+    iso3 = country['iso3']
     level = country['regional_level']
 
-    filename = 'regions_{}_{}.shp'.format(level, country_code_ISO3)
-    folder = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
-        'regions_lowest')
-    path_processed = os.path.join(folder, filename)
+    for regional_level in range(1, level + 1):
 
-    if not os.path.exists(path_processed):
+        print('----')
+        print('Working on {} level {}'.format(iso3, regional_level))
+
+        filename = 'regions_{}_{}.shp'.format(regional_level, iso3)
+        folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
+        path_processed = os.path.join(folder, filename)
 
         if not os.path.exists(folder):
             os.mkdir(folder)
 
-        print('Working on regions')
-        filename = 'gadm36_{}.shp'.format(level)
+        filename = 'gadm36_{}.shp'.format(regional_level)
         path_regions = os.path.join(DATA_RAW, 'gadm36_levels_shp', filename)
         regions = gpd.read_file(path_regions)
 
-        path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
-            'national_outline.shp')
-        countries = gpd.read_file(path_country)
+        print('Subsetting {} level {}'.format(iso3, regional_level))
+        regions = regions[regions.GID_0 == iso3]
 
-        for name in countries.GID_0.unique():
+        print('Excluding small shapes')
+        regions['geometry'] = regions.apply(exclude_small_shapes, axis=1)
 
-            if not name == country_code_ISO3:
-                continue
-
-            print('Working on {}'.format(name))
-            regions = regions[regions.GID_0 == name]
-
-            print('Excluding small shapes')
-            regions['geometry'] = regions.apply(exclude_small_shapes, axis=1)
-
-            print('Simplifying geometries')
-            regions['geometry'] = regions.simplify(
+        print('Simplifying geometries')
+        regions['geometry'] = regions.simplify(
+            tolerance = 0.005,
+            preserve_topology=True).buffer(0.01).simplify(
                 tolerance = 0.005,
-                preserve_topology=True).buffer(0.01).simplify(
-                    tolerance = 0.005,
-                    preserve_topology=True
-                )
-            try:
-                print('Writing global_regions.shp to file')
-                regions.to_file(path_processed, driver='ESRI Shapefile')
-            except:
-                pass
+                preserve_topology=True
+            )
+        try:
+            print('Writing global_regions.shp to file')
+            regions.to_file(path_processed, driver='ESRI Shapefile')
+        except:
+            print('Unable to write {}'.format(filename))
+            pass
 
     print('Completed processing of regional shapes level {}'.format(level))
 
@@ -208,8 +203,8 @@ def process_settlement_layer(country):
     settlements.nodata = 255
     settlements.crs = {"init": "epsg:4326"}
 
-    country_code_ISO3 = country['country_code_ISO3']
-    path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    iso3 = country['iso3']
+    path_country = os.path.join(DATA_INTERMEDIATE, iso3,
         'national_outline.shp')
 
     if os.path.exists(path_country):
@@ -217,7 +212,7 @@ def process_settlement_layer(country):
     else:
         print('Must generate national_outline.shp first' )
 
-    path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3)
+    path_country = os.path.join(DATA_INTERMEDIATE, iso3)
     shape_path = os.path.join(path_country, 'settlements.tif')
 
     bbox = country.envelope
@@ -256,8 +251,8 @@ def process_night_lights(country):
         Three digit ISO country code.
 
     """
-    country_code_ISO3 = country['country_code_ISO3']
-    path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    iso3 = country['iso3']
+    path_country = os.path.join(DATA_INTERMEDIATE, iso3,
         'national_outline.shp')
 
     filename = 'F182013.v4c_web.stable_lights.avg_vis.tif'
@@ -266,9 +261,9 @@ def process_night_lights(country):
 
     country = gpd.read_file(path_country)
 
-    print('working on {}'.format(country_code_ISO3))
+    print('working on {}'.format(iso3))
 
-    path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3)
+    path_country = os.path.join(DATA_INTERMEDIATE, iso3)
 
     bbox = country.envelope
 
@@ -308,8 +303,8 @@ def process_coverage_shapes(country):
         Three digit ISO country code.
 
     """
-    country_code_ISO3 = country['country_code_ISO3']
-    country_code_ISO2 = country['country_code_ISO2']
+    iso3 = country['iso3']
+    iso2 = country['iso2']
 
     technologies = [
         'GSM',
@@ -319,21 +314,21 @@ def process_coverage_shapes(country):
 
     for tech in technologies:
 
-        print('Working on {} in {}'.format(tech, country_code_ISO3))
+        print('Working on {} in {}'.format(tech, iso3))
 
         filename = 'Inclusions_201812_{}.shp'.format(tech)
         folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
             'Data_MCE')
         inclusions = gpd.read_file(os.path.join(folder, filename))
 
-        if country_code_ISO2 in inclusions['CNTRY_ISO2']:
+        if iso2 in inclusions['CNTRY_ISO2']:
 
             filename = 'MCE_201812_{}.shp'.format(tech)
             folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
                 'Data_MCE')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
-            coverage = coverage.loc[coverage['CNTRY_ISO3'] == country_code_ISO3]
+            coverage = coverage.loc[coverage['CNTRY_ISO3'] == iso3]
 
         else:
 
@@ -342,7 +337,7 @@ def process_coverage_shapes(country):
                 'Data_OCI')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
-            coverage = coverage.loc[coverage['CNTRY_ISO3'] == country_code_ISO3]
+            coverage = coverage.loc[coverage['CNTRY_ISO3'] == iso3]
 
         if len(coverage) > 0:
 
@@ -367,7 +362,7 @@ def process_coverage_shapes(country):
                 preserve_topology=True
             )
 
-            folder = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+            folder = os.path.join(DATA_INTERMEDIATE, iso3,
                 'coverage')
 
             if not os.path.exists(folder):
@@ -391,21 +386,21 @@ def get_regional_data(country):
 
     """
     level = country['regional_level']
-    country_code_ISO3 = country['country_code_ISO3']
-    path_country = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    iso3 = country['iso3']
+    path_country = os.path.join(DATA_INTERMEDIATE, iso3,
         'national_outline.shp')
 
     single_country = gpd.read_file(path_country)
 
-    print('working on {}'.format(country_code_ISO3))
+    print('working on {}'.format(iso3))
 
-    path_night_lights = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    path_night_lights = os.path.join(DATA_INTERMEDIATE, iso3,
         'night_lights.tif')
-    path_settlements = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    path_settlements = os.path.join(DATA_INTERMEDIATE, iso3,
         'settlements.tif')
 
-    filename = 'regions_{}_{}.shp'.format(level, country_code_ISO3)
-    folder = os.path.join(DATA_INTERMEDIATE, country_code_ISO3,
+    filename = 'regions_{}_{}.shp'.format(level, iso3)
+    folder = os.path.join(DATA_INTERMEDIATE, iso3,
         'regions_lowest')
     path = os.path.join(folder, filename)
 
@@ -580,31 +575,36 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'country_code_ISO3': 'SEN', 'country_code_ISO2': 'SN', 'regional_level': 3},
-        # {'country_code_ISO3': 'UGA', 'country_code_ISO2': 'UG', 'regional_level': 3},
-        # {'country_code_ISO3': 'ETH', 'country_code_ISO2': 'ET', 'regional_level': 3},
-        # {'country_code_ISO3': 'BGD', 'country_code_ISO2': 'BD', 'regional_level': 3},
-        {'country_code_ISO3': 'PER', 'country_code_ISO2': 'PE', 'regional_level': 3},
-        # {'country_code_ISO3': 'MWI', 'country_code_ISO2': 'MW', 'regional_level': 3},
-        # {'country_code_ISO3': 'ZAF', 'country_code_ISO2': 'ZA', 'regional_level': 3},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 3, 'regional_hubs_level':2},
         ]
+
+    population_density_threshold_km2 = 1000
+    overall_settlement_size = 20000
 
     for country in countries:
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing lowest regions')
-        process_lowest_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
+
+        create_core(country, population_density_threshold_km2, overall_settlement_size)

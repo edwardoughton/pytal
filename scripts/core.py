@@ -27,7 +27,7 @@ DATA_INTERMEDIATE = os.path.join(BASE_PATH, 'intermediate')
 DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 
 
-def estimate_core_nodes(country_id, population_threshold_km2,
+def estimate_core_nodes(iso3, population_threshold_km2,
     overall_settlement_size):
     """
     This function identifies settlements which exceed a desired settlement
@@ -36,7 +36,7 @@ def estimate_core_nodes(country_id, population_threshold_km2,
 
     Parameters
     ----------
-    country_id : string
+    iso3 : string
         ISO 3 digit country code.
     population_threshold_km2 : int
         Population density threshold for identifying built up areas.
@@ -49,7 +49,7 @@ def estimate_core_nodes(country_id, population_threshold_km2,
         Identified major settlements as Geojson objects.
 
     """
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'settlements.tif')
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'settlements.tif')
 
     with rasterio.open(path) as src:
         data = src.read()
@@ -76,9 +76,9 @@ def estimate_core_nodes(country_id, population_threshold_km2,
 
     nodes['geometry'] = nodes['geometry'].centroid
 
-    nodes = get_points_inside_country(nodes, country_id)
+    nodes = get_points_inside_country(nodes, iso3)
 
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul')
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
     filename = 'backhaul_routing_locations.shp'
 
     if not os.path.exists(path):
@@ -101,7 +101,7 @@ def estimate_core_nodes(country_id, population_threshold_km2,
     return output
 
 
-def get_points_inside_country(nodes, country_id):
+def get_points_inside_country(nodes, iso3):
     """
     Check settlement locations lie inside target country.
 
@@ -109,7 +109,7 @@ def get_points_inside_country(nodes, country_id):
     ----------
     nodes : dataframe
         A geopandas dataframe containing settlement nodes.
-    country_id : string
+    iso3 : string
         ISO 3 digit country code.
 
     Returns
@@ -119,7 +119,7 @@ def get_points_inside_country(nodes, country_id):
 
     """
     filename = 'national_outline.shp'
-    path = os.path.join(DATA_INTERMEDIATE, country_id, filename)
+    path = os.path.join(DATA_INTERMEDIATE, iso3, filename)
 
     national_outline = gpd.read_file(path)
 
@@ -187,7 +187,7 @@ def fit_edges(nodes):
     return edges
 
 
-def estimate_regional_hubs(path, nodes, regional_hubs_level, country_id):
+def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
     """
     Identify new regional hub locations to connect.
 
@@ -199,7 +199,7 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, country_id):
         A geopandas dataframe containing settlement nodes.
     regional_hubs_level : int
         Relates to the GADM regional levels to be used.
-    country_id : string
+    iso3 : string
         ISO 3 digit country code.
 
     Returns
@@ -216,7 +216,7 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, country_id):
 
     for index2, region in regions.iterrows():
 
-        if not region['GID_0'] == country_id:
+        if not region['GID_0'] == iso3:
             continue
 
         indicator = 0
@@ -302,11 +302,11 @@ def backhaul_distance(nodes, country, path_regions):
 
 
     """
-    country_id = country['country']
+    iso3 = country['country']
     level = country['regional_level']
 
-    filename = 'regions_{}_{}.shp'.format(level, country_id)
-    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regions_lowest')
+    filename = 'regions_{}_{}.shp'.format(level, iso3)
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions_lowest')
     path = os.path.join(folder, filename)
 
     region_data = gpd.read_file(path)
@@ -420,60 +420,76 @@ def write_shapefile(data, directory, filename, crs):
             sink.write(datum)
 
 
+def create_core(country, population_density_threshold_km2,
+    overall_settlement_size):
+    """
+
+    """
+    iso3 = country['iso3']
+    regional_hubs_level = country['regional_hubs_level']
+
+    print('---')
+    print('Working on {}'.format(iso3))
+
+    print('Generating core nodes')
+    core_nodes = estimate_core_nodes(
+        iso3,
+        population_density_threshold_km2,
+        overall_settlement_size
+    )
+
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+    write_shapefile(core_nodes, folder, 'core_nodes.shp', 'epsg:4326')
+
+    print('Generating core edges')
+    core_edges = fit_edges(core_nodes)
+
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+    write_shapefile(core_edges, folder, 'core_edges.shp', 'epsg:4326')
+
+    print('Generating regional hubs')
+    filename = 'global_regions_{}.shp'.format(regional_hubs_level)
+    path = os.path.join(DATA_INTERMEDIATE, filename)
+
+    filename = 'regions_{}_{}.shp'.format(regional_hubs_level, iso3)
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
+    path = os.path.join(folder, filename)
+
+    regional_hubs = estimate_regional_hubs(path, core_nodes,
+        regional_hubs_level, iso3)
+
+    #Countries like Bangladesh with have a node in every region unless the
+    #settlement size is adapted (hence there will be no regional hubs)
+    if len(regional_hubs) > 0:
+
+        folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs')
+        write_shapefile(regional_hubs, folder, 'regional_hubs.shp', 'epsg:4326')
+
+        print('Generating regional edges')
+        regional_edges = fit_regional_edges(core_nodes, regional_hubs)
+
+        folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs')
+        write_shapefile(regional_edges, folder, 'regional_edges.shp', 'epsg:4326')
+
+    print('Completed {}'.format(iso3))
+
+
 if __name__ == '__main__':
 
     population_density_threshold_km2 = 1000
     overall_settlement_size = 20000
 
     country_list = [
-        {'country': 'UGA', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'country': 'ETH', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'country': 'BGD', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'country': 'PER', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'country': 'MWI', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'country': 'ZAF', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'country_code_ISO3': 'UGA', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country_code_ISO3': 'ETH', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country_code_ISO3': 'BGD', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country_code_ISO3': 'PER', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country_code_ISO3': 'MWI', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'country_code_ISO3': 'ZAF', 'regional_level': 3, 'regional_hubs_level': 2},
         ]
 
     for country in country_list:
 
-        country_id = country['country']
+        create_core(country, population_density_threshold_km2, overall_settlement_size)
 
-        print('Working on {}'.format(country_id))
-
-        print('Generating core nodes')
-        core_nodes = estimate_core_nodes(
-            country_id,
-            population_density_threshold_km2,
-            overall_settlement_size
-        )
-
-        folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
-        write_shapefile(core_nodes, folder, 'core_nodes.shp', 'epsg:4326')
-
-        print('Generating core edges')
-        core_edges = fit_edges(core_nodes)
-
-        folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
-        write_shapefile(core_edges, folder, 'core_edges.shp', 'epsg:4326')
-
-        print('Generating regional hubs')
-        filename = 'global_regions_{}.shp'.format(country['regional_hubs_level'])
-        path = os.path.join(DATA_INTERMEDIATE, filename)
-
-        regional_hubs = estimate_regional_hubs(path, core_nodes,
-            country['regional_hubs_level'], country_id)
-
-        #Countries like Bangladesh with have a node in every region unless the
-        #settlement size is adapted (hence there will be no regional hubs)
-        if len(regional_hubs) > 0:
-
-            folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
-            write_shapefile(regional_hubs, folder, 'regional_hubs.shp', 'epsg:4326')
-
-            print('Generating regional edges')
-            regional_edges = fit_regional_edges(core_nodes, regional_hubs)
-
-            folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
-            write_shapefile(regional_edges, folder, 'regional_edges.shp', 'epsg:4326')
-
-        print('Completed {}'.format(country_id))
+        print('Completed {}'.format(country['country_code_ISO3']))
