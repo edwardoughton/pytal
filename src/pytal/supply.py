@@ -9,12 +9,14 @@ Winter 2020
 from itertools import tee
 from operator import itemgetter
 
-from costs import find_single_network_cost
+from pytal.costs import find_single_network_cost
 
 
-def estimate_supply(regions, lookup, option, global_parameters, country_parameters, costs):
+def estimate_supply(regions, lookup, option, global_parameters,
+    country_parameters, costs):
     """
-    For each region, optimize the network design and estimate the financial cost.
+    For each region, optimize the network design and estimate
+    the financial cost.
 
     Parameters
     ----------
@@ -23,7 +25,8 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
     lookup : dict
         A dictionary containing the lookup capacities.
     option : dict
-        Contains the scenario, strategy, and frequencies with bandwidths.
+        Contains the scenario, strategy, and frequencies
+        with bandwidths.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict
@@ -38,16 +41,15 @@ def estimate_supply(regions, lookup, option, global_parameters, country_paramete
 
     for region in regions:
 
-        network = optimize_network(region, option, global_parameters,
-            country_parameters, costs, lookup)
+        network = optimize_network(region, option,
+            global_parameters, country_parameters, costs, lookup)
 
         costs_by_site_densities = {}
 
         for item in network:
 
-            costs_by_site_densities['site_density_{}'.format(item['confidence'])] = (
-                item['site_density']
-            )
+            costs_by_site_densities['site_density_{}'.format(
+                item['confidence'])] = (item['site_density'])
 
             all_costs_km2 = find_single_network_cost(
                 region,
