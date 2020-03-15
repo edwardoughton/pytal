@@ -12,13 +12,16 @@ import json
 import pandas as pd
 import geopandas as gpd
 import pyproj
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, mapping, shape, LineString
+from shapely.ops import transform
 from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
 from rasterstats import zonal_stats
 import networkx as nx
 from rtree import index
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -323,14 +326,14 @@ def process_coverage_shapes(country):
         print('Working on {} in {}'.format(tech, iso3))
 
         filename = 'Inclusions_201812_{}.shp'.format(tech)
-        folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+        folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
             'Data_MCE')
         inclusions = gpd.read_file(os.path.join(folder, filename))
 
         if iso2 in inclusions['CNTRY_ISO2']:
 
             filename = 'MCE_201812_{}.shp'.format(tech)
-            folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+            folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
                 'Data_MCE')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
@@ -339,7 +342,7 @@ def process_coverage_shapes(country):
         else:
 
             filename = 'OCI_201812_{}.shp'.format(tech)
-            folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+            folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
                 'Data_OCI')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
@@ -381,6 +384,72 @@ def process_coverage_shapes(country):
     print('Processed coverage shapes')
 
 
+def process_regional_coverage(country):
+    """
+    This functions estimates the area covered by each cellular
+    technology.
+
+    Parameters
+    ----------
+    country : dict
+        Contains specific country parameters.
+
+    Returns
+    -------
+    output : dict
+        Results for cellular coverage by each technology for
+        each region.
+
+    """
+    level = country['regional_level']
+    iso3 = country['iso3']
+    gid_level = 'GID_{}'.format(level)
+
+    filename = 'regions_{}_{}.shp'.format(level, iso3)
+    folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
+    path = os.path.join(folder, filename)
+    regions = gpd.read_file(path)
+
+    technologies = [
+        'GSM',
+        '3G',
+        '4G'
+    ]
+
+    output = {}
+
+    for tech in technologies:
+
+        folder = os.path.join(DATA_INTERMEDIATE, iso3, 'coverage')
+        path =  os.path.join(folder, 'coverage_{}.shp'.format(tech))
+
+        if os.path.exists(path):
+
+            coverage = gpd.read_file(path)
+
+            coverage.crs = {'init': 'epsg:3857'}
+
+            coverage = coverage.to_crs({'init': 'epsg:4326'})
+
+            segments = gpd.overlay(regions, coverage, how='intersection')
+
+            segments = segments.to_crs({'init': 'epsg:3857'})
+
+            tech_coverage = {}
+
+            for idx, region in segments.iterrows():
+
+                geom = region['geometry']
+
+                area_km2 = geom.area / 1e6
+
+                tech_coverage[region[gid_level]] = area_km2
+
+            output[tech] = tech_coverage
+
+    return output
+
+
 def get_regional_data(country):
     """
     Extract regional data including luminosity and population.
@@ -391,10 +460,16 @@ def get_regional_data(country):
         Three digit ISO country code.
 
     """
-    level = country['regional_level']
     iso3 = country['iso3']
+    level = country['regional_level']
+    gid_level = 'GID_{}'.format(level)
+
     path_country = os.path.join(DATA_INTERMEDIATE, iso3,
         'national_outline.shp')
+
+    coverage = process_regional_coverage(country)
+
+    site_estimator = setup_site_estimator('SEN')
 
     single_country = gpd.read_file(path_country)
 
@@ -413,70 +488,108 @@ def get_regional_data(country):
     path_regions = gpd.read_file(path)
 
     project = pyproj.Transformer.from_proj(
-        pyproj.Proj("EPSG:4326"), #"EPSG:4326" # source coordinate system
-        pyproj.Proj("EPSG:3857")) #"EPSG:3857" # destination coordinate system
+        pyproj.Proj("EPSG:4326"), # source coordinate system
+        pyproj.Proj("EPSG:3857")) # destination coordinate system
 
     results = []
 
     for index, region in path_regions.iterrows():
 
+        with rasterio.open(path_night_lights) as src:
+
+            affine = src.transform
+            array = src.read(1)
+            array[array <= 0] = 0
+
+            #get luminosity values
+            luminosity_median = [d['median'] for d in zonal_stats(
+                region['geometry'],
+                array,
+                stats=['median'],
+                affine=affine)][0]
+
+            luminosity_summation = [d['sum'] for d in zonal_stats(
+                region['geometry'],
+                array,
+                stats=['sum'],
+                affine=affine)][0]
+
+        with rasterio.open(path_settlements) as src:
+
+            affine = src.transform
+            array = src.read(1)
+            array[array <= 0] = 0
+
+            #get luminosity values
+            population_summation = [d['sum'] for d in zonal_stats(
+                region['geometry'], array, stats=['sum'], affine=affine)][0]
+
+        geom = transform(project.transform, region['geometry'])
+
+        area_km2 = geom.area / 10**6
+
+        if luminosity_median == None:
+            luminosity_median = 0
+        if luminosity_summation == None:
+            luminosity_summation = 0
+
+        if 'GSM' in [c for c in coverage.keys()]:
+            if region[gid_level] in coverage['GSM']:
+                coverage_GSM_km2 = coverage['GSM'][region[gid_level]]
+            else:
+                coverage_GSM_km2 = 0
+        else:
+            coverage_GSM_km2 = 0
+
+        if '3G' in [c for c in coverage.keys()]:
+            if region[gid_level] in coverage['3G']:
+                coverage_3G_km2 = coverage['3G'][region[gid_level]]
+            else:
+                coverage_3G_km2 = 0
+        else:
+            coverage_3G_km2 = 0
+
+        if '4G' in [c for c in coverage.keys()]:
+            if region[gid_level] in coverage['4G']:
+                coverage_4G_km2 = coverage['4G'][region[gid_level]]
+            else:
+                coverage_4G_km2 = 0
+        else:
+            coverage_4G_km2 = 0
+
         try:
-
-            with rasterio.open(path_night_lights) as src:
-
-                affine = src.transform
-                array = src.read(1)
-                array[array <= 0] = 0
-
-                #get luminosity values
-                luminosity_median = [d['median'] for d in zonal_stats(
-                    region['geometry'],
-                    array,
-                    stats=['median'],
-                    affine=affine)][0]
-
-                luminosity_summation = [d['sum'] for d in zonal_stats(
-                    region['geometry'],
-                    array,
-                    stats=['sum'],
-                    affine=affine)][0]
-
-            with rasterio.open(path_settlements) as src:
-
-                affine = src.transform
-                array = src.read(1)
-                array[array <= 0] = 0
-
-                #get luminosity values
-                population_summation = [d['sum'] for d in zonal_stats(
-                    region['geometry'], array, stats=['sum'], affine=affine)][0]
-
-            geom = transform(project.transform, region['geometry'])
-
-            area_km2 = geom.area / 10**6
-
-            if luminosity_median == None:
-                luminosity_median = 0
-            if luminosity_summation == None:
-                luminosity_summation = 0
-
-            gid_level = 'GID_{}'.format(level)
-
-            results.append({
-                'GID_0': region['GID_0'],
-                gid_level: region[gid_level],
-                'median_luminosity': luminosity_median,
-                'sum_luminosity': luminosity_summation,
-                'mean_luminosity_km2': luminosity_summation / area_km2,
-                'population': population_summation,
-                'area_km2': area_km2,
-                'population_km2': population_summation / area_km2,
-            })
-
+            sites_km2 = estimate_numers_of_sites(
+                    site_estimator,
+                    np.array([(population_summation / area_km2)]).reshape(-1, 1)
+                )
         except:
-            print('Could not extract regional data for {}'.format(
-                region['GID_0']))
-            pass
+            sites_km2 = 0
+
+        try:
+            sites_total = (
+                estimate_numers_of_sites(
+                site_estimator,
+                np.array([(population_summation / area_km2)]).reshape(-1, 1)
+                ) * coverage_GSM_km2
+            )
+        except:
+            sites_total = 0
+
+        results.append({
+            'GID_0': region['GID_0'],
+            gid_level: region[gid_level],
+            'median_luminosity': luminosity_median,
+            'sum_luminosity': luminosity_summation,
+            'mean_luminosity_km2': luminosity_summation / area_km2,
+            'population': population_summation,
+            'area_km2': area_km2,
+            'population_km2': population_summation / area_km2,
+            'coverage_GSM_km2': coverage_GSM_km2,
+            'coverage_3G_km2': coverage_3G_km2,
+            'coverage_4G_km2': coverage_4G_km2,
+            'sites_km2': sites_km2,
+            'sites_total': sites_total,
+        })
 
     results_df = pd.DataFrame(results)
 
@@ -486,6 +599,66 @@ def get_regional_data(country):
     print('Completed {}'.format(single_country.NAME_0.values[0]))
 
     return print('Completed night lights data querying')
+
+
+def setup_site_estimator(iso3):
+    """
+    Imports data and creates a linear_regressor object.
+
+    Parameters
+    ----------
+    iso3 : string
+        The three digit ISO3 code for the country site data that
+        we want to use.
+
+    Returns
+    -------
+    linear_regressor : object
+        Linear regression object.
+
+    """
+    path = os.path.join(DATA_RAW, 'real_site_data', iso3, 'results.csv')
+
+    data = pd.read_csv(path)
+
+    data = data.loc[data['country'] == iso3]
+
+    # values converts it into a numpy array
+    X = data['population_km2'].values.reshape(-1, 1)
+    # -1 means that calculate the dimension of rows, but have 1 column
+    Y = data['sites_km2'].values.reshape(-1, 1)
+    # create object for the class
+    linear_regressor = LinearRegression()
+    # perform linear regression
+    linear_regressor.fit(X, Y)
+
+    return linear_regressor
+
+
+def estimate_numers_of_sites(linear_regressor, x_value):
+    """
+    Function to predict the y value from the stated x value.
+
+    Parameters
+    ----------
+    linear_regressor : object
+        Linear regression object.
+    x_value : float
+        The stated x value we want to use to predict y.
+
+    Returns
+    -------
+    result : float
+        The predicted y value.
+
+    """
+    if not x_value == 0:
+        result = linear_regressor.predict(x_value)
+        result = result[0,0]
+    else:
+        result = 0
+
+    return result
 
 
 def exclude_small_shapes(x):
@@ -906,13 +1079,13 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 3, 'regional_hubs_level':2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
         ]
 
     pop_density_km2 = 1000

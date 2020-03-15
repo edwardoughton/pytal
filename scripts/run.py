@@ -15,8 +15,8 @@ from tqdm import tqdm
 from collections import OrderedDict
 
 from options import OPTIONS, COUNTRY_PARAMETERS
-from demand import estimate_demand
-from supply import estimate_supply
+from pytal.demand import estimate_demand
+from pytal.supply import estimate_supply
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -202,37 +202,6 @@ def csv_writer(data, directory, filename):
         writer.writerows(data)
 
 
-def write_shapefile(data, directory, filename, crs):
-    """
-    Write geojson data to shapefile.
-    """
-    prop_schema = []
-    for name, value in data[0]['properties'].items():
-        fiona_prop_type = next((
-            fiona_type for fiona_type, python_type in \
-                fiona.FIELD_TYPES_MAP.items() if \
-                python_type == type(value)), None
-            )
-
-        prop_schema.append((name, fiona_prop_type))
-
-    sink_driver = 'ESRI Shapefile'
-    sink_crs = {'init': crs}
-    sink_schema = {
-        'geometry': data[0]['geometry']['type'],
-        'properties': OrderedDict(prop_schema)
-    }
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    with fiona.open(
-        os.path.join(directory, filename), 'w',
-        driver=sink_driver, crs=sink_crs, schema=sink_schema) as sink:
-        for datum in data:
-            sink.write(datum)
-
-
 if __name__ == '__main__':
 
     BASE_YEAR = 2020
@@ -302,9 +271,6 @@ if __name__ == '__main__':
             filename = 'subs_forecast.csv'
             penetration_lut = load_penetration(os.path.join(folder, filename))
 
-            # if not country == 'ESH':
-            #     continue
-
             print('-----')
             print('Working on {} in {}'.format(decision_option, country))
             print(' ')
@@ -320,9 +286,8 @@ if __name__ == '__main__':
                 path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
                 data = load_regions(path)[:1]
 
-
                 data = data.to_dict('records')
-
+                print(data)
                 data = estimate_demand(
                     data,
                     option,
