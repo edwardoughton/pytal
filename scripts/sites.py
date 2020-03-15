@@ -26,6 +26,7 @@ import geopandas as gpd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from functools import partial
+from sklearn.linear_model import LinearRegression
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -862,76 +863,129 @@ def vis_panel(data):
     filename = 'panel_plot.png'
     g.savefig(os.path.join(folder, filename))
 
+    plt.clf()
+
     print('Vis complete')
 
+
+def regression(data, folder, iso3):
+
+    print('Working on regression')
+    data = data.loc[data['country'] == iso3]
+
+    #shuffle dataframe
+    data = data.sample(frac=1)
+
+    #use 80% for model, 20% for validation
+    data_split = [80, 20]
+
+    segment_sample = int(round(len(data)/(100/data_split[0])))
+
+    #subset
+    data_80 = data[:segment_sample]
+    data_20 = data[segment_sample:]
+
+    X = data_80['population_km2'].values.reshape(-1, 1)  # values converts it into a numpy array
+    Y = data_80['sites_km2'].values.reshape(-1, 1)  # -1 means that calculate the dimension of rows, but have 1 column
+    linear_regressor = LinearRegression()  # create object for the class
+    linear_regressor.fit(X, Y)  # perform linear regression
+    Y_pred = linear_regressor.predict(X)  # make predictions
+
+    plt.scatter(X, Y)
+    plt.plot(X, Y_pred, color='red')
+    plt.title('Population Density Vs Cell Density', fontsize=14)
+    plt.xlabel('Population Density (persons per km^2)', fontsize=14)
+    plt.ylabel('Cell Density (cells per km^2)', fontsize=14)
+    plt.grid(True)
+    filename = 'regression_x_y.png'
+    plt.savefig(os.path.join(folder, iso3, filename))
+
+    plt.clf()
+
+    X = data_20['population_km2'].values.reshape(-1, 1)
+    Y = data_20['sites_km2'].values.reshape(-1, 1)
+    Y_pred = linear_regressor.predict(X)
+
+    plt.scatter(Y, Y_pred)
+    plt.title('Cell Density Vs Predicted Cell Density', fontsize=14)
+    plt.xlabel('Cell Density (cells per km^2)', fontsize=14)
+    plt.ylabel('Predicted Cell Density (cells per km^2)', fontsize=14)
+    plt.grid(True)
+
+    filename = 'regression_y_pred_y.png'
+    plt.savefig(os.path.join(folder, iso3,filename))
+
+    plt.clf()
+
+    return print('Regression complete')
 
 if __name__ == '__main__':
 
     folder = os.path.join(DATA_RAW, 'real_site_data')
 
-    countries = [
-        # {'iso3': 'AUS', 'iso2': 'AU', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'CAN', 'iso2': 'CA', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'NLD', 'iso2': 'ND', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
-        ]
+    # countries = [
+    #     # {'iso3': 'AUS', 'iso2': 'AU', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     {'iso3': 'CAN', 'iso2': 'CA', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     # {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     # {'iso3': 'NLD', 'iso2': 'ND', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+    #     ]
 
-    for country in countries:
+    # for country in countries:
 
-        iso3 = country['iso3']
+    #     iso3 = country['iso3']
 
-        print('Processing country outline')
-        process_country_shapes(country)
+    #     print('Processing country outline')
+    #     process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+    #     print('Processing regions')
+    #     process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+    #     print('Processing settlement layer')
+    #     process_settlement_layer(country)
 
-        print('Processing country sites data')
+    #     print('Processing country sites data')
 
-        if country['iso3'] == 'AUS':
-            data_australia = australia(country)
-            data_australia.drop('geometry', axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_australia)
+    #     if country['iso3'] == 'AUS':
+    #         data_australia = australia(country)
+    #         data_australia.drop('geometry', axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_australia)
 
-        if country['iso3'] == 'CAN':
-            data_canada = canada(country)
-            data_canada.drop('geometry',axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_canada)
+    #     if country['iso3'] == 'CAN':
+    #         data_canada = canada(country)
+    #         data_canada.drop('geometry',axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_canada)
 
-        if country['iso3'] == 'GBR':
-            data_great_britain = great_britain(country)
-            data_great_britain.drop(
-                'geometry',axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_great_britain)
+    #     if country['iso3'] == 'GBR':
+    #         data_great_britain = great_britain(country)
+    #         data_great_britain.drop(
+    #             'geometry',axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_great_britain)
 
-        if country['iso3'] == 'KEN':
-            data_kenya = kenya(country)
-            data_kenya.drop(
-                'geometry',axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_kenya)
+    #     if country['iso3'] == 'KEN':
+    #         data_kenya = kenya(country)
+    #         data_kenya.drop(
+    #             'geometry',axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_kenya)
 
-        if country['iso3'] == 'NLD':
-            data_netherlands = netherlands(country)
-            data_netherlands.drop(
-                'geometry',axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_netherlands)
+    #     if country['iso3'] == 'NLD':
+    #         data_netherlands = netherlands(country)
+    #         data_netherlands.drop(
+    #             'geometry',axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_netherlands)
 
-        if country['iso3'] == 'SEN':
-            data_senegal = senegal(country)
-            data_senegal.drop(
-                'geometry',axis=1).to_csv(
-                os.path.join(folder, iso3, 'results.csv'))
-            vis(country, data_senegal)
+    #     if country['iso3'] == 'SEN':
+    #         data_senegal = senegal(country)
+    #         data_senegal.drop(
+    #             'geometry',axis=1).to_csv(
+    #             os.path.join(folder, iso3, 'results.csv'))
+    #         vis(country, data_senegal)
 
     folder = os.path.join(DATA_RAW, 'real_site_data')
 
@@ -951,6 +1005,9 @@ if __name__ == '__main__':
         df = pd.read_csv(filename, index_col=None, header=0)
         data.append(df)
 
-    frame = pd.concat(data, axis=0, ignore_index=True)
+    data = pd.concat(data, axis=0, ignore_index=True)
 
-    vis_panel(frame)
+    vis_panel(data)
+
+    for iso3 in all_files:
+        regression(data, folder, iso3[0])
