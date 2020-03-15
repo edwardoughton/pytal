@@ -12,7 +12,8 @@ import json
 import pandas as pd
 import geopandas as gpd
 import pyproj
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, mapping, shape, LineString
+from shapely.ops import transform
 from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
@@ -323,14 +324,14 @@ def process_coverage_shapes(country):
         print('Working on {} in {}'.format(tech, iso3))
 
         filename = 'Inclusions_201812_{}.shp'.format(tech)
-        folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+        folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
             'Data_MCE')
         inclusions = gpd.read_file(os.path.join(folder, filename))
 
         if iso2 in inclusions['CNTRY_ISO2']:
 
             filename = 'MCE_201812_{}.shp'.format(tech)
-            folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+            folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
                 'Data_MCE')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
@@ -339,7 +340,7 @@ def process_coverage_shapes(country):
         else:
 
             filename = 'OCI_201812_{}.shp'.format(tech)
-            folder = os.path.join(DATA_RAW, 'Mobile Coverage Explorer',
+            folder = os.path.join(DATA_RAW, 'mobile_coverage_explorer',
                 'Data_OCI')
             coverage = gpd.read_file(os.path.join(folder, filename))
 
@@ -906,11 +907,11 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 1},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 3, 'regional_hubs_level': 1},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 3, 'regional_hubs_level':2},
         ]
