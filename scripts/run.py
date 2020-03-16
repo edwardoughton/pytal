@@ -287,7 +287,7 @@ if __name__ == '__main__':
                 data = load_regions(path)[:1]
 
                 data = data.to_dict('records')
-                print(data)
+
                 data = estimate_demand(
                     data,
                     option,
