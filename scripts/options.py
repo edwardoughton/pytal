@@ -204,51 +204,55 @@ COUNTRY_PARAMETERS = {
             'spectrum_capacity_usd_mhz_pop': 0.1,
             }
         },
-    'PER': {
-        # Unique mobile subscribers = 30% (GSMA, 2019)
-        # https://www.gsma.com/mobilefordevelopment/wp-content/uploads/2019/02/Digital-Identity-Country-Report.pdf
-        'penetration': 0.3,
-        # also GSMA, 2019 (same report as above)
-        # smartphone pen was 10% in 2017, so assume 15% in 2020
-        'smartphone_pen': 0.15,
-        # Access Comm, Airtel, TNM
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
+    'SEN': {
+        'luminosity': {
+            'high': 5,
+            'medium': 1,
+        },
+        'arpu': {
+            'high': 15,
+            'medium': 5,
+            'low': 2,
+        },
+        #
+        #
+        'smartphone_pen': 0.5,
         'networks': 3,
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
+        #
         'frequencies': {
             '4G': {
                     '1_networks': [
                         {
-                            'name': 'Access Comm',
+                            'name': '',
                             'frequency': 800, #Actually 850 MHz but treating as 800 MHz
                             'bandwidth': 10 #Actually 5, treating as 10 for now
                         },
                         {
-                            'name': 'Airtel',
+                            'name': '',
                             'frequency': 1800,
                             'bandwidth': 3
                         },
                         {
-                            'name': 'TNM',
+                            'name': '',
                             'frequency': 2500,
                             'bandwidth': 41
                         },
                     ],
                 '2_networks': [
                     {
-                        'name': 'Access Comm',
+                        'name': '',
                         'frequency': 800,
                         'bandwidth': 10 #Actually 5, treating as 10 for now
                     },
                     {
-                        'name': 'Airtel',
+                        'name': '',
                         'frequency': 1800,
                         'bandwidth': 3
                     },
                 ],
                 '3_networks': [
                     {
-                        'name': 'Access Comm',
+                        'name': '',
                         'frequency': 800,
                         'bandwidth': 10 #Actually 5, treating as 10 for now
                     },
@@ -257,36 +261,36 @@ COUNTRY_PARAMETERS = {
             '5G': {
                 '1_networks': [
                     {
-                        'name': 'Access Comm',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },
                     {
-                        'name': 'Airtel',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },
                     {
-                        'name': 'TNM',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },
                 ],
                 '2_networks': [
                     {
-                        'name': 'Access Comm',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },
                     {
-                        'name': 'Airtel',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },
                 ],
                 '3_networks': [
                     {
-                        'name': 'Access Comm',
+                        'name': '',
                         'frequency': 700,
                         'bandwidth': 10,
                     },

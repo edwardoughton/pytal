@@ -176,6 +176,23 @@ def load_penetration(path):
     return output
 
 
+def load_backhaul_lut(country, path):
+    """
+
+    """
+    level = country['regional_level']
+    level = 'GID_{}'.format(level)
+
+    output = {}
+
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            output[row[level]] = int(float(row['distance_m']))
+
+    return output
+
+
 def csv_writer(data, directory, filename):
     """
     Write data to a CSV file path.
@@ -222,9 +239,9 @@ if __name__ == '__main__':
         'power_generator_battery_system': 5000,
         'high_speed_backhaul_hub': 15000,
         'router': 2000,
-        'microwave_backhaul_urban': 10000,
-        'microwave_backhaul_suburban': 15000,
-        'microwave_backhaul_rural': 25000,
+        'microwave_backhaul_small': 10000,
+        'microwave_backhaul_medium': 15000,
+        'microwave_backhaul_large': 25000,
         'fiber_backhaul_urban': 20000,
         'fiber_backhaul_suburban': 35000,
         'fiber_backhaul_rural': 60000,
@@ -242,14 +259,16 @@ if __name__ == '__main__':
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
     lookup = read_capacity_lookup(path)
 
-    # country_list, country_regional_levels = find_country_list(['Africa', 'South America'])
-    country_list = [
-        # 'UGA',
-        # 'ETH',
-        # 'BGD',
-        # 'PER',
-        'MWI',
-        # 'ZAF'
+    # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
+    countries = [
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
     ]
 
     decision_options = [
@@ -263,16 +282,22 @@ if __name__ == '__main__':
 
         data_to_write = []
 
-        for country in country_list:
+        for country in countries:
 
-            country_parameters = COUNTRY_PARAMETERS[country]
+            iso3 = country['iso3']
 
-            folder = os.path.join(DATA_INTERMEDIATE, country, 'subscriptions')
+            country_parameters = COUNTRY_PARAMETERS[iso3]
+
+            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
             filename = 'subs_forecast.csv'
             penetration_lut = load_penetration(os.path.join(folder, filename))
 
+            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
+            filename = 'backhaul.csv'
+            backhaul_lut = load_backhaul_lut(country, os.path.join(folder, filename))
+
             print('-----')
-            print('Working on {} in {}'.format(decision_option, country))
+            print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
             for option in options:
@@ -283,11 +308,11 @@ if __name__ == '__main__':
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
                 # try:
-                path = os.path.join(DATA_INTERMEDIATE, country, 'regional_data.csv')
+                path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
                 data = load_regions(path)[:1]
 
                 data = data.to_dict('records')
-                print(data)
+
                 data = estimate_demand(
                     data,
                     option,
@@ -298,12 +323,14 @@ if __name__ == '__main__':
                 )
 
                 data = estimate_supply(
+                    country,
                     data,
                     lookup,
                     option,
                     GLOBAL_PARAMETERS,
                     country_parameters,
-                    COSTS
+                    COSTS,
+                    backhaul_lut
                 )
 
                 data_to_write = data_to_write + data
@@ -316,4 +343,4 @@ if __name__ == '__main__':
         path_results = os.path.join(BASE_PATH, '..', 'results')
 
         csv_writer(data_to_write, path_results, 'results_{}_{}.csv'.format(
-            decision_option, len(country_list)))
+            decision_option, len(countries)))

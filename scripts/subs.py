@@ -186,6 +186,7 @@ if __name__ == '__main__':
     all_subscription_data = []
 
     country_list = [
+        'SEN',
         'UGA',
         'ETH',
         'BGD',

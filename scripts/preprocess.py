@@ -13,7 +13,7 @@ import pandas as pd
 import geopandas as gpd
 import pyproj
 from shapely.geometry import MultiPolygon, mapping, shape, LineString
-from shapely.ops import transform
+from shapely.ops import transform, unary_union
 from fiona.crs import from_epsg
 import rasterio
 from rasterio.mask import mask
@@ -807,7 +807,8 @@ def estimate_core_nodes(iso3, pop_density_km2, settlement_size):
             'geometry': mapping(item['geometry']),
             'properties': {
                 'network_layer': 'core',
-                'id': index,
+                'id': 'core_{}'.format(index),
+                'node_number': index,
             }
         })
 
@@ -927,7 +928,7 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
 
     nodes = gpd.GeoDataFrame.from_features(nodes)
 
-    for index2, region in regions.iterrows():
+    for row_number, region in regions.iterrows():
 
         if not region['GID_0'] == iso3:
             continue
@@ -942,7 +943,9 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
                 'type': 'Feature',
                 'geometry': mapping(region['geometry'].centroid),
                 'properties': {
-                    'id': region['GID_{}'.format(regional_hubs_level)]
+                    'id': 'regional_hub_{}'.format(row_number),
+                    'hub_number': row_number,
+                    'network_layer': 'regional_hub',
                 }
             })
         else:
@@ -971,7 +974,7 @@ def fit_regional_edges(core_nodes, regional_hubs):
 
     for node in core_nodes:
         idx.insert(
-            node['properties']['id'],
+            node['properties']['node_number'],
             shape(node['geometry']).bounds,
             node)
 
@@ -984,7 +987,7 @@ def fit_regional_edges(core_nodes, regional_hubs):
         nearest = [i for i in idx.nearest((geom1.bounds))][0]
 
         for core_node in core_nodes:
-            if nearest == core_node['properties']['id']:
+            if nearest == core_node['properties']['node_number']:
                 geom2 = shape(core_node['geometry'])
                 output.append({
                     'type': 'Feature',
@@ -1074,18 +1077,125 @@ def create_network(country, pop_density_km2, settlement_size):
     print('Completed {}'.format(iso3))
 
 
+def backhaul_distance(country):
+    """
+    Function to calculate the backhaul distance.
+
+    """
+    country_id = country['iso3']
+    level = country['regional_level']
+
+    filename = 'regions_{}_{}.shp'.format(level, country_id)
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regions')
+    path = os.path.join(folder, filename)
+
+    regions = gpd.read_file(path)
+    regions.crs = 'epsg:4326'
+    regions = regions.to_crs({'init': 'epsg:3857'})
+
+    path1 = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_nodes.shp')
+    path2 = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_hubs.shp')
+    files = [path1, path2]
+    nodes = pd.concat([gpd.read_file(shp) for shp in files]).pipe(gpd.GeoDataFrame)
+
+    nodes.crs = 'epsg:4326'
+    nodes = nodes.to_crs({'init': 'epsg:3857'})
+
+    idx = index.Index()
+
+    routing_locations = []
+
+    point_id = 0
+    for row, node in nodes.iterrows():
+        routing_location = {
+            'type': 'Polygon',
+            'geometry': node['geometry'],
+            'properties': {
+                'id': point_id,
+            }
+        }
+        routing_locations.append(routing_location)
+        idx.insert(
+            point_id,
+            node['geometry'].bounds,
+            routing_location)
+        point_id += 1
+
+    output_csv = []
+    output_shape = []
+
+    for row_number, region in regions.iterrows():
+
+        geom = region['geometry'].representative_point()
+
+        nearest = [i for i in idx.nearest((geom.bounds))][0]
+
+        for routing_location in routing_locations:
+
+            if nearest == routing_location['properties']['id']:
+
+                geom2 = routing_location['geometry']
+
+                x1 = list(geom2.coords)[0][0]
+                y1 = list(geom2.coords)[0][1]
+
+        geom1 = unary_union(region['geometry']).representative_point()
+
+        x2 = list(geom1.coords)[0][0]
+        y2 = list(geom1.coords)[0][1]
+
+        line = LineString([
+            (x1, y1),
+            (x2, y2)
+        ])
+
+        output_csv.append({
+            'GID_{}'.format(level): region['GID_{}'.format(level)],
+            'distance_m': int(line.length),
+        })
+
+        output_shape.append({
+            'type': 'Feature',
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': (
+                    (list(geom1.coords)[0][0], list(geom1.coords)[0][1]),
+                    (list(geom2.coords)[0][0], list(geom2.coords)[0][1])
+                )
+            },
+            'properties': {
+                'region': region['GID_{}'.format(level)],
+            }
+        })
+
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul')
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    shapes = gpd.GeoDataFrame.from_features(output_shape, 'epsg:3857')
+    shapes = shapes.to_crs({'init': 'epsg:4326'})
+    shapes.to_file(os.path.join(folder, 'backhaul.shp'))
+
+    output_csv = pd.DataFrame(output_csv)
+    output_csv.to_csv(os.path.join(folder, 'backhaul.csv'), index=False)
+
+    return output_csv
+
+
 if __name__ == '__main__':
 
     # countries = find_country_list(['Africa'])
 
     countries = [
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
         ]
 
     pop_density_km2 = 1000
@@ -1093,23 +1203,27 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
 
         print('Creating network')
         create_network(country, pop_density_km2, settlement_size)
+
+        print('Create backhaul lookup table')
+        output = backhaul_distance(country)
+        # print(output)
