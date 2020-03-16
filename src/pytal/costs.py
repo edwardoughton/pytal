@@ -10,15 +10,15 @@ https://github.com/edwardoughton/pysim5g
 import math
 
 
-def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
-    global_parameters, country_parameters):
+def find_single_network_cost(country, region, sites_per_km2, strategy,
+    geotype, costs, global_parameters, country_parameters, backhaul_lut):
     """
     Calculates the annual total cost using capex and opex.
 
     Parameters
     ----------
-    region : ??
-        ??
+    region : dict
+        The region being assessed and all associated parameters.
     sites_per_km2 : int
         The density of sites.
     strategy : str
@@ -29,6 +29,8 @@ def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
         Contains all global_parameters.
     country_parameters :
         ???
+    backhaul_lut : dict
+        Backhaul distance by region.
 
     Returns
     -------
@@ -37,10 +39,11 @@ def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
         opex costs.
 
     """
+
     generation, core, backhaul, sharing = get_strategy_options(strategy)
 
-    cost_breakdown = get_costs(region, generation, sharing, backhaul, geotype, costs,
-        sites_per_km2, global_parameters, country_parameters)
+    cost_breakdown = get_costs(country, region, generation, core, backhaul, sharing,
+        geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut)
 
     total_deployment_costs_km2 = 0
     for key, value in cost_breakdown.items():
@@ -51,33 +54,33 @@ def find_single_network_cost(region, sites_per_km2, strategy, geotype, costs,
     return cost_breakdown
 
 
-def get_costs(region, generation, sharing, backhaul, geotype, costs, sites_per_km2,
-    global_parameters, country_parameters):
+def get_costs(country, region, generation, core, backhaul, sharing, geotype, costs,
+    sites_per_km2, global_parameters, country_parameters, backhaul_lut):
 
     if sharing == 'baseline':
-        costs = baseline(region, generation, backhaul, geotype, costs, sites_per_km2,
-            global_parameters, country_parameters)
+        costs = baseline(country, region, generation, core, backhaul, sharing,
+        geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut)
 
     if sharing == 'passive':
-        costs = passive(region, generation, backhaul, geotype, costs, sites_per_km2,
-            global_parameters, country_parameters)
+        costs = passive(country, region, generation, core, backhaul, sharing,
+        geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut)
 
     if sharing == 'active':
-        costs = active(region, generation, backhaul, geotype, costs, sites_per_km2,
-            global_parameters, country_parameters)
+        costs = active(country, region, generation, core, backhaul, sharing,
+        geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut)
 
     return costs
 
 
-def baseline(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
-    country_parameters):
+def baseline(country, region, generation, core, backhaul, sharing,
+    geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut):
     """
     No sharing takes place.
     Reflects the baseline scenario of needing to build a single dedicated
     network.
 
     """
-    backhaul_cost = get_backhaul_costs(backhaul, geotype, costs)
+    backhaul_cost = get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut)
 
     cost_breakdown = {
         'single_sector_antenna': (
@@ -127,15 +130,15 @@ def baseline(region, generation, backhaul, geotype, costs, sites_per_km2, global
     return cost_breakdown
 
 
-def passive(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
-    country_parameters):
+def passive(country, region, generation, core, backhaul, sharing, geotype, costs,
+    sites_per_km2, global_parameters, country_parameters, backhaul_lut):
     """
     Sharing of:
         - Mast
         - Site compound
 
     """
-    backhaul_cost = get_backhaul_costs(backhaul, geotype, costs)
+    backhaul_cost = get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut)
 
     cost_breakdown = {
         'single_sector_antenna': (
@@ -188,8 +191,8 @@ def passive(region, generation, backhaul, geotype, costs, sites_per_km2, global_
     return cost_breakdown
 
 
-def active(region, generation, backhaul, geotype, costs, sites_per_km2, global_parameters,
-    country_parameters):
+def active(country, region, generation, core, backhaul, sharing, geotype, costs,
+    sites_per_km2, global_parameters, country_parameters, backhaul_lut):
     """
     Sharing of:
         - RAN
@@ -197,7 +200,7 @@ def active(region, generation, backhaul, geotype, costs, sites_per_km2, global_p
         - Site compound
 
     """
-    backhaul_cost = get_backhaul_costs(backhaul, geotype, costs)
+    backhaul_cost = get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut)
 
     cost_breakdown = {
         'single_sector_antenna': (
@@ -267,18 +270,30 @@ def get_strategy_options(strategy):
     return generation, core, backhaul, sharing
 
 
-def get_backhaul_costs(backhaul, geotype, costs):
+def get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut):
     """
     Calculate backhaul costs.
 
     """
+    level = country['regional_level']
+    level = 'GID_{}'.format(level)
+    distance_m = backhaul_lut[region[level]]
+
     if backhaul == 'microwave':
-        tech = '{}_backhaul_{}'.format(backhaul, geotype)
-        cost = costs[tech]
+        if distance_m < 2e4:
+            tech = '{}_backhaul_{}'.format(backhaul, 'small')
+            cost = costs[tech]
+        elif 2e4 < distance_m < 4e4:
+            tech = '{}_backhaul_{}'.format(backhaul, 'medium')
+            cost = costs[tech]
+        else:
+            tech = '{}_backhaul_{}'.format(backhaul, 'large')
+            cost = costs[tech]
 
     if backhaul == 'fiber':
         tech = '{}_backhaul_{}'.format(backhaul, geotype)
-        cost = costs[tech]
+        cost_per_meter = costs[tech]
+        cost = cost_per_meter * distance_m
 
     return cost
 
