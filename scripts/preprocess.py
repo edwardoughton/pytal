@@ -1151,7 +1151,7 @@ def backhaul_distance(country):
 
         output_csv.append({
             'GID_{}'.format(level): region['GID_{}'.format(level)],
-            'distance_km': line.length,
+            'distance_m': int(line.length),
         })
 
         output_shape.append({
