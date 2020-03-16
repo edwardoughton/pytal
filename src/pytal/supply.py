@@ -12,8 +12,8 @@ from operator import itemgetter
 from pytal.costs import find_single_network_cost
 
 
-def estimate_supply(regions, lookup, option, global_parameters,
-    country_parameters, costs):
+def estimate_supply(country, regions, lookup, option, global_parameters,
+    country_parameters, costs, backhaul_lut):
     """
     For each region, optimize the network design and estimate
     the financial cost.
@@ -33,6 +33,8 @@ def estimate_supply(regions, lookup, option, global_parameters,
         All country specific parameters.
     costs : dict
         All equipment costs.
+    backhaul_lut : dict
+        Backhaul distance by region.
 
     """
     output = []
@@ -52,6 +54,7 @@ def estimate_supply(regions, lookup, option, global_parameters,
                 item['confidence'])] = (item['site_density'])
 
             all_costs_km2 = find_single_network_cost(
+                country,
                 region,
                 item['site_density'],
                 option['strategy'],
@@ -59,6 +62,7 @@ def estimate_supply(regions, lookup, option, global_parameters,
                 costs,
                 global_parameters,
                 country_parameters,
+                backhaul_lut
             )
 
             costs_by_site_densities['spectrum'] = all_costs_km2['spectrum']
