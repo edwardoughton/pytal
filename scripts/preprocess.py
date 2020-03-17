@@ -1077,7 +1077,7 @@ def create_network(country, pop_density_km2, settlement_size):
     print('Completed {}'.format(iso3))
 
 
-def backhaul_distance(country):
+def backhaul_lut(country):
     """
     Function to calculate the backhaul distance.
 
@@ -1182,16 +1182,107 @@ def backhaul_distance(country):
 
     return output_csv
 
+def core_and_hubs_lut(country):
+    """
+
+    """
+    country_id = country['iso3']
+    level = country['regional_level']
+
+    filename = 'regions_{}_{}.shp'.format(level, country_id)
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regions')
+    path = os.path.join(folder, filename)
+    regions = gpd.read_file(path)#[:1]
+
+    regions.crs = 'epsg:4326'
+    regions = regions.to_crs({'init': 'epsg:3857'})
+
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_edges.shp')
+    core_edges = gpd.read_file(path)
+    core_edges.crs = 'epsg:4326'
+    core_edges = core_edges.to_crs({'init': 'epsg:3857'})
+    core_edges = core_edges['geometry'].unary_union
+    core_edges = gpd.GeoDataFrame({'geometry': core_edges})
+
+    level = 'GID_{}'.format(level)
+
+    output = []
+
+    for idx, region in regions.iterrows():
+        length_m = sum(core_edges['geometry'].intersection(region['geometry']).length)
+        output.append({
+            level: region[level],
+            'length_m': length_m
+        })
+
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
+    filename = 'core_edges.csv'
+    output = pd.DataFrame(output)
+    output.to_csv(os.path.join(folder, filename), index=False)
+
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_edges.shp')
+    regional_edges = gpd.read_file(path)
+    regional_edges.crs = 'epsg:4326'
+    regional_edges = regional_edges.to_crs({'init': 'epsg:3857'})
+    regional_edges = regional_edges['geometry'].unary_union
+    regional_edges = gpd.GeoDataFrame({'geometry': regional_edges})
+
+    output = []
+
+    for idx, region in regions.iterrows():
+        length_m = sum(regional_edges['geometry'].intersection(region['geometry']).length)
+        output.append({
+            level: region[level],
+            'length_m': length_m
+        })
+
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
+    filename = 'regional_edges.csv'
+    output = pd.DataFrame(output)
+    output.to_csv(os.path.join(folder, filename), index=False)
+
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_nodes.shp')
+    nodes = gpd.read_file(path)
+    nodes.crs = 'epsg:4326'
+    nodes = nodes.to_crs({'init': 'epsg:3857'})
+    f = lambda x:np.sum(nodes.intersects(x))
+    regions['nodes'] = regions['geometry'].apply(f)
+
+    output = regions[[level, 'nodes']]
+
+    filename = 'core_nodes.csv'
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
+    path = os.path.join(folder, filename)
+
+    output.to_csv(path, index=False)
+
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_hubs.shp')
+    regional_hubs = gpd.read_file(path)
+    regional_hubs.crs = 'epsg:4326'
+    regional_hubs = regional_hubs.to_crs({'init': 'epsg:3857'})
+    f = lambda x:np.sum(regional_hubs.intersects(x))
+    regions['regional_hubs'] = regions['geometry'].apply(f)
+
+    output = regions[[level,'regional_hubs']]
+
+    filename = 'regional_hubs.csv'
+    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
+    path = os.path.join(folder, filename)
+
+    output.to_csv(path, index=False)
+
+    return print('Completed core and hubs lut')
+
 
 if __name__ == '__main__':
 
     # countries = find_country_list(['Africa'])
 
     countries = [
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
         # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 2},
         # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
@@ -1203,27 +1294,29 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        # print('Processing country boundary')
-        # process_country_shapes(country)
+        print('Processing country boundary')
+        process_country_shapes(country)
 
-        # print('Processing regions')
-        # process_regions(country)
+        print('Processing regions')
+        process_regions(country)
 
-        # print('Processing settlement layer')
-        # process_settlement_layer(country)
+        print('Processing settlement layer')
+        process_settlement_layer(country)
 
-        # print('Processing night lights')
-        # process_night_lights(country)
+        print('Processing night lights')
+        process_night_lights(country)
 
-        # print('Processing coverage shapes')
-        # process_coverage_shapes(country)
+        print('Processing coverage shapes')
+        process_coverage_shapes(country)
 
-        # print('Getting regional data')
-        # get_regional_data(country)
+        print('Getting regional data')
+        get_regional_data(country)
 
         print('Creating network')
         create_network(country, pop_density_km2, settlement_size)
 
         print('Create backhaul lookup table')
-        output = backhaul_distance(country)
-        # print(output)
+        output = backhaul_lut(country)
+
+        print('Create core and regional hubs lookup table')
+        output = core_and_hubs_lut(country)
