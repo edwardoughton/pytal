@@ -81,34 +81,29 @@ def read_capacity_lookup(path):
     with open(path, 'r') as capacity_lookup_file:
         reader = csv.DictReader(capacity_lookup_file)
         for row in reader:
-            if float(row["capacity_mbps_km2_50ci"]) <= 0:
+
+            if float(row["capacity_mbps_km2"]) <= 0:
                 continue
             environment = row["environment"].lower()
             ant_type = row["ant_type"]
             frequency_GHz = str(int(float(row["frequency_GHz"]) * 1e3))
-            bandwidth_MHz = str(row["bandwidth_MHz"])
             generation = str(row["generation"])
+            ci = str(row['confidence_interval'])
 
-            if (environment, ant_type, frequency_GHz, bandwidth_MHz, generation) \
+            if (environment, ant_type, frequency_GHz, generation, ci) \
                 not in capacity_lookup_table:
                 capacity_lookup_table[(
-                    environment, ant_type, frequency_GHz, bandwidth_MHz, generation)
+                    environment, ant_type, frequency_GHz, generation, ci)
                     ] = []
 
             capacity_lookup_table[(
                 environment,
                 ant_type,
                 frequency_GHz,
-                bandwidth_MHz,
-                generation)].append((
+                generation,
+                ci)].append((
                     float(row["sites_per_km2"]),
-                    {
-                        'capacity_mbps_km2_1ci': float(row["capacity_mbps_km2_1ci"]),
-                        'capacity_mbps_km2_10ci': float(row["capacity_mbps_km2_10ci"]),
-                        'capacity_mbps_km2_50ci': float(row["capacity_mbps_km2_50ci"]),
-                        'capacity_mbps_km2_90ci': float(row["capacity_mbps_km2_90ci"]),
-                        'capacity_mbps_km2_99ci': float(row["capacity_mbps_km2_99ci"]),
-                    }
+                    float(row["capacity_mbps_km2"])
                 ))
 
         for key, value_list in capacity_lookup_table.items():
@@ -254,7 +249,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [1, 10, 50]
+        'confidence': [5, 50, 95]
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -301,31 +296,29 @@ if __name__ == '__main__':
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options[:1]:
-
-                if not option['strategy'] == '4G_epc_microwave_baseline':
-                    continue
+            for option in options:
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
-
-                # try:
-                path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
-                data = load_regions(path)[:1]
-
-                data_initial = data.to_dict('records')
-
-                data_demand = estimate_demand(
-                    data_initial,
-                    option,
-                    GLOBAL_PARAMETERS,
-                    country_parameters,
-                    TIMESTEPS,
-                    penetration_lut
-                )
 
                 confidence_intervals = GLOBAL_PARAMETERS['confidence']
 
                 for ci in confidence_intervals:
+
+                    print('CI: {}'.format(ci))
+
+                    path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
+                    data = load_regions(path)#[:1]
+
+                    data_initial = data.to_dict('records')
+
+                    data_demand = estimate_demand(
+                        data_initial,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                        TIMESTEPS,
+                        penetration_lut
+                    )
 
                     data_supply = estimate_supply(
                         country,
