@@ -45,11 +45,13 @@ def find_single_network_cost(country, region, sites_per_km2, strategy,
     cost_breakdown = get_costs(country, region, generation, core, backhaul, sharing,
         geotype, costs, sites_per_km2, global_parameters, country_parameters, backhaul_lut)
 
-    total_deployment_costs_km2 = 0
+    network_cost_km2 = 0
     for key, value in cost_breakdown.items():
-        total_deployment_costs_km2 += value
+        network_cost_km2 += value
 
-    cost_breakdown['total_deployment_costs_km2'] = total_deployment_costs_km2
+    cost_breakdown['network_cost_km2'] = network_cost_km2
+
+    cost_breakdown['total_network_cost'] = network_cost_km2 * region['area_km2']
 
     return cost_breakdown
 
@@ -111,7 +113,8 @@ def baseline(country, region, generation, core, backhaul, sharing,
             discount_opex(costs['site_rental'], global_parameters) * sites_per_km2
         ),
         'power_generator_battery_system': (
-            discount_capex_and_opex(costs['power_generator_battery_system'], global_parameters) *
+            discount_capex_and_opex(costs['power_generator_battery_system'],
+            global_parameters) *
             sites_per_km2
         ),
         'high_speed_backhaul_hub': (
@@ -123,8 +126,7 @@ def baseline(country, region, generation, core, backhaul, sharing,
         ),
         '{}_backhaul'.format(backhaul): (
             discount_capex_and_opex(backhaul_cost, global_parameters) * sites_per_km2
-        ),
-        'spectrum': get_spectrum_costs(region, generation, country_parameters)
+        )
     }
 
     return cost_breakdown
@@ -184,8 +186,7 @@ def passive(country, region, generation, core, backhaul, sharing, geotype, costs
         '{}_backhaul'.format(backhaul): (
             discount_capex_and_opex(backhaul_cost, global_parameters) *
             sites_per_km2 / global_parameters['networks']
-        ),
-        'spectrum': get_spectrum_costs(region, generation, country_parameters)
+        )
     }
 
     return cost_breakdown
@@ -252,8 +253,7 @@ def active(country, region, generation, core, backhaul, sharing, geotype, costs,
         '{}_backhaul'.format(backhaul): (
             discount_capex_and_opex(backhaul_cost, global_parameters) *
             sites_per_km2 / global_parameters['networks']
-        ),
-        'spectrum': get_spectrum_costs(region, generation, country_parameters)
+        )
     }
 
     return cost_breakdown
@@ -294,28 +294,6 @@ def get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut):
         tech = '{}_backhaul_{}'.format(backhaul, geotype)
         cost_per_meter = costs[tech]
         cost = cost_per_meter * distance_m
-
-    return cost
-
-
-def get_spectrum_costs(region, generation, country_parameters):
-    """
-    Calculate spectrum costs.
-
-    """
-    population = int(round(region['population']))
-    frequencies = country_parameters['frequencies']
-    frequencies = frequencies[generation]
-    networks = country_parameters['networks']
-    frequencies = frequencies['{}_networks'.format(networks)]
-
-    for frequency in frequencies:
-        if frequency['frequency'] < 1000:
-            cost_usd_mhz_pop = country_parameters['costs']['spectrum_coverage_usd_mhz_pop']
-        else:
-            cost_usd_mhz_pop = country_parameters['costs']['spectrum_capacity_usd_mhz_pop']
-
-    cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
 
     return cost
 
