@@ -17,6 +17,7 @@ from collections import OrderedDict
 from options import OPTIONS, COUNTRY_PARAMETERS
 from pytal.demand import estimate_demand
 from pytal.supply import estimate_supply
+from pytal.assess import assess
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -248,7 +249,7 @@ if __name__ == '__main__':
     }
 
     GLOBAL_PARAMETERS = {
-        'overbooking_factor': 50,
+        'overbooking_factor': 100,
         'return_period': 10,
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
@@ -261,12 +262,12 @@ if __name__ == '__main__':
 
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
     countries = [
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
     ]
@@ -300,7 +301,7 @@ if __name__ == '__main__':
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options:
+            for option in options[:1]:
 
                 if not option['strategy'] == '4G_epc_microwave_baseline':
                     continue
@@ -311,10 +312,10 @@ if __name__ == '__main__':
                 path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
                 data = load_regions(path)[:1]
 
-                data = data.to_dict('records')
+                data_initial = data.to_dict('records')
 
-                data = estimate_demand(
-                    data,
+                data_demand = estimate_demand(
+                    data_initial,
                     option,
                     GLOBAL_PARAMETERS,
                     country_parameters,
@@ -322,23 +323,36 @@ if __name__ == '__main__':
                     penetration_lut
                 )
 
-                data = estimate_supply(
-                    country,
-                    data,
-                    lookup,
-                    option,
-                    GLOBAL_PARAMETERS,
-                    country_parameters,
-                    COSTS,
-                    backhaul_lut
-                )
+                confidence_intervals = GLOBAL_PARAMETERS['confidence']
 
-                data_to_write = data_to_write + data
+                for ci in confidence_intervals:
 
-                # except:
-                #     print('Unable to process {} for {} and {}'.format(
-                #         country, option['scenario'], option['strategy']))
-                #     pass
+                    data_supply = estimate_supply(
+                        country,
+                        data_demand,
+                        lookup,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                        COSTS,
+                        backhaul_lut,
+                        ci
+                    )
+
+                    data_assess = assess(
+                        country,
+                        data_supply,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                    )
+
+                    data_to_write = data_to_write + data_assess
+
+                    # except:
+                    #     print('Unable to process {} for {} and {}'.format(
+                    #         country, option['scenario'], option['strategy']))
+                    #     pass
 
         path_results = os.path.join(BASE_PATH, '..', 'results')
 
