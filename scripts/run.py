@@ -17,6 +17,7 @@ from collections import OrderedDict
 from options import OPTIONS, COUNTRY_PARAMETERS
 from pytal.demand import estimate_demand
 from pytal.supply import estimate_supply
+from pytal.assess import assess
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -80,34 +81,29 @@ def read_capacity_lookup(path):
     with open(path, 'r') as capacity_lookup_file:
         reader = csv.DictReader(capacity_lookup_file)
         for row in reader:
-            if float(row["capacity_mbps_km2_50ci"]) <= 0:
+
+            if float(row["capacity_mbps_km2"]) <= 0:
                 continue
             environment = row["environment"].lower()
             ant_type = row["ant_type"]
             frequency_GHz = str(int(float(row["frequency_GHz"]) * 1e3))
-            bandwidth_MHz = str(row["bandwidth_MHz"])
             generation = str(row["generation"])
+            ci = str(row['confidence_interval'])
 
-            if (environment, ant_type, frequency_GHz, bandwidth_MHz, generation) \
+            if (environment, ant_type, frequency_GHz, generation, ci) \
                 not in capacity_lookup_table:
                 capacity_lookup_table[(
-                    environment, ant_type, frequency_GHz, bandwidth_MHz, generation)
+                    environment, ant_type, frequency_GHz, generation, ci)
                     ] = []
 
             capacity_lookup_table[(
                 environment,
                 ant_type,
                 frequency_GHz,
-                bandwidth_MHz,
-                generation)].append((
+                generation,
+                ci)].append((
                     float(row["sites_per_km2"]),
-                    {
-                        'capacity_mbps_km2_1ci': float(row["capacity_mbps_km2_1ci"]),
-                        'capacity_mbps_km2_10ci': float(row["capacity_mbps_km2_10ci"]),
-                        'capacity_mbps_km2_50ci': float(row["capacity_mbps_km2_50ci"]),
-                        'capacity_mbps_km2_90ci': float(row["capacity_mbps_km2_90ci"]),
-                        'capacity_mbps_km2_99ci': float(row["capacity_mbps_km2_99ci"]),
-                    }
+                    float(row["capacity_mbps_km2"])
                 ))
 
         for key, value_list in capacity_lookup_table.items():
@@ -248,12 +244,12 @@ if __name__ == '__main__':
     }
 
     GLOBAL_PARAMETERS = {
-        'overbooking_factor': 50,
+        'overbooking_factor': 100,
         'return_period': 10,
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [1, 10, 50]
+        'confidence': [5, 50, 95]
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -261,12 +257,12 @@ if __name__ == '__main__':
 
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
     countries = [
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
         # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
         # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
     ]
@@ -302,43 +298,54 @@ if __name__ == '__main__':
 
             for option in options:
 
-                if not option['strategy'] == '4G_epc_microwave_baseline':
-                    continue
-
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
-                # try:
-                path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
-                data = load_regions(path)[:1]
+                confidence_intervals = GLOBAL_PARAMETERS['confidence']
 
-                data = data.to_dict('records')
+                for ci in confidence_intervals:
 
-                data = estimate_demand(
-                    data,
-                    option,
-                    GLOBAL_PARAMETERS,
-                    country_parameters,
-                    TIMESTEPS,
-                    penetration_lut
-                )
+                    print('CI: {}'.format(ci))
 
-                data = estimate_supply(
-                    country,
-                    data,
-                    lookup,
-                    option,
-                    GLOBAL_PARAMETERS,
-                    country_parameters,
-                    COSTS,
-                    backhaul_lut
-                )
+                    path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
+                    data = load_regions(path)#[:1]
 
-                data_to_write = data_to_write + data
+                    data_initial = data.to_dict('records')
 
-                # except:
-                #     print('Unable to process {} for {} and {}'.format(
-                #         country, option['scenario'], option['strategy']))
-                #     pass
+                    data_demand = estimate_demand(
+                        data_initial,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                        TIMESTEPS,
+                        penetration_lut
+                    )
+
+                    data_supply = estimate_supply(
+                        country,
+                        data_demand,
+                        lookup,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                        COSTS,
+                        backhaul_lut,
+                        ci
+                    )
+
+                    data_assess = assess(
+                        country,
+                        data_supply,
+                        option,
+                        GLOBAL_PARAMETERS,
+                        country_parameters,
+                    )
+
+                    data_to_write = data_to_write + data_assess
+
+                    # except:
+                    #     print('Unable to process {} for {} and {}'.format(
+                    #         country, option['scenario'], option['strategy']))
+                    #     pass
 
         path_results = os.path.join(BASE_PATH, '..', 'results')
 

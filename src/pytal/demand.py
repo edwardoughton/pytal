@@ -86,7 +86,7 @@ def estimate_demand(regions, option, global_parameters,
 
             revenue.append(region['arpu'] * region['phones_on_network'])
 
-        region['revenue'] = sum(revenue)
+        region['total_revenue'] = sum(revenue)
         region['revenue_km2'] = sum(revenue) / region['area_km2']
         region['demand_mbps_km2'] = sum(demand_mbps_km2) / len(demand_mbps_km2)
 

@@ -123,23 +123,23 @@ COUNTRY_PARAMETERS = {
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'frequencies': {
             '4G': {
-                    '1_networks': [
-                        {
-                            'name': 'Access Comm',
-                            'frequency': 800, #Actually 850 MHz but treating as 800 MHz
-                            'bandwidth': 10 #Actually 5, treating as 10 for now
-                        },
-                        {
-                            'name': 'Airtel',
-                            'frequency': 1800,
-                            'bandwidth': 3
-                        },
-                        {
-                            'name': 'TNM',
-                            'frequency': 2500,
-                            'bandwidth': 41
-                        },
-                    ],
+                '1_networks': [
+                    {
+                        'name': 'Access Comm',
+                        'frequency': 800, #Actually 850 MHz but treating as 800 MHz
+                        'bandwidth': 10 #Actually 5, treating as 10 for now
+                    },
+                    {
+                        'name': 'Airtel',
+                        'frequency': 1800,
+                        'bandwidth': 3
+                    },
+                    {
+                        'name': 'TNM',
+                        'frequency': 2500,
+                        'bandwidth': 41
+                    },
+                ],
                 '2_networks': [
                     {
                         'name': 'Access Comm',
@@ -202,7 +202,12 @@ COUNTRY_PARAMETERS = {
         'costs': {
             'spectrum_coverage_usd_mhz_pop': 0.5,
             'spectrum_capacity_usd_mhz_pop': 0.1,
-            }
+            },
+        'financials': {
+            'profit_margin': 20,
+            'tax_baseline': 30,
+            'tax_low': 10,
+            },
         },
     'SEN': {
         'luminosity': {
@@ -214,30 +219,27 @@ COUNTRY_PARAMETERS = {
             'medium': 5,
             'low': 2,
         },
-        #
-        #
         'smartphone_pen': 0.5,
         'networks': 3,
-        #
         'frequencies': {
             '4G': {
-                    '1_networks': [
-                        {
-                            'name': '',
-                            'frequency': 800, #Actually 850 MHz but treating as 800 MHz
-                            'bandwidth': 10 #Actually 5, treating as 10 for now
-                        },
-                        {
-                            'name': '',
-                            'frequency': 1800,
-                            'bandwidth': 3
-                        },
-                        {
-                            'name': '',
-                            'frequency': 2500,
-                            'bandwidth': 41
-                        },
-                    ],
+                '1_networks': [
+                    {
+                        'name': '',
+                        'frequency': 800, #Actually 850 MHz but treating as 800 MHz
+                        'bandwidth': 10 #Actually 5, treating as 10 for now
+                    },
+                    {
+                        'name': '',
+                        'frequency': 1800,
+                        'bandwidth': 3
+                    },
+                    {
+                        'name': '',
+                        'frequency': 2500,
+                        'bandwidth': 41
+                    },
+                ],
                 '2_networks': [
                     {
                         'name': '',
@@ -300,6 +302,111 @@ COUNTRY_PARAMETERS = {
         'costs': {
             'spectrum_coverage_usd_mhz_pop': 0.5,
             'spectrum_capacity_usd_mhz_pop': 0.1,
+            },
+        'financials': {
+            'profit_margin': 20,
+            'tax_baseline': 30,
+            'tax_low': 10,
+            },
+        },
+    'PER': {
+        'luminosity': {
+            'high': 5,
+            'medium': 1,
+        },
+        'arpu': {
+            'high': 15,
+            'medium': 5,
+            'low': 2,
+        },
+        'smartphone_pen': 0.4,
+        'networks': 3,
+        'frequencies': {
+            '4G': {
+                '1_networks': [
+                    {
+                        'name': '',
+                        'frequency': 800,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 1800,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 2100,
+                        'bandwidth': 10,
+                    },
+                ],
+                '2_networks': [
+                    {
+                        'name': '',
+                        'frequency': 800,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 1800,
+                        'bandwidth': 10,
+                    },
+                ],
+                '3_networks': [
+                    {
+                        'name': '',
+                        'frequency': 800,
+                        'bandwidth': 10,
+                    },
+                ],
+            },
+            '5G': {
+                '1_networks': [
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                ],
+                '2_networks': [
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                ],
+                '3_networks': [
+                    {
+                        'name': '',
+                        'frequency': 700,
+                        'bandwidth': 10,
+                    },
+                ],
             }
+        },
+        'costs': {
+            'spectrum_coverage_usd_mhz_pop': 0.5,
+            'spectrum_capacity_usd_mhz_pop': 0.1,
+            },
+        'financials': {
+            'profit_margin': 20,
+            'tax_baseline': 30,
+            'tax_low': 10,
+            },
         },
     }
