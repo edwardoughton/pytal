@@ -104,7 +104,6 @@ OPTIONS = {
 
 
 COUNTRY_PARAMETERS = {
-
     'MWI': {
         'luminosity': {
             'high': 5,
@@ -321,43 +320,43 @@ COUNTRY_PARAMETERS = {
             'low': 2,
         },
         'smartphone_pen': 0.4,
-        'networks': 4,
+        'networks': 3,
         'frequencies': {
             '4G': {
                 '1_networks': [
                     {
                         'name': '',
                         'frequency': 800,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 1800,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 2100,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
                 '2_networks': [
                     {
                         'name': '',
                         'frequency': 800,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 1800,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
                 '3_networks': [
                     {
                         'name': '',
                         'frequency': 800,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
             },
@@ -366,36 +365,36 @@ COUNTRY_PARAMETERS = {
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
                 '2_networks': [
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
                 '3_networks': [
                     {
                         'name': '',
                         'frequency': 700,
-                        'bandwidth': 20,
+                        'bandwidth': 10,
                     },
                 ],
             }
