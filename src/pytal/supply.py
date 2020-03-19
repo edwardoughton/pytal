@@ -92,7 +92,7 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
 
     frequencies = frequencies['{}_networks'.format(networks)]
 
-    confidence_str = 'capacity_mbps_km2_{}ci'.format(ci)
+    ci = str(ci)
 
     network = []
 
@@ -101,21 +101,24 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
     for item in frequencies:
 
         frequency = str(item['frequency'])
-        bandwidth = str(item['bandwidth'])
+        bandwidth = float(item['bandwidth'])
 
         density_capacities = lookup_capacity(
             lookup,
             geotype,
             ant_type,
             frequency,
-            bandwidth,
             generation,
+            ci
             )
 
-        max_density, max_capacities = density_capacities[-1]
-        min_density, min_capacities = density_capacities[0]
+        max_density, max_capacity = density_capacities[-1]
+        min_density, min_capacity = density_capacities[0]
 
-        if demand > max_capacities[confidence_str]:
+        max_capacity = max_capacity * bandwidth
+        min_capacity = min_capacity * bandwidth
+
+        if demand > max_capacity:
             network.append(
                 {
                     'frequency': str(frequency),
@@ -126,10 +129,10 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                     'confidence': ci,
                 }
             )
-            capacity += max_capacities[confidence_str]
+            capacity += max_capacity
 
 
-        elif demand < min_capacities[confidence_str]:
+        elif demand < min_capacity:
 
             network.append(
                 {
@@ -141,21 +144,24 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                     'confidence': ci,
                 }
             )
-            capacity += min_capacities[confidence_str]
+            capacity += min_capacity
 
         else:
 
             for a, b in pairwise(density_capacities):
 
-                lower_density, lower_capacities  = a
-                upper_density, upper_capacities  = b
+                lower_density, lower_capacity  = a
+                upper_density, upper_capacity  = b
 
-                if (lower_capacities[confidence_str] <= demand and
-                    demand < upper_capacities[confidence_str]):
+                lower_capacity = lower_capacity * bandwidth
+                upper_capacity = upper_capacity * bandwidth
+
+                if (lower_capacity <= demand and
+                    demand < upper_capacity):
 
                     site_density = interpolate(
-                        lower_capacities[confidence_str], lower_density,
-                        upper_capacities[confidence_str], upper_density,
+                        lower_capacity, lower_density,
+                        upper_capacity, upper_density,
                         demand
                     )
 
@@ -169,7 +175,7 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
                             'confidence': ci,
                         }
                     )
-                    capacity += upper_capacities[confidence_str]
+                    capacity += upper_capacity
 
     if not len(network) >= 1:
         network.append(
@@ -187,19 +193,19 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
 
 
 def lookup_capacity(lookup, environment, ant_type, frequency,
-    bandwidth, generation):
+    generation, ci):
     """
     Use lookup table to find the combination of spectrum bands
     which meets capacity by clutter environment geotype, frequency,
     bandwidth, technology generation and site density.
 
     """
-    if (environment, ant_type, frequency, bandwidth, generation) not in lookup:
+    if (environment, ant_type, frequency, generation, ci) not in lookup:
         raise KeyError("Combination %s not found in lookup table",
-                       (environment, ant_type, frequency, bandwidth, generation))
+                       (environment, ant_type, frequency, generation, ci))
 
     density_capacities = lookup[
-        (environment, ant_type,  frequency, bandwidth, generation)
+        (environment, ant_type,  frequency, generation, ci)
     ]
 
     return density_capacities
