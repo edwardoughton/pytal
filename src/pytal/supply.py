@@ -60,11 +60,8 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             backhaul_lut
         )
 
-        region_id = find_lowest_region(region)
-
         region['scenario'] = option['scenario']
         region['strategy'] = option['strategy']
-        region['region_level'] = region_id
         region['confidence'] = ci
         region['site_density'] = max_site_density
         region['network_cost_km2'] = all_costs_km2['network_cost_km2']
@@ -89,8 +86,6 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
 
     frequencies = country_parameters['frequencies']
     frequencies = frequencies[generation]
-
-    frequencies = frequencies['{}_networks'.format(networks)]
 
     ci = str(ci)
 
