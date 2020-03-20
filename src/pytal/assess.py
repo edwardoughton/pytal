@@ -78,7 +78,6 @@ def get_spectrum_costs(region, generation, country_parameters):
     frequencies = country_parameters['frequencies']
     frequencies = frequencies[generation]
     networks = country_parameters['networks']
-    frequencies = frequencies['{}_networks'.format(networks)]
 
     for frequency in frequencies:
         if frequency['frequency'] < 1000:
@@ -143,7 +142,13 @@ def calculate_phone_user_cost(region, country_parameters):
         region['total_profit']
     )
 
-    cost_per_user = cost / region['phones_on_network']
+    if region['phones_on_network'] > 0:
+
+        cost_per_user = cost / region['phones_on_network']
+
+    else:
+
+        cost_per_user = 0
 
     return cost_per_user
 
@@ -158,6 +163,12 @@ def calculate_smartphone_user_cost(region, country_parameters):
         region['total_profit']
     )
 
-    cost_per_smartphone_user = cost / region['smartphones_on_network']
+    if region['smartphones_on_network'] > 0:
+
+        cost_per_smartphone_user = cost / region['smartphones_on_network']
+
+    else:
+
+        cost_per_smartphone_user = 0
 
     return cost_per_smartphone_user
