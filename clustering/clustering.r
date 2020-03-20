@@ -3,6 +3,8 @@
 library(tidyverse)
 library(dplyr)
 library(ggrepel)
+require(rgdal)
+library(ggpubr)
 
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -45,6 +47,10 @@ subset <- select(mydata, coverage_4g, pop_density, gdp_per_cap)
 
 #scale data to be mean centralized 
 subset <- scale(subset) 
+
+#set the seed value for reproducible results
+#k means uses randomised initial centroids
+set.seed(42)
 
 #determine number of clusters
 wss <- ''
@@ -151,7 +157,7 @@ data = rbind(data, high_income)
 write.csv(data, file.path(folder, 'results', 'data_clustering_results.csv'))
 
 rm(data, country_info, fit, high_income, iso3, long, mydata, folder, path,
-   subset, boxplot_labelled, i, wss, cluster_num)
+   subset, i, wss, cluster_num)
 
 if (!require(rgeos)) {
   install.packages("rgeos", repos = "http://cran.us.r-project.org")
@@ -161,10 +167,10 @@ if (!require(rgdal)) {
   install.packages("rgdal", repos = "http://cran.us.r-project.org")
   require(rgdal)
 }
-if (!require(raster)) {
-  install.packages("raster", repos = "http://cran.us.r-project.org")
-  require(raster)
-}
+# if (!require(raster)) {
+#   install.packages("raster", repos = "http://cran.us.r-project.org")
+#   require(raster)
+# }
 if(!require(ggplot2)) {
   install.packages("ggplot2", repos="http://cloud.r-project.org")
   require(ggplot2)
@@ -208,8 +214,8 @@ theme_map <- function(...) {
       # panel.grid.minor = element_line(color = "#ebebe5", size = 0.2),
       panel.grid.major = element_line(color = "#ebebe5", size = 0.2),
       panel.grid.minor = element_blank(),
-      plot.background = element_rect(fill = "#f5f5f2", color = NA), 
-      panel.background = element_rect(fill = "#f5f5f2", color = NA), 
+      plot.background = element_rect(fill = "#f5f5f2", color = NA),
+      panel.background = element_rect(fill = "#f5f5f2", color = NA),
       legend.background = element_rect(fill = "#f5f5f2", color = NA),
       panel.border = element_blank(),
       ...
@@ -222,9 +228,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 #get data
 data <- read.csv(file.path(folder,'results','data_clustering_results.csv'), stringsAsFactors = F)
 
-require(rgdal)
-require(dplyr)
-shapes <- file.path(folder, '..', 'data', 'intermediate', "global_countries.shp")
+shapes <- file.path(folder, 'data_inputs', "global_countries.shp")
 
 #fortify the data AND keep trace of the commune code! (Takes ~2 minutes)
 gde_15 <- readOGR(shapes, layer = "global_countries")
@@ -240,14 +244,14 @@ map_data$cluster[is.na(map_data$cluster)] <- "No Data"
 
 #create map
 cluster_map <- ggplot() +
-  geom_polygon(data = map_data, aes(fill = factor(cluster), 
+  geom_polygon(data = map_data, aes(fill = factor(cluster),
               x = long, y = lat, group = group), colour='grey', size = 0.2) +
   coord_equal() +  theme_map() +
-  labs(x = NULL, y = NULL,  fill = 'Cluster', title = "Global Countries by Cluster", 
+  labs(x = NULL, y = NULL,  fill = 'Cluster', title = "Global Countries by Cluster",
        subtitle = "Clustering based on GDP Per Capita, Population Density and 4G Coverage") +
   theme(legend.position = "bottom") +
   guides(fill=guide_legend(ncol=8)) +
-  scale_fill_manual(values = c("#009E73", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00", "#999999", "#000000"))  
+  scale_fill_manual(values = c("#009E73", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00", "#999999", "#000000"))
 
 #export to folder
 path = file.path(folder, 'figures', 'map.tiff')
@@ -257,16 +261,9 @@ dev.off()
 
 rm(data, gde_15, map_data, map_data_fortified)
 
-library(ggpubr)
-
 cluster_panel <- ggarrange(boxplot, cluster_map, ncol = 1, nrow = 2, align = c("hv"))
 
 #export to folder
-path = file.path(folder, 'figures', 'cluster_panel.tiff')
-tiff(path, units="in", width=10, height=10, res=300)
-print(cluster_panel)
-dev.off()
-
 path = file.path(folder, 'figures', 'cluster_panel.png')
 ggsave(path, units="in", width=10, height=10)
 print(cluster_panel)
