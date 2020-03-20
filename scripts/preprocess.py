@@ -9,6 +9,7 @@ Winter 2020
 import os
 import configparser
 import json
+import csv
 import pandas as pd
 import geopandas as gpd
 import pyproj
@@ -371,6 +372,8 @@ def process_coverage_shapes(country):
                 preserve_topology=True
             )
 
+            coverage = coverage.to_crs({'init': 'epsg:4326'})
+
             folder = os.path.join(DATA_INTERMEDIATE, iso3,
                 'coverage')
 
@@ -427,21 +430,13 @@ def process_regional_coverage(country):
 
             coverage = gpd.read_file(path)
 
-            coverage.crs = {'init': 'epsg:3857'}
-
-            coverage = coverage.to_crs({'init': 'epsg:4326'})
-
             segments = gpd.overlay(regions, coverage, how='intersection')
-
-            segments = segments.to_crs({'init': 'epsg:3857'})
 
             tech_coverage = {}
 
             for idx, region in segments.iterrows():
 
-                geom = region['geometry']
-
-                area_km2 = geom.area / 1e6
+                area_km2 = round(area_of_polygon(region['geometry']) / 1e6)
 
                 tech_coverage[region[gid_level]] = area_km2
 
@@ -524,9 +519,8 @@ def get_regional_data(country):
             population_summation = [d['sum'] for d in zonal_stats(
                 region['geometry'], array, stats=['sum'], affine=affine)][0]
 
-        geom = transform(project.transform, region['geometry'])
 
-        area_km2 = geom.area / 10**6
+        area_km2 = round(area_of_polygon(region['geometry']) / 1e6)
 
         if luminosity_median == None:
             luminosity_median = 0
@@ -577,16 +571,17 @@ def get_regional_data(country):
 
         results.append({
             'GID_0': region['GID_0'],
-            gid_level: region[gid_level],
-            'median_luminosity': luminosity_median,
-            'sum_luminosity': luminosity_summation,
+            'GID_id': region[gid_level],
+            'GID_level': gid_level,
+            # 'median_luminosity': luminosity_median,
+            # 'sum_luminosity': luminosity_summation,
             'mean_luminosity_km2': luminosity_summation / area_km2,
             'population': population_summation,
             'area_km2': area_km2,
             'population_km2': population_summation / area_km2,
-            'coverage_GSM_km2': coverage_GSM_km2,
-            'coverage_3G_km2': coverage_3G_km2,
-            'coverage_4G_km2': coverage_4G_km2,
+            'coverage_GSM_km2': round(coverage_GSM_km2 / area_km2 * 100, 1),
+            'coverage_3G_km2': round(coverage_3G_km2 / area_km2 * 100, 1),
+            'coverage_4G_km2': round(coverage_4G_km2 / area_km2 * 100, 1),
             'sites_km2': sites_km2,
             'sites_total': sites_total,
         })
@@ -599,6 +594,20 @@ def get_regional_data(country):
     print('Completed {}'.format(single_country.NAME_0.values[0]))
 
     return print('Completed night lights data querying')
+
+
+def area_of_polygon(geom):
+    """
+    Returns the area of a polygon. Assume WGS84 as crs.
+
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+
+    poly_area, poly_perimeter = geod.geometry_area_perimeter(
+        geom
+    )
+
+    return abs(poly_area)
 
 
 def setup_site_estimator(iso3):
@@ -1274,20 +1283,223 @@ def core_and_hubs_lut(country):
     return print('Completed core and hubs lut')
 
 
+def load_country_lut(path):
+    """
+    Load iso country list data.
+
+    """
+    output = []
+
+    with open(path) as source:
+        reader = csv.DictReader(source)
+        for item in reader:
+            output.append({
+                'country': item['country'],
+                'ISO_3digit': item['ISO_3digit'],
+            })
+
+    return output
+
+
+def load_subscription_data(path, country, country_lut):
+    """
+    Load in itu cell phone subscription data.
+
+    Parameters
+    ----------
+    path : string
+        Location of itu data as .csv.
+    country : string
+        ISO3 digital country code.
+    country_lut : list of dicts
+        Lookup table containing country name to ISO3 digit code.
+
+    Returns
+    -------
+    output :
+        Time series data of cell phone subscriptions.
+
+    """
+    output = []
+    unmatched = []
+
+    years = [
+        '2005',
+        '2006',
+        '2007',
+        '2008',
+        '2009',
+        '2010',
+        '2011',
+        '2012',
+        '2013',
+        '2014',
+        '2015',
+        '2016',
+        '2017',
+    ]
+
+    with open(path) as source:
+        reader = csv.DictReader(source)
+        for item in reader:
+
+            #get 3 digital iso code from country name
+            for country_code in country_lut:
+
+                if item['country'] == country_code['country']:
+                    iso_code = country_code['ISO_3digit']
+
+            if not country == iso_code:
+                continue
+
+            keys = [k for k in item.keys()]
+
+            for year in years:
+                if year in keys:
+                    try:
+                        output.append({
+                            'country': iso_code,
+                            'year': int(year),
+                            'penetration': float(item[year]),
+                        })
+                    except:
+                        unmatched.append(item['country'])
+
+            iso_code = None
+
+    return output, unmatched
+
+
+def forecast_linear(country, historical_data, start_point, end_point, horizon):
+    """
+    Forcasts subscription adoption rate.
+
+    Parameters
+    ----------
+    historical_data : list of dicts
+        Past penetration data.
+    start_point : int
+        Starting year of forecast period.
+    end_point : int
+        Final year of forecast period.
+    horizon : int
+        Number of years to use to estimate mean growth rate.
+
+    """
+    output = []
+
+    for item in historical_data:
+        output.append({
+            'country': item['country'],
+            'year': item['year'],
+            'penetration': item['penetration'],
+        })
+
+    years = [item['year'] for item in historical_data]
+
+    sorted_data = sorted(historical_data, key = lambda i: i['year'], reverse=False)
+
+    year_0 = sorted(historical_data, key = lambda i: i['year'], reverse=True)[0]
+
+    growth_rates = []
+
+    for year in range((max(years)-horizon), max(years)):
+        year_plus_1 = year + 1
+        for item in sorted_data:
+            if item['year'] == year:
+                t0 = item['penetration']
+            if item['year'] == year_plus_1:
+                t1 = item['penetration']
+        growth_rate = t1 - t0
+
+        #exclude negative growth rates
+        if growth_rate > 0:
+            growth_rates.append(growth_rate)
+        #exclude excessively high growth rates
+        elif growth_rate < 8:
+            growth_rates.append(growth_rate)
+        else:
+            pass
+
+    mean_growth = sum(growth_rates) / len(growth_rates)
+
+    for year in range(start_point, end_point + 1):
+        if year == start_point:
+            growth = (1 + (mean_growth/100))
+            penetration = year_0['penetration'] * growth
+        else:
+
+            if penetration < 100:
+                growth = (1 + (mean_growth/100))
+            else:
+                growth = (1 + ((mean_growth/2)/100))
+            penetration = penetration * growth
+
+        if year not in [item['year'] for item in output]:
+
+            output.append({
+                'country': country,
+                'year': year,
+                'penetration': round(penetration, 2),
+            })
+
+    return output
+
+
+def forecast_subscriptions(country):
+    """
+
+    """
+    iso3 = country['iso3']
+
+    path = os.path.join(BASE_PATH, 'global_information.csv')
+    country_lut = load_country_lut(path)
+
+    path = os.path.join(DATA_RAW, 'itu', 'Mobile_cellular_2000-2018_Dec2019.csv')
+    historical_data, unmatched = load_subscription_data(path, iso3, country_lut)
+
+    start_point = 2018
+    end_point = 2030
+    horizon = 4
+
+    forecast = forecast_linear(
+        iso3,
+        historical_data,
+        start_point,
+        end_point,
+        horizon
+    )
+
+    forecast_df = pd.DataFrame(forecast)
+
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    forecast_df.to_csv(os.path.join(path, 'subs_forecast.csv'), index=False)
+
+    return print('Completed subscription forecast')
+
+
 if __name__ == '__main__':
 
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
-        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
-        # {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
         ]
 
     pop_density_km2 = 1000
@@ -1321,3 +1533,6 @@ if __name__ == '__main__':
 
         print('Create core and regional hubs lookup table')
         output = core_and_hubs_lut(country)
+
+        print('Create subscription forcast')
+        forecast_subscriptions(country)

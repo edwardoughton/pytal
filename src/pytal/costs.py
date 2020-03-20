@@ -275,9 +275,7 @@ def get_backhaul_costs(country, region, backhaul, geotype, costs, backhaul_lut):
     Calculate backhaul costs.
 
     """
-    level = country['regional_level']
-    level = 'GID_{}'.format(level)
-    distance_m = backhaul_lut[region[level]]
+    distance_m = backhaul_lut[region['GID_id']]
 
     if backhaul == 'microwave':
         if distance_m < 2e4:

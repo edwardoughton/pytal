@@ -189,6 +189,113 @@ def load_backhaul_lut(country, path):
     return output
 
 
+def aggregate_country_results(data_to_write):
+    """
+    Aggregate results for cross-country comparative insights.
+
+    """
+    output = []
+
+    countries = set()
+    scenarios =  set()
+    strategies = set()
+    confidence_ints = set()
+
+    for item in data_to_write:
+        countries.add(item['GID_0'])
+        scenarios.add(item['scenario'])
+        strategies.add(item['strategy'])
+        confidence_ints.add(item['confidence'])
+
+    for country in list(countries):
+        for scenario in list(scenarios):
+            for strategy in list(strategies):
+                for ci in confidence_ints:
+
+                    population = 0
+                    area_km2 = 0
+                    coverage_GSM_km2 = 0
+                    coverage_3G_km2 = 0
+                    coverage_4G_km2 = 0
+                    sites_total = 0
+                    pop_w_phones = 0
+                    phones_on_net = 0
+                    pop_w_sphones = 0
+                    sphones_on_net = 0
+                    total_revenue = 0
+                    total_network_cost = 0
+                    total_spectrum_cost = 0
+                    total_profit = 0
+                    total_tax = 0
+
+                    for item in data_to_write:
+                        if (
+                            item['GID_0'] == country and
+                            item['scenario'] == scenario and
+                            item['strategy'] == strategy and
+                            item['confidence'] == ci
+                            ):
+
+                            population += item['population']
+                            area_km2 += item['area_km2']
+                            coverage_GSM_km2 += item['coverage_GSM_km2']
+                            coverage_3G_km2 += item['coverage_3G_km2']
+                            coverage_4G_km2 += item['coverage_4G_km2']
+                            sites_total += item['sites_total']
+                            pop_w_phones += item['population_with_phones']
+                            phones_on_net += item['phones_on_network']
+                            pop_w_sphones += item['population_with_smartphones']
+                            sphones_on_net += item['smartphones_on_network']
+                            total_revenue += item['total_revenue']
+                            total_network_cost += item['total_network_cost']
+                            total_spectrum_cost += item['total_spectrum_cost']
+                            total_profit += item['total_profit']
+                            total_tax += item['total_tax']
+
+                    output.append({
+                        'country': country,
+                        'scenario': scenario,
+                        'strategy': strategy,
+                        'confidence': ci,
+                        'population_m': int(population / 1e6),
+                        'area_km2_m': int(area_km2 / 1e6),
+                        'coverage_GSM_perc': percentage(coverage_GSM_km2, area_km2),
+                        'coverage_3G_perc': percentage(coverage_3G_km2, area_km2),
+                        'coverage_4G_perc': percentage(coverage_4G_km2, area_km2),
+                        'sites_total': int(sites_total),
+                        'population_with_phones_perc': percentage(pop_w_phones, population),
+                        'phones_on_network_perc': percentage(phones_on_net, population),
+                        'pop_with_sphones_perc': percentage(pop_w_sphones, population),
+                        'sphones_on_net_perc': percentage(sphones_on_net, population),
+                        'total_revenue_bn': avoid_zeros(total_revenue / 1e9),
+                        'total_network_cost_bn':  avoid_zeros(total_network_cost / 1e9),
+                        'total_spectrum_cost_bn': avoid_zeros(total_spectrum_cost / 1e9),
+                        'total_profit_bn':  avoid_zeros(total_profit / 1e9),
+                        'total_tax_bn':  avoid_zeros(total_tax / 1e9),
+                    })
+
+    return output
+
+
+def percentage(numerator, denominator):
+    """
+    Generic percentage function.
+
+    """
+    return int(round(numerator / denominator * 100))
+
+
+def avoid_zeros(value):
+    """
+    Make value 0 if negative.
+
+    """
+    if value >= 0:
+        return round(value, 1)
+    else:
+        return 0
+
+
 def csv_writer(data, directory, filename):
     """
     Write data to a CSV file path.
@@ -249,22 +356,28 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [5, 50, 95]
+        'confidence': [50] #[5, 50, 95]
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
     lookup = read_capacity_lookup(path)
 
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
+
     countries = [
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'BGD', 'iso2': 'BD', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 1},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level':2},
+        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
     ]
 
     decision_options = [
@@ -296,7 +409,7 @@ if __name__ == '__main__':
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options:
+            for option in options:#[:1]:
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
@@ -342,12 +455,12 @@ if __name__ == '__main__':
 
                     data_to_write = data_to_write + data_assess
 
-                    # except:
-                    #     print('Unable to process {} for {} and {}'.format(
-                    #         country, option['scenario'], option['strategy']))
-                    #     pass
-
         path_results = os.path.join(BASE_PATH, '..', 'results')
 
-        csv_writer(data_to_write, path_results, 'results_{}_{}.csv'.format(
+        csv_writer(data_to_write, path_results, 'regional_results_{}_{}.csv'.format(
+            decision_option, len(countries)))
+
+        country_results = aggregate_country_results(data_to_write)
+
+        csv_writer(country_results, path_results, 'country_results_{}_{}.csv'.format(
             decision_option, len(countries)))
