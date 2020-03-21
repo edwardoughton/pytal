@@ -54,7 +54,7 @@ def define_geotype(x):
     Allocate geotype given a specific population density.
 
     """
-    if x['population_km2'] > 2000:
+    if x['population_km2'] > 5000:
         return 'urban'
     elif x['population_km2'] > 1500:
         return 'suburban 1'
@@ -189,137 +189,91 @@ def load_backhaul_lut(country, path):
     return output
 
 
-def aggregate_country_results(data_to_write):
+def load_core_lut(country, path):
     """
-    Aggregate results for cross-country comparative insights.
 
     """
-    output = []
+    level = country['regional_level']
+    level = 'GID_{}'.format(level)
 
-    countries = set()
-    scenarios =  set()
-    strategies = set()
-    confidence_ints = set()
+    interim = []
 
-    for item in data_to_write:
-        countries.add(item['GID_0'])
-        scenarios.add(item['scenario'])
-        strategies.add(item['strategy'])
-        confidence_ints.add(item['confidence'])
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            interim.append({
+                level: row[level],
+                'asset': row['asset'],
+                'value': int(row['value']),
+            })
 
-    for country in list(countries):
-        for scenario in list(scenarios):
-            for strategy in list(strategies):
-                for ci in confidence_ints:
+    asset_types = [
+        'core_edges',
+        'core_nodes',
+        'regional_edges',
+        'regional_nodes'
+    ]
 
-                    population = 0
-                    area_km2 = 0
-                    coverage_GSM_km2 = 0
-                    coverage_3G_km2 = 0
-                    coverage_4G_km2 = 0
-                    sites_total = 0
-                    pop_w_phones = 0
-                    phones_on_net = 0
-                    pop_w_sphones = 0
-                    sphones_on_net = 0
-                    total_revenue = 0
-                    total_network_cost = 0
-                    total_spectrum_cost = 0
-                    total_profit = 0
-                    total_tax = 0
+    output = {}
 
-                    for item in data_to_write:
-                        if (
-                            item['GID_0'] == country and
-                            item['scenario'] == scenario and
-                            item['strategy'] == strategy and
-                            item['confidence'] == ci
-                            ):
-
-                            population += item['population']
-                            area_km2 += item['area_km2']
-                            coverage_GSM_km2 += item['coverage_GSM_km2']
-                            coverage_3G_km2 += item['coverage_3G_km2']
-                            coverage_4G_km2 += item['coverage_4G_km2']
-                            sites_total += item['sites_total']
-                            pop_w_phones += item['population_with_phones']
-                            phones_on_net += item['phones_on_network']
-                            pop_w_sphones += item['population_with_smartphones']
-                            sphones_on_net += item['smartphones_on_network']
-                            total_revenue += item['total_revenue']
-                            total_network_cost += item['total_network_cost']
-                            total_spectrum_cost += item['total_spectrum_cost']
-                            total_profit += item['total_profit']
-                            total_tax += item['total_tax']
-
-                    output.append({
-                        'country': country,
-                        'scenario': scenario,
-                        'strategy': strategy,
-                        'confidence': ci,
-                        'population_m': int(population / 1e6),
-                        'area_km2_m': int(area_km2 / 1e6),
-                        'coverage_GSM_perc': percentage(coverage_GSM_km2, area_km2),
-                        'coverage_3G_perc': percentage(coverage_3G_km2, area_km2),
-                        'coverage_4G_perc': percentage(coverage_4G_km2, area_km2),
-                        'sites_total': int(sites_total),
-                        'population_with_phones_perc': percentage(pop_w_phones, population),
-                        'phones_on_network_perc': percentage(phones_on_net, population),
-                        'pop_with_sphones_perc': percentage(pop_w_sphones, population),
-                        'sphones_on_net_perc': percentage(sphones_on_net, population),
-                        'total_revenue_bn': avoid_zeros(total_revenue / 1e9),
-                        'total_network_cost_bn':  avoid_zeros(total_network_cost / 1e9),
-                        'total_spectrum_cost_bn': avoid_zeros(total_spectrum_cost / 1e9),
-                        'total_profit_bn':  avoid_zeros(total_profit / 1e9),
-                        'total_tax_bn':  avoid_zeros(total_tax / 1e9),
-                    })
+    for asset_type in asset_types:
+        asset_dict = {}
+        for row in interim:
+            if asset_type == row['asset']:
+                asset_dict[row[level]] = row['value']
+                output[asset_type] = asset_dict
 
     return output
 
 
-def percentage(numerator, denominator):
+def write_results(regional_results, costs_km2, folder):
     """
-    Generic percentage function.
-
-    """
-    return int(round(numerator / denominator * 100))
-
-
-def avoid_zeros(value):
-    """
-    Make value 0 if negative.
+    Write all results.
 
     """
-    if value >= 0:
-        return round(value, 1)
-    else:
-        return 0
+    print('Writing national results')
+    national_results = pd.DataFrame(regional_results)
+    national_results = national_results[[
+        'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
+        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+    ]]
 
+    national_results = national_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
 
-def csv_writer(data, directory, filename):
-    """
-    Write data to a CSV file path.
-    Parameters
-    ----------
-    data : list of dicts
-        Data to be written.
-    directory : string
-        Path to export folder
-    filename : string
-        Desired filename.
-    """
-    # Create path
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
+    national_results.to_csv(path,index=True)
 
-    fieldnames = []
-    for name, value in data[0].items():
-        fieldnames.append(name)
+    print('Writing decile results')
+    decile_results = pd.DataFrame(regional_results)
+    decile_results = decile_results[[
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
+        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+    ]]
 
-    with open(os.path.join(directory, filename), 'w') as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames, lineterminator = '\n')
-        writer.writeheader()
-        writer.writerows(data)
+    decile_results = decile_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+
+    path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
+    decile_results.to_csv(path, index=True)
+
+    print('Writing regional results')
+    regional_results = pd.DataFrame(regional_results)
+    regional_results = regional_results[[
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
+        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+    ]]
+
+    regional_results = regional_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+
+    path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
+    regional_results.to_csv(path, index=True)
+
+    print('Writing cost results')
+    costs_km2 = pd.DataFrame(costs_km2)
+    path = os.path.join(folder,'cost_results_{}.csv'.format(decision_option))
+    costs_km2.to_csv(path, index=False)
 
 
 if __name__ == '__main__':
@@ -343,11 +297,19 @@ if __name__ == '__main__':
         'high_speed_backhaul_hub': 15000,
         'router': 2000,
         'microwave_backhaul_small': 10000,
-        'microwave_backhaul_medium': 15000,
-        'microwave_backhaul_large': 25000,
-        'fiber_backhaul_urban': 20000,
-        'fiber_backhaul_suburban': 35000,
-        'fiber_backhaul_rural': 60000,
+        'microwave_backhaul_medium': 20000,
+        'microwave_backhaul_large': 40000,
+        'fiber_backhaul_urban_m': 5,
+        'fiber_backhaul_suburban_m': 5,
+        'fiber_backhaul_rural_m': 5,
+        'core_nodes_epc': 100000,
+        'core_nodes_nsa': 150000,
+        'core_nodes_sa': 200000,
+        'core_edges': 20,
+        'regional_nodes_epc': 100000,
+        'regional_nodes_nsa': 150000,
+        'regional_nodes_sa': 200000,
+        'regional_edges': 10,
     }
 
     GLOBAL_PARAMETERS = {
@@ -365,19 +327,19 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
+        # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
         {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
+        # {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
     ]
 
     decision_options = [
@@ -389,7 +351,7 @@ if __name__ == '__main__':
 
         options = OPTIONS[decision_option]
 
-        data_to_write = []
+        regional_results = []
 
         for country in countries:
 
@@ -402,8 +364,12 @@ if __name__ == '__main__':
             penetration_lut = load_penetration(os.path.join(folder, filename))
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
-            filename = 'backhaul.csv'
+            filename = 'backhaul_lut.csv'
             backhaul_lut = load_backhaul_lut(country, os.path.join(folder, filename))
+
+            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+            filename = 'core_lut.csv'
+            core_lut = load_core_lut(country, os.path.join(folder, filename))
 
             print('-----')
             print('Working on {} in {}'.format(decision_option, iso3))
@@ -433,7 +399,7 @@ if __name__ == '__main__':
                         penetration_lut
                     )
 
-                    data_supply = estimate_supply(
+                    data_supply, costs_km2 = estimate_supply(
                         country,
                         data_demand,
                         lookup,
@@ -442,6 +408,7 @@ if __name__ == '__main__':
                         country_parameters,
                         COSTS,
                         backhaul_lut,
+                        core_lut,
                         ci
                     )
 
@@ -453,14 +420,9 @@ if __name__ == '__main__':
                         country_parameters,
                     )
 
-                    data_to_write = data_to_write + data_assess
+                    regional_results = regional_results + data_assess
 
-        path_results = os.path.join(BASE_PATH, '..', 'results')
+        folder = os.path.join(BASE_PATH, '..', 'results')
+        write_results(regional_results, costs_km2, folder)
 
-        csv_writer(data_to_write, path_results, 'regional_results_{}_{}.csv'.format(
-            decision_option, len(countries)))
-
-        country_results = aggregate_country_results(data_to_write)
-
-        csv_writer(country_results, path_results, 'country_results_{}_{}.csv'.format(
-            decision_option, len(countries)))
+        print('Completed model run')
