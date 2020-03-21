@@ -13,7 +13,7 @@ from pytal.costs import find_single_network_cost
 
 
 def estimate_supply(country, regions, lookup, option, global_parameters,
-    country_parameters, costs, backhaul_lut, ci):
+    country_parameters, costs, backhaul_lut, core_lut, ci):
     """
     For each region, optimize the network design and estimate
     the financial cost.
@@ -35,11 +35,16 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         All equipment costs.
     backhaul_lut : dict
         Backhaul distance by region.
+    core_lut : ???
+        ???
     ci : int
         Confidence interval.
 
     """
-    output = []
+    iso3 = country['iso3']
+
+    output_regions = []
+    output_costs = []
 
     for region in regions:
 
@@ -48,28 +53,41 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
 
         max_site_density = max([r['site_density'] for r in network])
 
-        all_costs_km2 = find_single_network_cost(
+        total_sites_required = max_site_density * region['area_km2']
+
+        if total_sites_required > region['sites_estimated_total']:
+            region['new_sites'] = total_sites_required - region['sites_estimated_total']
+            region['upgraded_sites'] = region['sites_estimated_total']
+        else:
+            region['new_sites'] = 0
+            region['upgraded_sites'] = region['sites_estimated_total']
+
+        cost_results, total_network_cost = find_single_network_cost(
             country,
             region,
-            max_site_density,
             option['strategy'],
             region['geotype'].split(' ')[0],
             costs,
             global_parameters,
             country_parameters,
-            backhaul_lut
+            backhaul_lut,
+            core_lut
         )
 
         region['scenario'] = option['scenario']
         region['strategy'] = option['strategy']
         region['confidence'] = ci
         region['site_density'] = max_site_density
-        region['network_cost_km2'] = all_costs_km2['network_cost_km2']
-        region['total_network_cost'] = all_costs_km2['total_network_cost']
+        region['total_network_cost'] = total_network_cost
 
-        output.append(region)
+        output_regions.append(region)
 
-    return output
+        for cost_result in cost_results:
+            cost_result['GID_0'] = iso3
+            cost_result['GID_id'] = region['GID_id']
+            output_costs.append(cost_result)
+
+    return output_regions, output_costs
 
 
 def optimize_network(region, option, global_parameters, country_parameters, costs, lookup, ci):
