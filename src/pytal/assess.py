@@ -40,11 +40,11 @@ def assess(country, regions, option, global_parameters, country_parameters):
         # npv spectrum cost
         region['total_spectrum_cost'] = get_spectrum_costs(region, generation, country_parameters)
 
-        #profit = revenue - network cost + spectrum cost
-        region['total_profit'] = calculate_profit(region, country_parameters)
-
-        #tax only on profits
+        #tax on investment
         region['total_tax'] = calculate_tax(region, country_parameters)
+
+        #profit margin value calculated on all costs + taxes
+        region['total_profit'] = calculate_profit(region, country_parameters)
 
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
@@ -52,6 +52,13 @@ def assess(country, regions, option, global_parameters, country_parameters):
         region['per_phone_user_cost'] = calculate_phone_user_cost(region, country_parameters)
 
         region['per_smartphone_user_cost'] = calculate_smartphone_user_cost(region, country_parameters)
+
+        region['total_cost'] = (
+            region['total_network_cost'] +
+            region['total_spectrum_cost'] +
+            region['total_tax'] +
+            region['total_profit']
+        )
 
         output.append(region)
 
@@ -90,29 +97,36 @@ def get_spectrum_costs(region, generation, country_parameters):
     return cost
 
 
-def calculate_profit(region, country_parameters):
-    """
-    Estimate npv profit.
-
-    """
-    revenue = region['total_revenue']
-
-    cost = region['total_network_cost'] + region['total_spectrum_cost']
-
-    profit = revenue - cost
-
-    return profit
-
-
 def calculate_tax(region, country_parameters):
     """
 
     """
     tax_rate = country_parameters['financials']['tax_baseline']
 
-    tax = region['total_profit'] * (tax_rate / 100)
+    investment = (
+        region['total_network_cost'] +
+        region['total_spectrum_cost']
+    )
+
+    tax = investment * (tax_rate / 100)
 
     return tax
+
+
+def calculate_profit(region, country_parameters):
+    """
+    Estimate npv profit.
+
+    """
+    investment = (
+        region['total_network_cost'] +
+        region['total_spectrum_cost'] +
+        region['total_tax']
+    )
+
+    profit = investment * (country_parameters['financials']['profit_margin'] / 100)
+
+    return profit
 
 
 def calculate_benefit_cost_ratio(region, country_parameters):
@@ -139,6 +153,7 @@ def calculate_phone_user_cost(region, country_parameters):
     cost = (
         region['total_network_cost'] +
         region['total_spectrum_cost'] +
+        region['total_tax'] +
         region['total_profit']
     )
 
@@ -160,6 +175,7 @@ def calculate_smartphone_user_cost(region, country_parameters):
     cost = (
         region['total_network_cost'] +
         region['total_spectrum_cost'] +
+        region['total_tax'] +
         region['total_profit']
     )
 
