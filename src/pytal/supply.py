@@ -41,10 +41,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         Confidence interval.
 
     """
-    iso3 = country['iso3']
-
     output_regions = []
-    output_costs = []
 
     for region in regions:
 
@@ -54,11 +51,11 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         total_sites_required = site_density * region['area_km2']
 
         if total_sites_required > region['sites_estimated_total']:
-            region['new_sites'] = total_sites_required - region['sites_estimated_total']
-            region['upgraded_sites'] = region['sites_estimated_total']
+            region['new_sites'] = int(round(total_sites_required - region['sites_estimated_total']))
+            region['upgraded_sites'] = int(round(region['sites_estimated_total']))
         else:
             region['new_sites'] = 0
-            region['upgraded_sites'] = region['sites_estimated_total']
+            region['upgraded_sites'] = int(round(total_sites_required))
 
         total_network_cost = find_single_network_cost(
             country,
@@ -77,7 +74,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         region['confidence'] = ci
         region['site_density'] = site_density
         region['total_network_cost'] = total_network_cost
-        print('----total network cost {}'.format(total_network_cost))
+        # print('----total network cost {}'.format(total_network_cost))
         output_regions.append(region)
 
         # for cost_result in cost_results:
@@ -153,7 +150,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
         density_lut.append((density, capacity))
 
     density_lut = sorted(density_lut, key=lambda tup: tup[0])
-
+    # print(density_lut)
     max_density, max_capacity = density_lut[-1]
     min_density, min_capacity = density_lut[0]
 
@@ -178,8 +175,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
             lower_capacity = lower_capacity * bandwidth
             upper_capacity = upper_capacity * bandwidth
 
-            if (lower_capacity <= demand and
-                demand < upper_capacity):
+            if lower_capacity <= demand < upper_capacity:
 
                 site_density = interpolate(
                     lower_capacity, lower_density,
