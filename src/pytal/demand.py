@@ -65,15 +65,9 @@ def estimate_demand(regions, option, global_parameters,
 
             #phones : int
             #Total number of smartphones on the network being modeled.
-            region['population_with_smartphones'] = (
+            region['smartphones_on_network'] = (
                region['phones_on_network'] *
                country_parameters['smartphone_pen'])
-
-            #phones : int
-            #Total number of smartphones on the network being modeled.
-            region['smartphones_on_network'] = (
-                region['population_with_smartphones'] /
-                country_parameters['networks'])
 
             # demand_mbps_km2 : float
             # Total demand in mbps / km^2.
@@ -113,24 +107,6 @@ def estimate_arpu(region, timestep, global_parameters, country_parameters):
     else:
         arpu = country_parameters['arpu']['low']
         return discount_arpu(arpu, timestep, global_parameters)
-
-
-def estimate_phones(x):
-    """
-    Allocate consumption category given a specific luminosity.
-
-    """
-    if x['mean_luminosity_km2'] > 5:
-
-        return 10
-
-    elif x['mean_luminosity_km2'] > 1:
-
-        return 5
-
-    else:
-
-        return 1
 
 
 def discount_arpu(arpu, timestep, global_parameters):
