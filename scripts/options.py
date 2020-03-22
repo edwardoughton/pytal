@@ -137,10 +137,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -186,10 +186,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -235,10 +235,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -284,10 +284,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -333,10 +333,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -382,10 +382,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -436,10 +436,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -452,7 +452,6 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             },
         },
-
 
 
     'PAK': {
@@ -492,10 +491,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -588,10 +587,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -637,10 +636,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -686,10 +685,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -735,10 +734,10 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
-                },
+                # {
+                #     'frequency': 26000,
+                #     'bandwidth': 500,
+                # },
             ]
         },
         'costs': {
@@ -751,11 +750,5 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             },
         },
-
-
-
-
-
-
 
     }
