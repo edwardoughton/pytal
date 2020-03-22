@@ -328,7 +328,7 @@ def get_backhaul_costs(country, region, backhaul, costs, backhaul_lut):
             cost = costs[tech]
 
     elif backhaul == 'fiber':
-        tech = '{}_backhaul_{}_m'.format(backhaul, region['geotype'])
+        tech = '{}_backhaul_{}_m'.format(backhaul, region['geotype'].split(' ')[0])
         cost_per_meter = costs[tech]
         cost = cost_per_meter * distance_m
 
@@ -346,10 +346,14 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
     if asset_type == 'core_edges':
 
-        distance_m = core_lut[asset_type][region['GID_id']]
-        cost_m = costs['core_edges']
+        if region['GID_id'] in [core_lut[asset_type].keys()]:
+            distance_m = core_lut[asset_type][region['GID_id']]
+            cost_m = costs['core_edges']
+            cost = int(distance_m * cost_m)
+        else:
+            cost = 20000
 
-        return int(distance_m * cost_m)
+        return cost
 
     elif asset_type == 'core_nodes':
 
@@ -360,17 +364,31 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
     elif asset_type == 'regional_edges':
 
-        distance_m = core_lut[asset_type][region['GID_id']]
-        cost_m = costs['regional_edges']
+        if 'regional_edges' in [core_lut.keys()]:
+            if region['GID_id'] in [core_lut[asset_type].keys()]:
+                distance_m = core_lut[asset_type][region['GID_id']]
+                cost_m = costs['regional_edges']
+                cost = int(distance_m * cost_m)
+            else:
+                cost = 20000
+        else:
+            cost = 20000
 
-        return int(distance_m * cost_m)
+        return cost
 
     elif asset_type == 'regional_nodes':
 
-        quantity = core_lut[asset_type][region['GID_id']]
-        cost_each = costs['regional_nodes_{}'.format(core)]
+        if 'regional_nodes' in [core_lut.keys()]:
+            if region['GID_id'] in [core_lut[asset_type].keys()]:
+                quantity = core_lut[asset_type][region['GID_id']]
+                cost_each = costs['regional_nodes_{}'.format(core)]
+                cost = int(quantity * cost_each)
+            else:
+                cost = 20000
+        else:
+            cost = 20000
 
-        return int(quantity * cost_each)
+        return cost
 
     else:
         print('Did not recognise core asset type')
