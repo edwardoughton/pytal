@@ -13,7 +13,7 @@ import csv
 import pandas as pd
 import geopandas as gpd
 import pyproj
-from shapely.geometry import MultiPolygon, mapping, shape, LineString
+from shapely.geometry import MultiPolygon, mapping, shape, MultiLineString, LineString
 from shapely.ops import transform, unary_union
 from fiona.crs import from_epsg
 import rasterio
@@ -482,10 +482,6 @@ def get_regional_data(country):
 
     path_regions = gpd.read_file(path)
 
-    project = pyproj.Transformer.from_proj(
-        pyproj.Proj("EPSG:4326"), # source coordinate system
-        pyproj.Proj("EPSG:3857")) # destination coordinate system
-
     results = []
 
     for index, region in path_regions.iterrows():
@@ -582,8 +578,8 @@ def get_regional_data(country):
             'coverage_GSM_km2': round(coverage_GSM_km2 / area_km2 * 100, 1),
             'coverage_3G_km2': round(coverage_3G_km2 / area_km2 * 100, 1),
             'coverage_4G_km2': round(coverage_4G_km2 / area_km2 * 100, 1),
-            'sites_km2': sites_km2,
-            'sites_total': sites_total,
+            'sites_estimated_km2': sites_km2,
+            'sites_estimated_total': sites_total,
         })
 
     results_df = pd.DataFrame(results)
@@ -608,6 +604,18 @@ def area_of_polygon(geom):
     )
 
     return abs(poly_area)
+
+
+def length_of_line(geom):
+    """
+    Returns the length of a linestring. Assume WGS84 as crs.
+
+    """
+    geod = pyproj.Geod(ellps="WGS84")
+
+    total_length = geod.line_length(*geom.xy)
+
+    return abs(total_length)
 
 
 def setup_site_estimator(iso3):
@@ -910,7 +918,7 @@ def fit_edges(nodes):
     return edges
 
 
-def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
+def estimate_regional_nodes(path, nodes, regional_nodes_level, iso3):
     """
     Identify new regional hub locations to connect.
 
@@ -920,7 +928,7 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
         Path to the GADM regions to be used in the analysis.
     nodes : dataframe
         A geopandas dataframe containing settlement nodes.
-    regional_hubs_level : int
+    regional_nodes_level : int
         Relates to the GADM regional levels to be used.
     iso3 : string
         ISO 3 digit country code.
@@ -963,7 +971,7 @@ def estimate_regional_hubs(path, nodes, regional_hubs_level, iso3):
     return output
 
 
-def fit_regional_edges(core_nodes, regional_hubs):
+def fit_regional_edges(core_nodes, regional_nodes):
     """
     Fit edges to the identified nodes using a minimum spanning tree.
 
@@ -971,7 +979,7 @@ def fit_regional_edges(core_nodes, regional_hubs):
     ----------
     core_nodes : dataframe
         A geopandas dataframe containing settlement nodes.
-    regional_hubs :
+    regional_nodes :
 
     Returns
     -------
@@ -989,7 +997,7 @@ def fit_regional_edges(core_nodes, regional_hubs):
 
     output = []
 
-    for regional_hub in regional_hubs:
+    for regional_hub in regional_nodes:
 
         geom1 = shape(regional_hub['geometry'])
 
@@ -1033,7 +1041,7 @@ def create_network(country, pop_density_km2, settlement_size):
     print('---')
 
     iso3 = country['iso3']
-    regional_hubs_level = country['regional_hubs_level']
+    regional_nodes_level = country['regional_nodes_level']
 
     print('Working on {}'.format(iso3))
 
@@ -1048,29 +1056,29 @@ def create_network(country, pop_density_km2, settlement_size):
     core_edges = fit_edges(core_nodes)
 
     print('Generating regional hubs')
-    filename = 'regions_{}_{}.shp'.format(regional_hubs_level, iso3)
+    filename = 'regions_{}_{}.shp'.format(regional_nodes_level, iso3)
     folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
     path = os.path.join(folder, filename)
 
-    regional_hubs = estimate_regional_hubs(path, core_nodes,
-        regional_hubs_level, iso3)
+    regional_nodes = estimate_regional_nodes(path, core_nodes,
+        regional_nodes_level, iso3)
 
     #Countries like Bangladesh with have a node in every region unless the
     #settlement size is adapted (hence there will be no regional hubs)
-    if len(regional_hubs) > 0:
+    if len(regional_nodes) > 0:
 
         print('Generating regional edges')
-        regional_edges = fit_regional_edges(core_nodes, regional_hubs)
+        regional_edges = fit_regional_edges(core_nodes, regional_nodes)
 
-        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs')
+        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_nodes')
         if not os.path.exists(path):
             os.makedirs(path)
 
-        regional_hubs = gpd.GeoDataFrame.from_features(regional_hubs, crs='epsg:4326')
-        regional_hubs.to_file(os.path.join(path, 'regional_hubs.shp'))
+        regional_nodes = gpd.GeoDataFrame.from_features(regional_nodes, crs='epsg:4326')
+        regional_nodes.to_file(os.path.join(path, 'regional_nodes.shp'))
 
         regional_edges = gpd.GeoDataFrame.from_features(regional_edges, crs='epsg:4326')
-        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_hubs', 'regional_edges.shp')
+        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_nodes', 'regional_edges.shp')
         regional_edges.to_file(path)
 
     path = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
@@ -1100,15 +1108,18 @@ def backhaul_lut(country):
 
     regions = gpd.read_file(path)
     regions.crs = 'epsg:4326'
-    regions = regions.to_crs({'init': 'epsg:3857'})
 
     path1 = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_nodes.shp')
-    path2 = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_hubs.shp')
-    files = [path1, path2]
+    path2 = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_nodes.shp')
+
+    if not os.path.exists(path2):
+        files = [path1]
+    else:
+        files = [path1, path2]
+
     nodes = pd.concat([gpd.read_file(shp) for shp in files]).pipe(gpd.GeoDataFrame)
 
     nodes.crs = 'epsg:4326'
-    nodes = nodes.to_crs({'init': 'epsg:3857'})
 
     idx = index.Index()
 
@@ -1160,7 +1171,7 @@ def backhaul_lut(country):
 
         output_csv.append({
             'GID_{}'.format(level): region['GID_{}'.format(level)],
-            'distance_m': int(line.length),
+            'distance_m': int(length_of_line(line))
         })
 
         output_shape.append({
@@ -1182,16 +1193,16 @@ def backhaul_lut(country):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    shapes = gpd.GeoDataFrame.from_features(output_shape, 'epsg:3857')
-    shapes = shapes.to_crs({'init': 'epsg:4326'})
+    shapes = gpd.GeoDataFrame.from_features(output_shape, 'epsg:4326')
     shapes.to_file(os.path.join(folder, 'backhaul.shp'))
 
     output_csv = pd.DataFrame(output_csv)
-    output_csv.to_csv(os.path.join(folder, 'backhaul.csv'), index=False)
+    output_csv.to_csv(os.path.join(folder, 'backhaul_lut.csv'), index=False)
 
     return output_csv
 
-def core_and_hubs_lut(country):
+
+def core_lut(country):
     """
 
     """
@@ -1204,78 +1215,114 @@ def core_and_hubs_lut(country):
     regions = gpd.read_file(path)#[:1]
 
     regions.crs = 'epsg:4326'
-    regions = regions.to_crs({'init': 'epsg:3857'})
-
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_edges.shp')
-    core_edges = gpd.read_file(path)
-    core_edges.crs = 'epsg:4326'
-    core_edges = core_edges.to_crs({'init': 'epsg:3857'})
-    core_edges = core_edges['geometry'].unary_union
-    core_edges = gpd.GeoDataFrame({'geometry': core_edges})
 
     level = 'GID_{}'.format(level)
 
     output = []
 
-    for idx, region in regions.iterrows():
-        length_m = sum(core_edges['geometry'].intersection(region['geometry']).length)
-        output.append({
-            level: region[level],
-            'length_m': length_m
-        })
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_edges.shp')
+    core_edges = gpd.read_file(path)
+    core_edges.crs = 'epsg:4326'
+    core_edges = core_edges['geometry'].unary_union
+    core_edges = gpd.GeoDataFrame({'geometry': core_edges})
 
-    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
-    filename = 'core_edges.csv'
-    output = pd.DataFrame(output)
-    output.to_csv(os.path.join(folder, filename), index=False)
+    multiline = []
 
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_edges.shp')
-    regional_edges = gpd.read_file(path)
-    regional_edges.crs = 'epsg:4326'
-    regional_edges = regional_edges.to_crs({'init': 'epsg:3857'})
-    regional_edges = regional_edges['geometry'].unary_union
-    regional_edges = gpd.GeoDataFrame({'geometry': regional_edges})
+    for idx, core_edge in core_edges.iterrows():
+        geom = core_edge['geometry']
+        multiline.append(geom)
 
-    output = []
+    multiline = MultiLineString(multiline)
 
     for idx, region in regions.iterrows():
-        length_m = sum(regional_edges['geometry'].intersection(region['geometry']).length)
-        output.append({
-            level: region[level],
-            'length_m': length_m
-        })
 
-    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
-    filename = 'regional_edges.csv'
-    output = pd.DataFrame(output)
-    output.to_csv(os.path.join(folder, filename), index=False)
+        lines = multiline.intersection(region['geometry'])
+
+        if lines.is_empty:
+            continue
+
+        length_m = 0
+        if lines.geom_type == 'MultiLineString':
+            for line in list(lines.geoms):
+                length_m += length_of_line(line)
+
+        elif lines.geom_type == 'LineString':
+            length_m += length_of_line(lines)
+
+        output.append({
+            'GID_id': region[level],
+            'asset': 'core_edges',
+            'value': int(round(length_m))
+        })
 
     path = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_nodes.shp')
     nodes = gpd.read_file(path)
     nodes.crs = 'epsg:4326'
-    nodes = nodes.to_crs({'init': 'epsg:3857'})
+
     f = lambda x:np.sum(nodes.intersects(x))
     regions['nodes'] = regions['geometry'].apply(f)
 
-    output = regions[[level, 'nodes']]
+    for idx, region in regions.iterrows():
+        output.append({
+            'GID_id': region[level],
+            'asset': 'core_nodes',
+            'value': region['nodes']
+        })
 
-    filename = 'core_nodes.csv'
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_edges.shp')
+
+    if os.path.exists(path):
+
+        regional_edges = gpd.read_file(path)
+        regional_edges.crs = 'epsg:4326'
+        regional_edges = regional_edges['geometry'].unary_union
+        regional_edges = gpd.GeoDataFrame({'geometry': regional_edges})
+
+        multiline = []
+
+        for idx, regional_edge in regional_edges.iterrows():
+            geom = regional_edge['geometry']
+            multiline.append(geom)
+
+        multiline = MultiLineString(multiline)
+
+        for idx, region in regions.iterrows():
+            lines = multiline.intersection(region['geometry'])
+            length_m = 0
+            if lines.geom_type == 'MultiLineString':
+                for line in list(lines.geoms):
+                    length_m += length_of_line(line)
+
+            elif lines.geom_type == 'LineString':
+                length_m += length_of_line(line)
+
+            output.append({
+                'GID_id': region[level],
+                'asset': 'regional_edges',
+                'value': int(round(length_m))
+            })
+
+
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_nodes.shp')
+
+    if os.path.exists(path):
+
+        regional_nodes = gpd.read_file(path)
+        regional_nodes.crs = 'epsg:4326'
+        f = lambda x:np.sum(regional_nodes.intersects(x))
+        regions['regional_nodes'] = regions['geometry'].apply(f)
+
+        for idx, region in regions.iterrows():
+            output.append({
+                'GID_id': region[level],
+                'asset': 'regional_nodes',
+                'value': region['regional_nodes']
+            })
+
+    output = pd.DataFrame(output)
+
+    filename = 'core_lut.csv'
     folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
-    path = os.path.join(folder, filename)
-
-    output.to_csv(path, index=False)
-
-    path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs', 'regional_hubs.shp')
-    regional_hubs = gpd.read_file(path)
-    regional_hubs.crs = 'epsg:4326'
-    regional_hubs = regional_hubs.to_crs({'init': 'epsg:3857'})
-    f = lambda x:np.sum(regional_hubs.intersects(x))
-    regions['regional_hubs'] = regions['geometry'].apply(f)
-
-    output = regions[[level,'regional_hubs']]
-
-    filename = 'regional_hubs.csv'
-    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_hubs')
     path = os.path.join(folder, filename)
 
     output.to_csv(path, index=False)
@@ -1487,19 +1534,19 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_nodes_level': 1},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_nodes_level': 2},
         ]
 
     pop_density_km2 = 1000
@@ -1507,32 +1554,32 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
 
-        print('Creating network')
-        create_network(country, pop_density_km2, settlement_size)
+        # print('Creating network')
+        # create_network(country, pop_density_km2, settlement_size)
 
-        print('Create backhaul lookup table')
-        output = backhaul_lut(country)
+        # print('Create backhaul lookup table')
+        # output = backhaul_lut(country)
 
         print('Create core and regional hubs lookup table')
-        output = core_and_hubs_lut(country)
+        output = core_lut(country)
 
-        print('Create subscription forcast')
-        forecast_subscriptions(country)
+        # print('Create subscription forcast')
+        # forecast_subscriptions(country)

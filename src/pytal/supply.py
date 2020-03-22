@@ -13,7 +13,7 @@ from pytal.costs import find_single_network_cost
 
 
 def estimate_supply(country, regions, lookup, option, global_parameters,
-    country_parameters, costs, backhaul_lut, ci):
+    country_parameters, costs, backhaul_lut, core_lut, ci):
     """
     For each region, optimize the network design and estimate
     the financial cost.
@@ -35,44 +35,57 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         All equipment costs.
     backhaul_lut : dict
         Backhaul distance by region.
+    core_lut : ???
+        ???
     ci : int
         Confidence interval.
 
     """
-    output = []
+    output_regions = []
 
     for region in regions:
 
-        network = optimize_network(region, option,
-            global_parameters, country_parameters, costs, lookup, ci)
+        site_density = find_site_density(region, option,
+            country_parameters, lookup, ci)
 
-        max_site_density = max([r['site_density'] for r in network])
+        total_sites_required = site_density * region['area_km2']
 
-        all_costs_km2 = find_single_network_cost(
+        if total_sites_required > region['sites_estimated_total']:
+            region['new_sites'] = int(round(total_sites_required - region['sites_estimated_total']))
+            region['upgraded_sites'] = int(round(region['sites_estimated_total']))
+        else:
+            region['new_sites'] = 0
+            region['upgraded_sites'] = int(round(total_sites_required))
+
+        total_network_cost = find_single_network_cost(
             country,
             region,
-            max_site_density,
             option['strategy'],
             region['geotype'].split(' ')[0],
             costs,
             global_parameters,
             country_parameters,
-            backhaul_lut
+            backhaul_lut,
+            core_lut
         )
 
         region['scenario'] = option['scenario']
         region['strategy'] = option['strategy']
         region['confidence'] = ci
-        region['site_density'] = max_site_density
-        region['network_cost_km2'] = all_costs_km2['network_cost_km2']
-        region['total_network_cost'] = all_costs_km2['total_network_cost']
+        region['site_density'] = site_density
+        region['total_network_cost'] = total_network_cost
+        # print('----total network cost {}'.format(total_network_cost))
+        output_regions.append(region)
 
-        output.append(region)
+        # for cost_result in cost_results:
+        #     cost_result['GID_0'] = iso3
+        #     cost_result['GID_id'] = region['GID_id']
+        #     output_costs.append(cost_result)
 
-    return output
+    return output_regions#, output_costs
 
 
-def optimize_network(region, option, global_parameters, country_parameters, costs, lookup, ci):
+def find_site_density(region, option, country_parameters, lookup, ci):
     """
     For a given region, provide an optmized network.
 
@@ -89,7 +102,7 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
 
     ci = str(ci)
 
-    network = []
+    unique_densities = set()
 
     capacity = 0
 
@@ -107,84 +120,69 @@ def optimize_network(region, option, global_parameters, country_parameters, cost
             ci
             )
 
-        max_density, max_capacity = density_capacities[-1]
-        min_density, min_capacity = density_capacities[0]
+        for item in density_capacities:
+            site_density, capacity = item
+            unique_densities.add(site_density)
 
-        max_capacity = max_capacity * bandwidth
-        min_capacity = min_capacity * bandwidth
+    density_lut = []
 
-        if demand > max_capacity:
-            network.append(
-                {
-                    'frequency': str(frequency),
-                    'bandwidth': str(bandwidth),
-                    'geotype': geotype,
-                    'demand': demand,
-                    'site_density': max_density,
-                    'confidence': ci,
-                }
+    for density in list(unique_densities):
+        capacity = 0
+        for item in frequencies:
+
+            frequency = str(item['frequency'])
+            bandwidth = float(item['bandwidth'])
+
+            density_capacities = lookup_capacity(
+                lookup,
+                geotype,
+                ant_type,
+                frequency,
+                generation,
+                ci
             )
-            capacity += max_capacity
 
+            for density_capacity in density_capacities:
 
-        elif demand < min_capacity:
+                if density_capacity[0] == density:
+                    capacity += density_capacity[1]
 
-            network.append(
-                {
-                    'frequency': str(frequency),
-                    'bandwidth': str(bandwidth),
-                    'geotype': geotype,
-                    'demand': demand,
-                    'site_density': min_density,
-                    'confidence': ci,
-                }
-            )
-            capacity += min_capacity
+        density_lut.append((density, capacity))
 
-        else:
+    density_lut = sorted(density_lut, key=lambda tup: tup[0])
+    # print(density_lut)
+    max_density, max_capacity = density_lut[-1]
+    min_density, min_capacity = density_lut[0]
 
-            for a, b in pairwise(density_capacities):
+    max_capacity = max_capacity * bandwidth
+    min_capacity = min_capacity * bandwidth
 
-                lower_density, lower_capacity  = a
-                upper_density, upper_capacity  = b
+    if demand > max_capacity:
 
-                lower_capacity = lower_capacity * bandwidth
-                upper_capacity = upper_capacity * bandwidth
+        return max_density
 
-                if (lower_capacity <= demand and
-                    demand < upper_capacity):
+    elif demand < min_capacity:
 
-                    site_density = interpolate(
-                        lower_capacity, lower_density,
-                        upper_capacity, upper_density,
-                        demand
-                    )
+        return min_density
 
-                    network.append(
-                        {
-                            'frequency': str(frequency),
-                            'bandwidth': str(bandwidth),
-                            'geotype': geotype,
-                            'demand': demand,
-                            'site_density': site_density,
-                            'confidence': ci,
-                        }
-                    )
-                    capacity += upper_capacity
+    else:
 
-    if not len(network) >= 1:
-        network.append(
-                    {
-                        'frequency': str(frequency),
-                        'bandwidth': str(bandwidth),
-                        'geotype': geotype,
-                        'demand': demand,
-                        'site_density': 0,
-                        'confidence': ci,
-                    }
+        for a, b in pairwise(density_lut):
+
+            lower_density, lower_capacity  = a
+            upper_density, upper_capacity  = b
+
+            lower_capacity = lower_capacity * bandwidth
+            upper_capacity = upper_capacity * bandwidth
+
+            if lower_capacity <= demand < upper_capacity:
+
+                site_density = interpolate(
+                    lower_capacity, lower_density,
+                    upper_capacity, upper_density,
+                    demand
                 )
-
-    return network
+                return site_density
 
 
 def lookup_capacity(lookup, environment, ant_type, frequency,
@@ -204,21 +202,6 @@ def lookup_capacity(lookup, environment, ant_type, frequency,
     ]
 
     return density_capacities
-
-
-def find_lowest_region(region):
-    """
-    Find the lowest regional level being used based on the GADM data.
-
-    """
-    if 'GID_4' in region:
-        return region['GID_4']
-    elif 'GID_3' in region:
-        return region['GID_3']
-    elif 'GID_2' in region:
-        return region['GID_2']
-    elif 'GID_1' in region:
-        return region['GID_1']
 
 
 def get_strategy_options(strategy):
@@ -254,4 +237,5 @@ def pairwise(iterable):
     """
     a, b = tee(iterable)
     next(b, None)
+
     return zip(a, b)
