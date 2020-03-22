@@ -1111,7 +1111,12 @@ def backhaul_lut(country):
 
     path1 = os.path.join(DATA_INTERMEDIATE, country_id, 'core', 'core_nodes.shp')
     path2 = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_nodes.shp')
-    files = [path1, path2]
+
+    if not os.path.exists(path2):
+        files = [path1]
+    else:
+        files = [path1, path2]
+
     nodes = pd.concat([gpd.read_file(shp) for shp in files]).pipe(gpd.GeoDataFrame)
 
     nodes.crs = 'epsg:4326'
@@ -1230,17 +1235,22 @@ def core_lut(country):
     multiline = MultiLineString(multiline)
 
     for idx, region in regions.iterrows():
+
         lines = multiline.intersection(region['geometry'])
+
+        if lines.is_empty:
+            continue
+
         length_m = 0
         if lines.geom_type == 'MultiLineString':
             for line in list(lines.geoms):
                 length_m += length_of_line(line)
 
         elif lines.geom_type == 'LineString':
-            length_m += length_of_line(line)
+            length_m += length_of_line(lines)
 
         output.append({
-            level: region[level],
+            'GID_id': region[level],
             'asset': 'core_edges',
             'value': int(round(length_m))
         })
@@ -1254,54 +1264,60 @@ def core_lut(country):
 
     for idx, region in regions.iterrows():
         output.append({
-            level: region[level],
+            'GID_id': region[level],
             'asset': 'core_nodes',
             'value': region['nodes']
         })
 
     path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_edges.shp')
-    regional_edges = gpd.read_file(path)
-    regional_edges.crs = 'epsg:4326'
-    regional_edges = regional_edges['geometry'].unary_union
-    regional_edges = gpd.GeoDataFrame({'geometry': regional_edges})
 
-    multiline = []
+    if os.path.exists(path):
 
-    for idx, regional_edge in regional_edges.iterrows():
-        geom = regional_edge['geometry']
-        multiline.append(geom)
+        regional_edges = gpd.read_file(path)
+        regional_edges.crs = 'epsg:4326'
+        regional_edges = regional_edges['geometry'].unary_union
+        regional_edges = gpd.GeoDataFrame({'geometry': regional_edges})
 
-    multiline = MultiLineString(multiline)
+        multiline = []
 
-    for idx, region in regions.iterrows():
-        lines = multiline.intersection(region['geometry'])
-        length_m = 0
-        if lines.geom_type == 'MultiLineString':
-            for line in list(lines.geoms):
+        for idx, regional_edge in regional_edges.iterrows():
+            geom = regional_edge['geometry']
+            multiline.append(geom)
+
+        multiline = MultiLineString(multiline)
+
+        for idx, region in regions.iterrows():
+            lines = multiline.intersection(region['geometry'])
+            length_m = 0
+            if lines.geom_type == 'MultiLineString':
+                for line in list(lines.geoms):
+                    length_m += length_of_line(line)
+
+            elif lines.geom_type == 'LineString':
                 length_m += length_of_line(line)
 
-        elif lines.geom_type == 'LineString':
-            length_m += length_of_line(line)
-
-        output.append({
-            level: region[level],
-            'asset': 'regional_edges',
-            'value': int(round(length_m))
-        })
+            output.append({
+                'GID_id': region[level],
+                'asset': 'regional_edges',
+                'value': int(round(length_m))
+            })
 
 
     path = os.path.join(DATA_INTERMEDIATE, country_id, 'regional_nodes', 'regional_nodes.shp')
-    regional_nodes = gpd.read_file(path)
-    regional_nodes.crs = 'epsg:4326'
-    f = lambda x:np.sum(regional_nodes.intersects(x))
-    regions['regional_nodes'] = regions['geometry'].apply(f)
 
-    for idx, region in regions.iterrows():
-        output.append({
-            level: region[level],
-            'asset': 'regional_nodes',
-            'value': region['regional_nodes']
-        })
+    if os.path.exists(path):
+
+        regional_nodes = gpd.read_file(path)
+        regional_nodes.crs = 'epsg:4326'
+        f = lambda x:np.sum(regional_nodes.intersects(x))
+        regions['regional_nodes'] = regions['geometry'].apply(f)
+
+        for idx, region in regions.iterrows():
+            output.append({
+                'GID_id': region[level],
+                'asset': 'regional_nodes',
+                'value': region['regional_nodes']
+            })
 
     output = pd.DataFrame(output)
 
@@ -1518,19 +1534,19 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
         {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_nodes_level': 2},
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 2},
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_nodes_level': 1},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_nodes_level': 2},
         ]
 
     pop_density_km2 = 1000
@@ -1562,8 +1578,8 @@ if __name__ == '__main__':
         # print('Create backhaul lookup table')
         # output = backhaul_lut(country)
 
-        # print('Create core and regional hubs lookup table')
-        # output = core_lut(country)
+        print('Create core and regional hubs lookup table')
+        output = core_lut(country)
 
         # print('Create subscription forcast')
         # forecast_subscriptions(country)
