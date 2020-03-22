@@ -202,7 +202,7 @@ def load_core_lut(country, path):
         reader = csv.DictReader(source)
         for row in reader:
             interim.append({
-                level: row[level],
+                'GID_id': row['GID_id'],
                 'asset': row['asset'],
                 'value': int(row['value']),
             })
@@ -220,13 +220,13 @@ def load_core_lut(country, path):
         asset_dict = {}
         for row in interim:
             if asset_type == row['asset']:
-                asset_dict[row[level]] = row['value']
+                asset_dict[row['GID_id']] = row['value']
                 output[asset_type] = asset_dict
 
     return output
 
 
-def write_results(regional_results, costs_km2, folder):
+def write_results(regional_results, folder):
     """
     Write all results.
 
@@ -235,7 +235,7 @@ def write_results(regional_results, costs_km2, folder):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+        'sites_estimated_total', 'new_sites', 'upgraded_sites', 'total_revenue', 'total_cost'
     ]]
 
     national_results = national_results.groupby([
@@ -248,7 +248,7 @@ def write_results(regional_results, costs_km2, folder):
     decile_results = pd.DataFrame(regional_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+        'sites_estimated_total', 'new_sites', 'upgraded_sites','total_revenue', 'total_cost'
     ]]
 
     decile_results = decile_results.groupby([
@@ -261,7 +261,7 @@ def write_results(regional_results, costs_km2, folder):
     regional_results = pd.DataFrame(regional_results)
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'total_revenue', 'total_cost'
+        'sites_estimated_total', 'new_sites', 'upgraded_sites', 'total_revenue', 'total_cost'
     ]]
 
     regional_results = regional_results.groupby([
@@ -270,10 +270,10 @@ def write_results(regional_results, costs_km2, folder):
     path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
     regional_results.to_csv(path, index=True)
 
-    print('Writing cost results')
-    costs_km2 = pd.DataFrame(costs_km2)
-    path = os.path.join(folder,'cost_results_{}.csv'.format(decision_option))
-    costs_km2.to_csv(path, index=False)
+    # print('Writing cost results')
+    # costs_km2 = pd.DataFrame(costs_km2)
+    # path = os.path.join(folder,'cost_results_{}.csv'.format(decision_option))
+    # costs_km2.to_csv(path, index=False)
 
 
 if __name__ == '__main__':
@@ -327,19 +327,19 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
         {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
-        # {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_hubs_level': 2},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
+        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
+        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
     ]
 
     decision_options = [
@@ -399,7 +399,7 @@ if __name__ == '__main__':
                         penetration_lut
                     )
 
-                    data_supply, costs_km2 = estimate_supply(
+                    data_supply = estimate_supply(
                         country,
                         data_demand,
                         lookup,
@@ -423,6 +423,6 @@ if __name__ == '__main__':
                     regional_results = regional_results + data_assess
 
         folder = os.path.join(BASE_PATH, '..', 'results')
-        write_results(regional_results, costs_km2, folder)
+        write_results(regional_results, folder)
 
         print('Completed model run')
