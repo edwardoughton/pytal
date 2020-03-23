@@ -49,19 +49,19 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             country_parameters, lookup, ci)
 
         total_sites_required = site_density * region['area_km2']
+        region['new_sites'] = total_sites_required
 
-        if total_sites_required > region['sites_estimated_total']:
-            region['new_sites'] = int(round(total_sites_required - region['sites_estimated_total']))
-            region['upgraded_sites'] = int(round(region['sites_estimated_total']))
-        else:
-            region['new_sites'] = 0
-            region['upgraded_sites'] = int(round(total_sites_required))
+        # if total_sites_required > region['sites_estimated_total']:
+        #     region['new_sites'] = int(round(total_sites_required - region['sites_estimated_total']))
+        #     region['upgraded_sites'] = int(round(region['sites_estimated_total']))
+        # else:
+        #     region['new_sites'] = 0
+        #     region['upgraded_sites'] = int(round(total_sites_required))
 
         total_network_cost = find_single_network_cost(
             country,
             region,
             option['strategy'],
-            region['geotype'].split(' ')[0],
             costs,
             global_parameters,
             country_parameters,
@@ -95,9 +95,31 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     geotype = region['geotype'].split(' ')[0]
     ant_type = 'macro'
 
-    generation, core, backhaul, sharing = get_strategy_options(option['strategy'])
+    generation = option['strategy'].split('_')[0]
 
     frequencies = country_parameters['frequencies']
+    frequencies = {
+        '4G':[
+            {
+                'frequency': 800,
+                'bandwidth': 10,
+            },
+            {
+                'frequency': 2600,
+                'bandwidth': 10,
+            },
+        ],
+        '5G':[
+            {
+                'frequency': 700,
+                'bandwidth': 10,
+            },
+            {
+                'frequency': 3500,
+                'bandwidth': 50,
+            },
+        ],
+    }
     frequencies = frequencies[generation]
 
     ci = str(ci)
@@ -150,7 +172,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
         density_lut.append((density, capacity))
 
     density_lut = sorted(density_lut, key=lambda tup: tup[0])
-    # print(density_lut)
+
     max_density, max_capacity = density_lut[-1]
     min_density, min_capacity = density_lut[0]
 
@@ -202,21 +224,6 @@ def lookup_capacity(lookup, environment, ant_type, frequency,
     ]
 
     return density_capacities
-
-
-def get_strategy_options(strategy):
-    """
-    Take a single string containing all strategy components, and return
-    each component as an individual string.
-
-    """
-    #strategy is 'generation_core_backhaul_sharing'
-    generation = strategy.split('_')[0]
-    core = strategy.split('_')[1]
-    backhaul = strategy.split('_')[2]
-    sharing = strategy.split('_')[3]
-
-    return generation, core, backhaul, sharing
 
 
 def interpolate(x0, y0, x1, y1, x):
