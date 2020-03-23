@@ -4,7 +4,9 @@ from pytal.demand import estimate_demand
 
 def test_estimate_demand(
     setup_region,
+    setup_region_rural,
     setup_option,
+    setup_option_high,
     setup_global_parameters,
     setup_country_parameters,
     setup_timesteps,
@@ -53,5 +55,19 @@ def test_estimate_demand(
     # demand_mbps_km2 = 125
 
     assert round(answer[0]['demand_mbps_km2']) == round(
-        smartphones_on_network * 30 / 100 / 2
+        smartphones_on_network * 50 / 100 / 2
     )
+
+    answer = estimate_demand(
+        setup_region_rural,
+        setup_option_high,
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_timesteps,
+        setup_penetration_lut
+    )
+
+    # 1667 phones
+    # arpu = 15
+    # 40% subsidy
+    assert round(answer[0]['total_revenue']) == round(15 * 5000 / 3 * 1.4)
