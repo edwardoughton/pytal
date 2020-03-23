@@ -14,12 +14,32 @@ def setup_region():
     'geotype': 'urban'
     }]
 
+@fixture(scope='function')
+def setup_region_rural():
+    return [{
+    'GID_0': 'MWI',
+    'GID_id': 'MWI.1.1.1_1',
+    'mean_luminosity_km2': 26.736407691655717,
+    'population': 10000,
+    'area_km2': 2,
+    'population_km2': 5000,
+    'decile': 100,
+    'geotype': 'rural'
+    }]
+
 
 @fixture(scope='function')
 def setup_option():
     return {
-        'scenario': 'S1_30',
-        'strategy': '4G_epc_microwave_baseline'
+        'scenario': 'S1_50_5_1',
+        'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'
+    }
+
+@fixture(scope='function')
+def setup_option_high():
+    return {
+        'scenario': 'S1_50_5_1',
+        'strategy': '4G_epc_microwave_baseline_high_high_high'
     }
 
 
@@ -31,7 +51,8 @@ def setup_global_parameters():
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [1, 10, 50]
+        'confidence': [1, 10, 50],
+        'networks': 2,
     }
 
 
@@ -80,10 +101,21 @@ def setup_country_parameters():
                 },
             ]
         },
-        'costs': {
-            'spectrum_coverage_usd_mhz_pop': 0.5,
-            'spectrum_capacity_usd_mhz_pop': 0.1,
-            }
+        'financials': {
+            'profit_margin': 20,
+            'subsidy_low': 10,
+            'subsidy_baseline': 25,
+            'subsidy_high': 40,
+            'spectrum_coverage_low_usd_mhz_pop': 0.25,
+            'spectrum_capacity_low_usd_mhz_pop': 0.05,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_high_usd_mhz_pop': 1,
+            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'tax_low': 10,
+            'tax_baseline': 25,
+            'tax_high': 40,
+            },
         }
 
 
