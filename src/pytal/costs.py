@@ -11,7 +11,7 @@ import math
 
 
 def find_single_network_cost(country, region, strategy,
-    geotype, costs, global_parameters, country_parameters, backhaul_lut, core_lut):
+    costs, global_parameters, country_parameters, backhaul_lut, core_lut):
     """
     Calculates the annual total cost using capex and opex.
 
@@ -37,10 +37,7 @@ def find_single_network_cost(country, region, strategy,
         opex costs.
 
     """
-    generation, core, backhaul, sharing = get_strategy_options(strategy)
-
-    cost_results = get_costs(country, region, generation, core, backhaul, sharing,
-        costs, global_parameters, backhaul_lut, core_lut
+    cost_results = get_costs(country, region, strategy, costs, global_parameters, backhaul_lut, core_lut
     )
 
     # total_network_cost = 0
@@ -51,32 +48,35 @@ def find_single_network_cost(country, region, strategy,
     return cost_results#, total_network_cost
 
 
-def get_costs(country, region, generation, core, backhaul, sharing, costs,
-    global_parameters, backhaul_lut, core_lut):
+def get_costs(country, region, strategy, costs, global_parameters, backhaul_lut, core_lut):
 
     total_new_site_cost = 0
     total_upgrade_cost = 0
 
+    sharing = strategy.split('_')[3]
+
     if sharing == 'baseline':
-        if region['new_sites'] > 0:
-            total_new_site_cost, cost_structure = baseline_new_site(country, region, generation, core, backhaul, costs,
-                global_parameters, backhaul_lut, core_lut)
+    #     if region['new_sites'] > 0:
+        total_new_site_cost, cost_structure = baseline_new_site(country, region, strategy, costs,
+            global_parameters, backhaul_lut, core_lut)
 
-        if region['upgraded_sites'] > 0:
-            total_upgrade_cost, cost_structure = baseline_upgrade(region['upgraded_sites'], costs, global_parameters)
+        # if region['upgraded_sites'] > 0:
+        #     total_upgrade_cost, cost_structure = baseline_upgrade(region['upgraded_sites'], costs, global_parameters)
 
-    # if sharing == 'passive':
-    #     costs = passive(country, region, generation, core, backhaul, sharing,
-    #     geotype, costs, global_parameters, country_parameters, backhaul_lut, core_lut)
+    if sharing == 'passive':
+        total_new_site_cost, cost_structure = passive_new_site(country, region, strategy, costs,
+            global_parameters, backhaul_lut, core_lut)
 
-    # if sharing == 'active':
+    if sharing == 'active':
+        total_new_site_cost, cost_structure = active_new_site(country, region, strategy, costs,
+            global_parameters, backhaul_lut, core_lut)
     #     costs = active(country, region, generation, core, backhaul, sharing,
     #     geotype, costs, global_parameters, country_parameters, backhaul_lut, core_lut)
 
     return total_new_site_cost + total_upgrade_cost
 
 
-def baseline_new_site(country, region, generation, core, backhaul, costs,
+def baseline_new_site(country, region, strategy, costs,
     global_parameters, backhaul_lut, core_lut):
     """
     No sharing takes place.
@@ -84,6 +84,9 @@ def baseline_new_site(country, region, generation, core, backhaul, costs,
     network.
 
     """
+    core = strategy.split('_')[1]
+    backhaul = strategy.split('_')[2]
+
     new_sites = region['new_sites']
 
     cost_structure = {
@@ -171,142 +174,147 @@ def baseline_upgrade(sites_to_upgrade, costs, global_parameters):
     return total_upgrade_cost, cost_structure
 
 
-def passive(country, region, generation, core, backhaul, sharing, geotype, costs,
-    sites_per_km2, global_parameters, country_parameters, backhaul_lut):
+def passive_new_site(country, region, strategy, costs,
+    global_parameters, backhaul_lut, core_lut):
     """
-    Sharing of:
-        - Mast
-        - Site compound
 
     """
-    backhaul_cost = get_backhaul_costs(country, region, backhaul, costs, backhaul_lut)
-
-    cost_breakdown = {
-        'single_sector_antenna': (
-            discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
-            global_parameters['sectorization'] * sites_per_km2
-        ),
-        'single_remote_radio_unit': (
-            discount_capex_and_opex(costs['single_remote_radio_unit'], global_parameters) *
-            global_parameters['sectorization'] * sites_per_km2
-        ),
-        'single_baseband_unit': (
-            discount_capex_and_opex(costs['single_baseband_unit'], global_parameters) *
-            sites_per_km2
-        ),
-        'tower': (
-            costs['tower'] * sites_per_km2 / global_parameters['networks']
-        ),
-        'civil_materials': (
-            costs['civil_materials'] * sites_per_km2 / global_parameters['networks']
-        ),
-        'transportation': (
-            costs['transportation'] * sites_per_km2 / global_parameters['networks']
-        ),
-        'installation': (
-            costs['installation'] * sites_per_km2 / global_parameters['networks']
-        ),
-        'site_rental': (
-            discount_opex(costs['site_rental'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'power_generator_battery_system': (
-            discount_capex_and_opex(costs['power_generator_battery_system'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'high_speed_backhaul_hub': (
-            discount_capex_and_opex(costs['high_speed_backhaul_hub'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'router': (
-            discount_capex_and_opex(costs['router'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        '{}_backhaul'.format(backhaul): (
-            discount_capex_and_opex(backhaul_cost, global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        )
-    }
-
-    return cost_breakdown
-
-
-def active(country, region, generation, core, backhaul, sharing, geotype, costs,
-    sites_per_km2, global_parameters, country_parameters, backhaul_lut):
-    """
-    Sharing of:
-        - RAN
-        - Mast
-        - Site compound
-
-    """
-    backhaul_cost = get_backhaul_costs(country, region, backhaul, costs, backhaul_lut)
-
-    cost_breakdown = {
-        'single_sector_antenna': (
-            discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
-            global_parameters['sectorization'] * sites_per_km2 /
-            global_parameters['networks']
-        ),
-        'single_remote_radio_unit': (
-            discount_capex_and_opex(costs['single_remote_radio_unit'], global_parameters) *
-            global_parameters['sectorization'] * sites_per_km2 /
-            global_parameters['networks']
-        ),
-        'single_baseband_unit': (
-            discount_capex_and_opex(costs['single_baseband_unit'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'tower': (
-            costs['tower'] *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'civil_materials': (
-            costs['civil_materials'] *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'transportation': (
-            costs['transportation'] *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'installation': (
-            costs['installation'] *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'site_rental': (
-            discount_opex(costs['site_rental'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'power_generator_battery_system': (
-            discount_capex_and_opex(costs['power_generator_battery_system'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'high_speed_backhaul_hub': (
-            discount_capex_and_opex(costs['high_speed_backhaul_hub'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        'router': (
-            discount_capex_and_opex(costs['router'], global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        ),
-        '{}_backhaul'.format(backhaul): (
-            discount_capex_and_opex(backhaul_cost, global_parameters) *
-            sites_per_km2 / global_parameters['networks']
-        )
-    }
-
-    return cost_breakdown
-
-
-def get_strategy_options(strategy):
-
-    #strategy is 'generation_core_backhaul_sharing'
-    generation = strategy.split('_')[0]
     core = strategy.split('_')[1]
     backhaul = strategy.split('_')[2]
-    sharing = strategy.split('_')[3]
 
-    return generation, core, backhaul, sharing
+    new_sites = region['new_sites']
+
+    cost_structure = {
+        'antennas': (
+            discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
+            global_parameters['sectorization']
+        ),
+        'remote_radio_units': (
+            discount_capex_and_opex(costs['single_remote_radio_unit'], global_parameters) *
+            global_parameters['sectorization']
+        ),
+        'single_baseband_unit': (
+            discount_capex_and_opex(costs['single_baseband_unit'], global_parameters)
+        ),
+        'tower': (
+            costs['tower'] / global_parameters['networks']
+        ),
+        'civil_materials': (
+            costs['single_baseband_unit'] / global_parameters['networks']
+        ),
+        'transportation': (
+            costs['single_baseband_unit'] / global_parameters['networks']
+        ),
+        'installation': (
+            costs['installation'] / global_parameters['networks']
+        ),
+        'site_rental': (
+            discount_opex(costs['site_rental'], global_parameters) / global_parameters['networks']
+        ),
+        'power_generator_battery_system': (
+            discount_capex_and_opex(costs['power_generator_battery_system'], global_parameters) / global_parameters['networks']
+        ),
+        'high_speed_backhaul_hub': (
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], global_parameters) / global_parameters['networks']
+        ),
+        'router': (
+            discount_capex_and_opex(costs['router'], global_parameters) / global_parameters['networks']
+        ),
+        '{}_backhaul'.format(backhaul): (
+            discount_capex_and_opex(
+                get_backhaul_costs(country, region, backhaul, costs, backhaul_lut), global_parameters) / global_parameters['networks']
+        ),
+        'core_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_edges', costs, core_lut, core), global_parameters)
+        ),
+        'code_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_nodes', costs, core_lut, core), global_parameters)
+        ),
+        'regional_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_edges', costs, core_lut, core), global_parameters)
+        ),
+        'regional_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_nodes', costs, core_lut, core), global_parameters)
+        ),
+    }
+
+    total_new_site_cost = new_sites * sum(cost_structure.values())
+
+    return total_new_site_cost, cost_structure
+
+
+def active_new_site(country, region, strategy, costs,
+    global_parameters, backhaul_lut, core_lut):
+    """
+
+    """
+    core = strategy.split('_')[1]
+    backhaul = strategy.split('_')[2]
+
+    new_sites = region['new_sites']
+
+    cost_structure = {
+        'antennas': (
+            discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
+            global_parameters['sectorization'] / global_parameters['networks']
+        ),
+        'remote_radio_units': (
+            discount_capex_and_opex(costs['single_remote_radio_unit'], global_parameters) *
+            global_parameters['sectorization'] / global_parameters['networks']
+        ),
+        'single_baseband_unit': (
+            discount_capex_and_opex(costs['single_baseband_unit'], global_parameters) /
+            global_parameters['networks']
+        ),
+        'tower': (
+            costs['tower'] / global_parameters['networks']
+        ),
+        'civil_materials': (
+            costs['single_baseband_unit'] / global_parameters['networks']
+        ),
+        'transportation': (
+            costs['single_baseband_unit'] / global_parameters['networks']
+        ),
+        'installation': (
+            costs['installation'] / global_parameters['networks']
+        ),
+        'site_rental': (
+            discount_opex(costs['site_rental'], global_parameters) / global_parameters['networks']
+        ),
+        'power_generator_battery_system': (
+            discount_capex_and_opex(costs['power_generator_battery_system'], global_parameters) / global_parameters['networks']
+        ),
+        'high_speed_backhaul_hub': (
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], global_parameters) / global_parameters['networks']
+        ),
+        'router': (
+            discount_capex_and_opex(costs['router'], global_parameters) / global_parameters['networks']
+        ),
+        '{}_backhaul'.format(backhaul): (
+            discount_capex_and_opex(
+                get_backhaul_costs(country, region, backhaul, costs, backhaul_lut), global_parameters) / global_parameters['networks']
+        ),
+        'core_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_edges', costs, core_lut, core), global_parameters) /
+            global_parameters['networks']
+        ),
+        'code_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_nodes', costs, core_lut, core), global_parameters) /
+            global_parameters['networks']
+        ),
+        'regional_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_edges', costs, core_lut, core), global_parameters) /
+            global_parameters['networks']
+        ),
+        'regional_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_nodes', costs, core_lut, core), global_parameters) /
+            global_parameters['networks']
+        ),
+    }
+
+    total_new_site_cost = new_sites * sum(cost_structure.values())
+
+    return total_new_site_cost, cost_structure
 
 
 def get_backhaul_costs(country, region, backhaul, costs, backhaul_lut):
@@ -346,7 +354,7 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
     if asset_type == 'core_edges':
 
-        if region['GID_id'] in [core_lut[asset_type].keys()]:
+        if region['GID_id'] in core_lut[asset_type]:
             distance_m = core_lut[asset_type][region['GID_id']]
             cost_m = costs['core_edges']
             cost = int(distance_m * cost_m)
@@ -364,8 +372,8 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
     elif asset_type == 'regional_edges':
 
-        if 'regional_edges' in [core_lut.keys()]:
-            if region['GID_id'] in [core_lut[asset_type].keys()]:
+        if 'regional_edges' in core_lut:
+            if region['GID_id'] in core_lut[asset_type]:
                 distance_m = core_lut[asset_type][region['GID_id']]
                 cost_m = costs['regional_edges']
                 cost = int(distance_m * cost_m)
@@ -378,8 +386,8 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
     elif asset_type == 'regional_nodes':
 
-        if 'regional_nodes' in [core_lut.keys()]:
-            if region['GID_id'] in [core_lut[asset_type].keys()]:
+        if 'regional_nodes' in core_lut:
+            if region['GID_id'] in core_lut[asset_type]:
                 quantity = core_lut[asset_type][region['GID_id']]
                 cost_each = costs['regional_nodes_{}'.format(core)]
                 cost = int(quantity * cost_each)

@@ -33,15 +33,17 @@ def assess(country, regions, option, global_parameters, country_parameters):
     """
     output = []
 
-    generation, core, backhaul, sharing = get_strategy_options(option['strategy'])
+    strategy = option['strategy']
+
+    subsidy = option['strategy'].split('_')[4]
 
     for region in regions:
 
         # npv spectrum cost
-        region['total_spectrum_cost'] = get_spectrum_costs(region, generation, country_parameters)
+        region['total_spectrum_cost'] = get_spectrum_costs(region, option['strategy'], country_parameters)
 
         #tax on investment
-        region['total_tax'] = calculate_tax(region, country_parameters)
+        region['total_tax'] = calculate_tax(region, strategy, country_parameters)
 
         #profit margin value calculated on all costs + taxes
         region['total_profit'] = calculate_profit(region, country_parameters)
@@ -49,9 +51,9 @@ def assess(country, regions, option, global_parameters, country_parameters):
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
 
-        region['per_phone_user_cost'] = calculate_phone_user_cost(region, country_parameters)
-
-        region['per_smartphone_user_cost'] = calculate_smartphone_user_cost(region, country_parameters)
+        if not subsidy == 'baseline':
+            subsidy_level = 'subsidy_{}'.format(subsidy)
+            region['total_network_cost'] = region['total_network_cost'] * (1 - (country_parameters['financials'][subsidy_level] / 100))
 
         region['total_cost'] = (
             region['total_network_cost'] +
@@ -65,43 +67,45 @@ def assess(country, regions, option, global_parameters, country_parameters):
     return output
 
 
-def get_strategy_options(strategy):
-
-    #strategy is 'generation_core_backhaul_sharing'
-    generation = strategy.split('_')[0]
-    core = strategy.split('_')[1]
-    backhaul = strategy.split('_')[2]
-    sharing = strategy.split('_')[3]
-
-    return generation, core, backhaul, sharing
-
-
-def get_spectrum_costs(region, generation, country_parameters):
+def get_spectrum_costs(region, strategy, country_parameters):
     """
     Calculate spectrum costs.
 
     """
     population = int(round(region['population']))
     frequencies = country_parameters['frequencies']
+    generation = strategy.split('_')[0]
     frequencies = frequencies[generation]
-    networks = country_parameters['networks']
+
+    spectrum_cost = strategy.split('_')[5]
+
+    coverage_spectrum_cost = 'spectrum_coverage_{}_usd_mhz_pop'.format(spectrum_cost)
+    capacity_spectrum_cost = 'spectrum_capacity_{}_usd_mhz_pop'.format(spectrum_cost)
+
+    all_costs = []
 
     for frequency in frequencies:
         if frequency['frequency'] < 1000:
-            cost_usd_mhz_pop = country_parameters['costs']['spectrum_coverage_usd_mhz_pop']
+            cost_usd_mhz_pop = country_parameters['financials'][coverage_spectrum_cost]
+            cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
+            all_costs.append(cost)
         else:
-            cost_usd_mhz_pop = country_parameters['costs']['spectrum_capacity_usd_mhz_pop']
+            cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
+            cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
+            all_costs.append(cost)
 
-    cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
-
-    return cost
+    return sum(all_costs)
 
 
-def calculate_tax(region, country_parameters):
+def calculate_tax(region, strategy, country_parameters):
     """
+    Calculate tax.
 
     """
-    tax_rate = country_parameters['financials']['tax_baseline']
+    tax_rate = strategy.split('_')[6]
+    tax_rate = 'tax_{}'.format(tax_rate)
+
+    tax_rate = country_parameters['financials'][tax_rate]
 
     investment = (
         region['total_network_cost'] +
@@ -136,55 +140,12 @@ def calculate_benefit_cost_ratio(region, country_parameters):
     cost = (
         region['total_network_cost'] +
         region['total_spectrum_cost'] +
-        region['total_tax']
+        region['total_tax'] +
+        region['total_profit']
     )
 
     revenue = region['total_revenue']
 
-    bcr = revenue - cost
+    bcr = revenue / cost
 
     return bcr
-
-
-def calculate_phone_user_cost(region, country_parameters):
-    """
-
-    """
-    cost = (
-        region['total_network_cost'] +
-        region['total_spectrum_cost'] +
-        region['total_tax'] +
-        region['total_profit']
-    )
-
-    if region['phones_on_network'] > 0:
-
-        cost_per_user = cost / region['phones_on_network']
-
-    else:
-
-        cost_per_user = 0
-
-    return cost_per_user
-
-
-def calculate_smartphone_user_cost(region, country_parameters):
-    """
-
-    """
-    cost = (
-        region['total_network_cost'] +
-        region['total_spectrum_cost'] +
-        region['total_tax'] +
-        region['total_profit']
-    )
-
-    if region['smartphones_on_network'] > 0:
-
-        cost_per_smartphone_user = cost / region['smartphones_on_network']
-
-    else:
-
-        cost_per_smartphone_user = 0
-
-    return cost_per_smartphone_user

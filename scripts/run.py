@@ -235,7 +235,7 @@ def write_results(regional_results, folder):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'upgraded_sites', 'total_revenue', 'total_cost'
+        'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     national_results = national_results.groupby([
@@ -248,7 +248,7 @@ def write_results(regional_results, folder):
     decile_results = pd.DataFrame(regional_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'upgraded_sites','total_revenue', 'total_cost'
+        'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     decile_results = decile_results.groupby([
@@ -261,7 +261,7 @@ def write_results(regional_results, folder):
     regional_results = pd.DataFrame(regional_results)
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'sites_estimated_total', 'new_sites', 'upgraded_sites', 'total_revenue', 'total_cost'
+        'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     regional_results = regional_results.groupby([
@@ -299,17 +299,17 @@ if __name__ == '__main__':
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 5,
-        'fiber_backhaul_suburban_m': 5,
-        'fiber_backhaul_rural_m': 5,
-        'core_nodes_epc': 100000,
-        'core_nodes_nsa': 150000,
-        'core_nodes_sa': 200000,
-        'core_edges': 20,
-        'regional_nodes_epc': 100000,
-        'regional_nodes_nsa': 150000,
-        'regional_nodes_sa': 200000,
-        'regional_edges': 10,
+        'fiber_backhaul_urban_m': 3,
+        'fiber_backhaul_suburban_m': 3,
+        'fiber_backhaul_rural_m': 3,
+        'core_nodes_epc': 50000,
+        'core_nodes_nsa': 75000,
+        'core_nodes_sa': 100000,
+        'core_edges': 5,
+        'regional_nodes_epc': 50000,
+        'regional_nodes_nsa': 100000,
+        'regional_nodes_sa': 150000,
+        'regional_edges': 5,
     }
 
     GLOBAL_PARAMETERS = {
@@ -318,7 +318,8 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [50] #[5, 50, 95]
+        'confidence': [50], #[5, 50, 95],
+        'networks': 3
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -344,7 +345,8 @@ if __name__ == '__main__':
 
     decision_options = [
         'technology_options',
-        # 'business_model_options'
+        'business_model_options',
+        'policy_options'
     ]
 
     for decision_option in decision_options:
