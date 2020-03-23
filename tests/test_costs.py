@@ -1,15 +1,15 @@
 import pytest
-from pytal.costs import (baseline_new_site, baseline_upgrade, get_backhaul_costs,
-    get_core_costs, discount_capex_and_opex, discount_opex)
+from pytal.costs import (baseline_new_site, baseline_upgrade, passive_new_site, active_new_site,
+    get_backhaul_costs, get_core_costs, discount_capex_and_opex, discount_opex)
 
 
-def test_baseline_new_site(setup_region, setup_costs, setup_global_parameters,
+def test_baseline_new_site(setup_region, setup_option, setup_costs, setup_global_parameters,
     setup_backhaul_lut, setup_core_lut):
 
     setup_region[0]['new_sites'] = 1
 
-    total_cost, cost_structure = baseline_new_site('MWI', setup_region[0], '4G', 'epc',
-        'microwave', setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+    total_cost, cost_structure = baseline_new_site('MWI', setup_region[0], setup_option['strategy'],
+        setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
 
     assert cost_structure['antennas'] == 5379
     assert cost_structure['remote_radio_units'] == 14343
@@ -28,8 +28,8 @@ def test_baseline_new_site(setup_region, setup_costs, setup_global_parameters,
 
     setup_region[0]['new_sites'] = 10
 
-    total_cost, cost_structure = baseline_new_site('MWI', setup_region[0], '4G', 'epc',
-        'microwave', setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+    total_cost, cost_structure = baseline_new_site('MWI', setup_region[0], setup_option['strategy'],
+        setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
 
     assert total_cost == 6376170
 
@@ -48,6 +48,68 @@ def test_baseline_upgrade(setup_costs, setup_global_parameters):
     total_cost, cost_structure = baseline_upgrade(10, setup_costs, setup_global_parameters)
 
     assert total_cost == 366740
+
+
+def test_passive_new_site(setup_region, setup_option, setup_costs, setup_global_parameters,
+    setup_backhaul_lut, setup_core_lut):
+
+    setup_region[0]['new_sites'] = 1
+
+    total_cost, cost_structure = passive_new_site('MWI', setup_region[0], setup_option['strategy'],
+        setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+
+    assert cost_structure['antennas'] == 5379
+    assert cost_structure['remote_radio_units'] == 14343
+    assert cost_structure['single_baseband_unit'] == 11952
+    assert cost_structure['tower'] == 5000
+    assert cost_structure['civil_materials'] == 5000
+    assert cost_structure['transportation'] == 5000
+    assert cost_structure['installation'] == 2500
+    assert cost_structure['site_rental'] == 9371.5
+    assert cost_structure['power_generator_battery_system'] == 2988
+    assert cost_structure['high_speed_backhaul_hub'] == 8964.5
+    assert cost_structure['router'] == 1195
+    assert cost_structure['microwave_backhaul'] == 5976
+
+    assert total_cost == 591622.0
+
+    setup_region[0]['new_sites'] = 10
+
+    total_cost, cost_structure = passive_new_site('MWI', setup_region[0], setup_option['strategy'],
+    setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+
+    assert total_cost == 5916220
+
+
+def test_active_new_site(setup_region, setup_option, setup_costs, setup_global_parameters,
+    setup_backhaul_lut, setup_core_lut):
+
+    setup_region[0]['new_sites'] = 1
+
+    total_cost, cost_structure = active_new_site('MWI', setup_region[0], setup_option['strategy'],
+    setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+
+    assert cost_structure['antennas'] == 2689.5
+    assert cost_structure['remote_radio_units'] == 7171.5
+    assert cost_structure['single_baseband_unit'] == 5976
+    assert cost_structure['tower'] == 5000
+    assert cost_structure['civil_materials'] == 5000
+    assert cost_structure['transportation'] == 5000
+    assert cost_structure['installation'] == 2500
+    assert cost_structure['site_rental'] == 9371.5
+    assert cost_structure['power_generator_battery_system'] == 2988
+    assert cost_structure['high_speed_backhaul_hub'] == 8964.5
+    assert cost_structure['router'] == 1195
+    assert cost_structure['microwave_backhaul'] == 5976
+
+    assert total_cost == 318808.5
+
+    setup_region[0]['new_sites'] = 10
+
+    total_cost, cost_structure = active_new_site('MWI', setup_region[0], setup_option['strategy'],
+        setup_costs, setup_global_parameters, setup_backhaul_lut, setup_core_lut)
+
+    assert total_cost == 3188085
 
 
 def test_get_backhaul_costs(setup_region, setup_costs, setup_backhaul_lut):
@@ -88,64 +150,3 @@ def test_discount_capex_and_opex(setup_global_parameters):
 def test_discount_opex(setup_global_parameters):
 
     assert discount_opex(1000, setup_global_parameters) == 1952
-
-
-
-
-
-
-# def test_optimize_network(
-#     setup_region,
-#     setup_option,
-#     setup_global_parameters,
-#     setup_country_parameters,
-#     setup_timesteps,
-#     setup_penetration_lut,
-#     setup_costs,
-#     setup_lookup,
-#     setup_ci
-#     ):
-#     #test demand being larger than max capacity
-#     answer = find_site_density(
-#         {'demand_mbps_km2': 100000,
-#         'geotype': 'urban'},
-#         setup_option,
-#         setup_country_parameters,
-#         setup_lookup,
-#         setup_ci
-#     )
-
-#     assert answer == 2
-
-#     answer = find_site_density(
-#         {'demand_mbps_km2': 0.005,
-#         'geotype': 'urban'},
-#         setup_option,
-#         setup_country_parameters,
-#         setup_lookup,
-#         setup_ci
-#     )
-
-#     assert answer == 0.01
-
-#     answer = find_site_density(
-#         {'demand_mbps_km2': 250,
-#         'geotype': 'urban'},
-#         setup_option,
-#         setup_country_parameters,
-#         setup_lookup,
-#         setup_ci
-#     )
-
-#     assert answer == 0.05
-
-#     answer = find_site_density(
-#         {'demand_mbps_km2': 120,
-#         'geotype': 'urban'},
-#         setup_option,
-#         setup_country_parameters,
-#         setup_lookup,
-#         setup_ci
-#     )
-
-#     assert answer == 0.02
