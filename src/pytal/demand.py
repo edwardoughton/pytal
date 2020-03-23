@@ -41,6 +41,15 @@ def estimate_demand(regions, option, global_parameters,
         revenue = []
         demand_mbps_km2 = []
 
+        scenario_per_user_capacity = get_per_user_capacity(region['geotype'], option)
+
+        # subsidy_level = 'subsidy_{}'.format(subsidy)
+
+        # if not subsidy_level == 'subsidy_baseline': #region['geotype'] == 'rural' and
+        #     subsidy_factor = 1 + (country_parameters['financials'][subsidy_level] / 100)
+        # else:
+        #     subsidy_factor = 1
+
         for timestep in timesteps:
 
             penetration = penetration_lut[timestep]
@@ -73,20 +82,41 @@ def estimate_demand(regions, option, global_parameters,
             # Total demand in mbps / km^2.
             demand_mbps_km2.append(
                 (region['smartphones_on_network'] *
-                int(option['scenario'].split('_')[1]) / #User demand in Mbps
+                scenario_per_user_capacity / #User demand in Mbps
                 global_parameters['overbooking_factor'] /
                 region['area_km2']
                 ))
 
             revenue.append(region['arpu'] * region['phones_on_network'])
 
-        region['total_revenue'] = sum(revenue)
-        region['revenue_km2'] = sum(revenue) / region['area_km2']
-        region['demand_mbps_km2'] = sum(demand_mbps_km2) / len(demand_mbps_km2)
+        region['total_revenue'] = round(sum(revenue))# * subsidy_factor)
+        region['revenue_km2'] = round(sum(revenue) / region['area_km2']) #* subsidy_factor / region['area_km2'])
+        region['demand_mbps_km2'] = round(sum(demand_mbps_km2) / len(demand_mbps_km2))
 
         output.append(region)
 
     return output
+
+
+def get_per_user_capacity(geotype, option):
+    """
+
+    """
+
+    if geotype.split(' ')[0] == 'urban':
+
+        return int(option['scenario'].split('_')[1])
+
+    elif geotype.split(' ')[0] == 'suburban':
+
+        return int(option['scenario'].split('_')[2])
+
+    elif geotype.split(' ')[0] == 'rural':
+
+        return int(option['scenario'].split('_')[3])
+
+    else:
+        print('Did not recognise geotype')
 
 
 def estimate_arpu(region, timestep, global_parameters, country_parameters):
