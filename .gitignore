@@ -110,3 +110,4 @@ venv.bak/
 /spectrum/figures/*
 /backhaul/figures/*
 /clustering/figures/*
+/subscriptions/data_inputs/*
