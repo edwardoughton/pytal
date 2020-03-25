@@ -1265,6 +1265,10 @@ def backhaul_lut(country):
             }
         })
 
+    output_csv = pd.DataFrame(output_csv)
+    path = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul_lut.csv')
+    output_csv.to_csv(path, index=False)
+
     folder = os.path.join(DATA_INTERMEDIATE, country_id, 'backhaul')
 
     if not os.path.exists(folder):
@@ -1273,10 +1277,7 @@ def backhaul_lut(country):
     shapes = gpd.GeoDataFrame.from_features(output_shape, 'epsg:4326')
     shapes.to_file(os.path.join(folder, 'backhaul.shp'))
 
-    output_csv = pd.DataFrame(output_csv)
-    output_csv.to_csv(os.path.join(folder, 'backhaul_lut.csv'), index=False)
-
-    return output_csv
+    return print('Complete backhaul lut')
 
 
 def core_lut(country):
@@ -1398,7 +1399,7 @@ def core_lut(country):
     output = pd.DataFrame(output)
 
     filename = 'core_lut.csv'
-    folder = os.path.join(DATA_INTERMEDIATE, country_id, 'core')
+    folder = os.path.join(DATA_INTERMEDIATE, country_id)
     path = os.path.join(folder, filename)
 
     output.to_csv(path, index=False)
@@ -1511,59 +1512,37 @@ def forecast_linear(country, historical_data, start_point, end_point, horizon):
     """
     output = []
 
+    subs_growth = country['subs_growth']
+
     for item in historical_data:
+
+        unique_users = round(item['penetration'] / country['subs_per_user'], 2)
+
         output.append({
             'country': item['country'],
             'year': item['year'],
             'penetration': item['penetration'],
+            'unique_users': unique_users
         })
-
-    years = [item['year'] for item in historical_data]
-
-    sorted_data = sorted(historical_data, key = lambda i: i['year'], reverse=False)
 
     year_0 = sorted(historical_data, key = lambda i: i['year'], reverse=True)[0]
 
-    growth_rates = []
-
-    for year in range((max(years)-horizon), max(years)):
-        year_plus_1 = year + 1
-        for item in sorted_data:
-            if item['year'] == year:
-                t0 = item['penetration']
-            if item['year'] == year_plus_1:
-                t1 = item['penetration']
-        growth_rate = t1 - t0
-
-        #exclude negative growth rates
-        if growth_rate > 0:
-            growth_rates.append(growth_rate)
-        #exclude excessively high growth rates
-        elif growth_rate < 8:
-            growth_rates.append(growth_rate)
-        else:
-            pass
-
-    mean_growth = sum(growth_rates) / len(growth_rates)
-
     for year in range(start_point, end_point + 1):
         if year == start_point:
-            growth = (1 + (mean_growth/100))
-            penetration = year_0['penetration'] * growth
-        else:
 
-            if penetration < 100:
-                growth = (1 + (mean_growth/100))
-            else:
-                growth = (1 + ((mean_growth/2)/100))
-            penetration = penetration * growth
+            penetration = year_0['penetration'] * (1 + (subs_growth/100))
+        else:
+            penetration = penetration * (1 + (subs_growth/100))
 
         if year not in [item['year'] for item in output]:
 
+            unique_users = round(penetration / country['subs_per_user'], 2)
+
             output.append({
-                'country': country,
+                'country': country['iso3'],
                 'year': year,
                 'penetration': round(penetration, 2),
+                'unique_users': unique_users
             })
 
     return output
@@ -1586,7 +1565,7 @@ def forecast_subscriptions(country):
     horizon = 4
 
     forecast = forecast_linear(
-        iso3,
+        country,
         historical_data,
         start_point,
         end_point,
@@ -1602,6 +1581,9 @@ def forecast_subscriptions(country):
 
     forecast_df.to_csv(os.path.join(path, 'subs_forecast.csv'), index=False)
 
+    path = os.path.join(BASE_PATH, '..', 'subscriptions', 'data_inputs')
+    forecast_df.to_csv(os.path.join(path, '{}.csv'.format(iso3)), index=False)
+
     return print('Completed subscription forecast')
 
 
@@ -1612,24 +1594,31 @@ if __name__ == '__main__':
     countries = [
         #cluster 1
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-            'pop_density_km2': 5000, 'settlement_size': 20000},
+            'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
         #cluster 2
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 2,
-            'pop_density_km2': 5000, 'settlement_size': 20000},
-        # #cluster 3
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 2,
-            'pop_density_km2': 2000, 'settlement_size': 20000},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
+            'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
+        #cluster 3
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
+            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
         # #cluster 4
         {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-            'pop_density_km2': 2000, 'settlement_size': 20000},
-        # #cluster 5
+            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
+        #cluster 5
         {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-            'pop_density_km2': 2000, 'settlement_size': 20000},
+            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
         # #cluster 6
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'pop_density_km2': 2000, 'settlement_size': 20000},
+            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
-            'pop_density_km2': 2000, 'settlement_size': 20000},
+            'pop_density_km2': 1000, 'settlement_size': 5000, 'subs_growth': 1.5,
+            'subs_per_user': 1.8},
 
         # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
         # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},
@@ -1664,10 +1653,10 @@ if __name__ == '__main__':
         create_network(country, country['pop_density_km2'], country['settlement_size'])
 
         print('Create backhaul lookup table')
-        output = backhaul_lut(country)
+        backhaul_lut(country)
 
         print('Create core and regional hubs lookup table')
-        output = core_lut(country)
+        core_lut(country)
 
         print('Create subscription forcast')
         forecast_subscriptions(country)
