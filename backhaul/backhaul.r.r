@@ -18,6 +18,6 @@ plot <- ggplot(data=data, aes(x=Region, y=Value, fill=Technology)) +
   scale_y_continuous(expand = c(0, 1.5), limits = c(0,100))
 
 path = file.path(folder, 'figures', 'panel.png')
-ggsave(path, units="in", width=7, height=7)
+ggsave(path, units="in", width=5, height=5)
 print(plot)
 dev.off()

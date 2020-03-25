@@ -4,6 +4,7 @@ library(tidyverse)
 library(plyr)
 library(ggpubr)
 #####################
+
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -43,14 +44,8 @@ pysim5g_plot_se = ggplot(data, aes(x=r_distance/1000, y=spectral_efficiency_bps_
   geom_smooth() +
   scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0)) +
   theme(legend.position="bottom") + guides(colour=guide_legend(ncol=7)) +
-  labs(title = 'Spectral Efficiency vs User Distance', x = NULL, y='Spectral Efficiency (Bps/Hz)', colour='Frequency (GHz)') +
+  labs(title = 'Spectral Efficiency vs User Distance', x = NULL, y='Spectral Efficiency (Bps/Hz)', colour='Frequency (GHz)\n(10MHz BW)') +
   facet_wrap(~environment)
-
-
-path = file.path(folder, 'figures', 'pysim5g_plot_se.png')
-ggsave(path, units="in", width=10, height=8)
-print(pysim5g_plot_se)
-dev.off()
 
 #plot data
 #locally estimated scatterplot smoothing
@@ -60,14 +55,8 @@ pysim5g_plot_capacity = ggplot(data, aes(x=r_distance/1000, y=capacity_mbps, col
   geom_smooth() +
   scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0)) +
   theme(legend.position="bottom") + guides(colour=guide_legend(ncol=7)) +
-  labs(title = 'Channel Capacity vs User Distance', x = NULL, y='Capacity (Mbps)', colour='Frequency (GHz)') +
+  labs(title = 'Channel Capacity vs User Distance', x = NULL, y='Capacity (Mbps)', colour='Frequency (GHz)\n(10MHz BW)') +
   facet_wrap(~environment)
-
-
-path = file.path(folder, 'figures', 'pysim5g_plot_capacity.png')
-ggsave(path, units="in", width=10, height=8)
-print(pysim5g_plot_capacity)
-dev.off()
 
 #plot data
 #locally estimated scatterplot smoothing
@@ -77,19 +66,13 @@ pysim5g_plot_capacity_km2 = ggplot(data, aes(x=r_distance/1000, y=capacity_mbps_
   geom_smooth() +
   scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0)) +
   theme(legend.position="bottom") + guides(colour=guide_legend(ncol=7)) +
-  labs(title = 'Area Capacity vs User Distance', x = "Distance (km)", y='Capacity (Mbps/km^2)', colour='Frequency (GHz)') +
+  labs(title = 'Area Capacity vs User Distance', x = "Distance (km)", y='Capacity (Mbps/km^2)', colour='Frequency (GHz)\n(10MHz BW)') +
   facet_wrap(~environment)
-
-
-path = file.path(folder, 'figures', 'pysim5g_plot_capacity_km2.png')
-ggsave(path, units="in", width=10, height=8)
-print(pysim5g_plot_capacity_km2)
-dev.off()
 
 panel = ggarrange(pysim5g_plot_se, pysim5g_plot_capacity, pysim5g_plot_capacity_km2,  
                   common.legend = TRUE, legend = 'bottom', ncol = 1, nrow = 3)
 
-path = file.path(folder, 'figures', 'pysim5g_panel.png')
+path = file.path(folder, 'figures', 'pysim5g_panel.png', dpi=300)
 ggsave(path, units="in", width=8, height=10)
 print(panel)
 dev.off()
