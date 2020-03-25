@@ -167,35 +167,29 @@ def load_penetration(path):
     with open(path, 'r') as source:
         reader = csv.DictReader(source)
         for row in reader:
-            output[int(row['year'])] = float(row['penetration'])
+            output[int(row['year'])] = float(row['unique_users'])
 
     return output
 
 
-def load_backhaul_lut(country, path):
+def load_backhaul_lut(path):
     """
 
     """
-    level = country['regional_level']
-    level = 'GID_{}'.format(level)
-
     output = {}
 
     with open(path, 'r') as source:
         reader = csv.DictReader(source)
         for row in reader:
-            output[row[level]] = int(float(row['distance_m']))
+            output[row['GID_id']] = int(float(row['distance_m']))
 
     return output
 
 
-def load_core_lut(country, path):
+def load_core_lut(path):
     """
 
     """
-    level = country['regional_level']
-    level = 'GID_{}'.format(level)
-
     interim = []
 
     with open(path, 'r') as source:
@@ -299,17 +293,17 @@ if __name__ == '__main__':
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 3,
-        'fiber_backhaul_suburban_m': 3,
-        'fiber_backhaul_rural_m': 3,
+        'fiber_backhaul_urban_m': 15,
+        'fiber_backhaul_suburban_m': 10,
+        'fiber_backhaul_rural_m': 5,
         'core_nodes_epc': 50000,
-        'core_nodes_nsa': 75000,
+        'core_nodes_nsa': 50000,
         'core_nodes_sa': 100000,
-        'core_edges': 5,
+        'core_edges': 10,
         'regional_nodes_epc': 50000,
         'regional_nodes_nsa': 100000,
         'regional_nodes_sa': 150000,
-        'regional_edges': 5,
+        'regional_edges': 8,
     }
 
     GLOBAL_PARAMETERS = {
@@ -328,21 +322,20 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        # {'iso3': 'ALG', 'iso2': 'AL', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_hubs_level': 2},
-        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'PAK', 'iso2': 'SN', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_hubs_level': 2},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_hubs_level': 2},
-        {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_hubs_level': 1},
-        {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_hubs_level': 2},
-    ]
+        #cluster 1
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        #cluster 2
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
+        # #cluster 3
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
+        # #cluster 4
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
+        # #cluster 5
+        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1},
+        # #cluster 6
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        ]
 
     decision_options = [
         'technology_options',
@@ -368,11 +361,11 @@ if __name__ == '__main__':
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
             filename = 'backhaul_lut.csv'
-            backhaul_lut = load_backhaul_lut(country, os.path.join(folder, filename))
+            backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
             filename = 'core_lut.csv'
-            core_lut = load_core_lut(country, os.path.join(folder, filename))
+            core_lut = load_core_lut(os.path.join(folder, filename))
 
             print('-----')
             print('Working on {} in {}'.format(decision_option, iso3))
