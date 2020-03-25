@@ -223,16 +223,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 5,
-            'subsidy_baseline': 10,
             'subsidy_high': 20,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -278,16 +273,61 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
+            'subsidy_high': 40,
+            'spectrum_coverage_low_usd_mhz_pop': 0.25,
+            'spectrum_capacity_low_usd_mhz_pop': 0.05,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_high_usd_mhz_pop': 1,
+            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'tax_low': 10,
+            'tax_baseline': 25,
+            'tax_high': 40,
+            },
+        },
+
+    'DZA': {
+        'luminosity': {
+            'high': 5,
+            'medium': 1,
+        },
+        'arpu': {
+            'high': 20,
+            'medium': 10,
+            'low': 5,
+        },
+        'smartphone_pen': 0.4,
+        'networks': 3,
+        'frequencies': {
+            '4G': [
+                {
+                    'frequency': 800,
+                    'bandwidth': 10,
+                },
+                {
+                    'frequency': 2600,
+                    'bandwidth': 10,
+                },
+            ],
+            '5G': [
+                {
+                    'frequency': 700,
+                    'bandwidth': 10,
+                },
+                {
+                    'frequency': 3500,
+                    'bandwidth': 50,
+                },
+            ]
+        },
+        'financials': {
+            'profit_margin': 20,
+            'subsidy_low': 10,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -333,16 +373,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -388,16 +423,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -443,16 +473,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -498,16 +523,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -558,16 +578,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -619,16 +634,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -671,16 +681,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -727,16 +732,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -782,16 +782,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -837,16 +832,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
@@ -892,16 +882,11 @@ COUNTRY_PARAMETERS = {
                     'frequency': 3500,
                     'bandwidth': 50,
                 },
-                # {
-                #     'frequency': 26000,
-                #     'bandwidth': 500,
-                # },
             ]
         },
         'financials': {
             'profit_margin': 20,
             'subsidy_low': 10,
-            'subsidy_baseline': 25,
             'subsidy_high': 40,
             'spectrum_coverage_low_usd_mhz_pop': 0.25,
             'spectrum_capacity_low_usd_mhz_pop': 0.05,
