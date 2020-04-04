@@ -9,7 +9,6 @@ https://github.com/edwardoughton/pysim5g
 """
 import math
 
-
 def find_single_network_cost(country, region, strategy,
     costs, global_parameters, country_parameters, backhaul_lut, core_lut):
     """
@@ -37,46 +36,62 @@ def find_single_network_cost(country, region, strategy,
         opex costs.
 
     """
-    cost_results = get_costs(country, region, strategy, costs, global_parameters, backhaul_lut, core_lut
-    )
+    generation = strategy.split('_')[0]
+    core = strategy.split('_')[1]
+    sharing = strategy.split('_')[3]
+
+    new_sites = region['new_sites']
+    upgraded_sites = region['upgraded_sites']
+    existing_4g_sites = region['sites_4G']
+
+    regional_cost = 0
+
+    if new_sites > 0 and generation == '4G':
+
+        total_cost, cost_structure = greenfield_4g(country, region,
+            strategy, costs, global_parameters, backhaul_lut, core_lut)
+
+        regional_cost += new_sites * total_cost
+
+
+    if upgraded_sites > 0 and generation == '4G':
+
+        upgraded_sites = upgraded_sites - existing_4g_sites
+
+        total_cost, cost_structure = upgrade_to_4g(country, region,
+            strategy, costs, global_parameters, backhaul_lut, core_lut)
+
+        regional_cost += new_sites * total_cost
+
+
+    if new_sites > 0 and generation == '5G' and core == 'nsa':
+
+        total_cost, cost_structure = greenfield_5g_nsa(country, region,
+            strategy, costs, global_parameters, backhaul_lut, core_lut)
+
+        regional_cost += new_sites * total_cost
+
+
+    # if new_sites > 0 and generation == '5G' and core == 'nsa':
+
+    #     new_site_cost, cost_structure = greenfield_4g(country, region, strategy,
+    #         costs, global_parameters, backhaul_lut, core_lut)
+
+    #     total_cost = new_sites * new_site_cost
+
+
+
+
 
     # total_network_cost = 0
     # for cost_result in cost_results:
     #     for key, value in cost_result.items():
     #         total_network_cost += value
 
-    return cost_results#, total_network_cost
+    return cost_results #, total_network_cost
 
 
-def get_costs(country, region, strategy, costs, global_parameters, backhaul_lut, core_lut):
-
-    total_new_site_cost = 0
-    total_upgrade_cost = 0
-
-    sharing = strategy.split('_')[3]
-
-    if sharing == 'baseline':
-    #     if region['new_sites'] > 0:
-        total_new_site_cost, cost_structure = baseline_new_site(country, region, strategy, costs,
-            global_parameters, backhaul_lut, core_lut)
-
-        # if region['upgraded_sites'] > 0:
-        #     total_upgrade_cost, cost_structure = baseline_upgrade(region['upgraded_sites'], costs, global_parameters)
-
-    if sharing == 'passive':
-        total_new_site_cost, cost_structure = passive_new_site(country, region, strategy, costs,
-            global_parameters, backhaul_lut, core_lut)
-
-    if sharing == 'active':
-        total_new_site_cost, cost_structure = active_new_site(country, region, strategy, costs,
-            global_parameters, backhaul_lut, core_lut)
-    #     costs = active(country, region, generation, core, backhaul, sharing,
-    #     geotype, costs, global_parameters, country_parameters, backhaul_lut, core_lut)
-
-    return total_new_site_cost + total_upgrade_cost
-
-
-def baseline_new_site(country, region, strategy, costs,
+def greenfield_4g(country, region, strategy, costs,
     global_parameters, backhaul_lut, core_lut):
     """
     No sharing takes place.
@@ -86,10 +101,11 @@ def baseline_new_site(country, region, strategy, costs,
     """
     core = strategy.split('_')[1]
     backhaul = strategy.split('_')[2]
+    sharing = strategy.split('_')[3]
 
-    new_sites = region['new_sites']
+    shared_assets = INFRA_SHARING_ASSETS[sharing]
 
-    cost_structure = {
+    assets = {
         'antennas': (
             discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
             global_parameters['sectorization']
@@ -141,9 +157,87 @@ def baseline_new_site(country, region, strategy, costs,
         ),
     }
 
-    total_new_site_cost = new_sites * sum(cost_structure.values())
+    cost_structure = {}
 
-    return total_new_site_cost, cost_structure
+    total_cost = 0
+
+    for key, value in assets.items():
+        if not key in shared_assets:
+            cost_structure[key] = value
+            total_cost += value
+        else:
+            value = value / global_parameters['networks']
+            cost_structure[key] = value
+            total_cost += value
+
+    return total_cost, cost_structure
+
+
+def upgrade_to_4g(country, region, strategy, costs,
+    global_parameters, backhaul_lut, core_lut):
+    """
+    Reflects the baseline scenario of needing to build a single dedicated
+    network.
+
+    """
+    core = strategy.split('_')[1]
+    backhaul = strategy.split('_')[2]
+    sharing = strategy.split('_')[3]
+
+    shared_assets = INFRA_SHARING_ASSETS[sharing]
+
+    assets = {
+        'antennas': (
+            discount_capex_and_opex(costs['single_sector_antenna'], global_parameters) *
+            global_parameters['sectorization']
+        ),
+        'remote_radio_units': (
+            discount_capex_and_opex(costs['single_remote_radio_unit'], global_parameters) *
+            global_parameters['sectorization']
+        ),
+        'single_baseband_unit': (
+            discount_capex_and_opex(costs['single_baseband_unit'], global_parameters)
+        ),
+        'installation': (
+            costs['installation']
+        ),
+        'high_speed_backhaul_hub': (
+            discount_capex_and_opex(costs['high_speed_backhaul_hub'], global_parameters)
+        ),
+        'router': (
+            discount_capex_and_opex(costs['router'], global_parameters)
+        ),
+        '{}_backhaul'.format(backhaul): (
+            discount_capex_and_opex(get_backhaul_costs(country, region, backhaul, costs, backhaul_lut), global_parameters)
+        ),
+        'core_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_edges', costs, core_lut, core), global_parameters)
+        ),
+        'code_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'core_nodes', costs, core_lut, core), global_parameters)
+        ),
+        'regional_edges': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_edges', costs, core_lut, core), global_parameters)
+        ),
+        'regional_nodes': (
+            discount_capex_and_opex(get_core_costs(country, region, 'regional_nodes', costs, core_lut, core), global_parameters)
+        ),
+    }
+
+    cost_structure = {}
+
+    total_cost = 0
+
+    for key, value in assets.items():
+        if not key in shared_assets:
+            cost_structure[key] = value
+            total_cost += value
+        else:
+            value = value / global_parameters['networks']
+            cost_structure[key] = value
+            total_cost += value
+
+    return total_cost, cost_structure
 
 
 def baseline_upgrade(sites_to_upgrade, costs, global_parameters):
@@ -456,3 +550,35 @@ def discount_opex(opex, global_parameters):
     discounted_cost = round(sum(costs_over_time_period))
 
     return discounted_cost
+
+
+INFRA_SHARING_ASSETS = {
+    'baseline': [],
+    # 'passive': [
+    #     'tower',
+    #     'civil_materials',
+    #     'transportation',
+    #     'installation',
+    #     'site_rental',
+    #     'power_generator_battery_system',
+    # ],
+    # 'active': [
+    #     'antennas',  ##these items need renaming
+    #     'single_remote_radio_unit',
+    #     'single_baseband_unit',
+    #     'tower',
+    #     'civil_materials',
+    #     'transportation',
+    #     'installation',
+    #     'site_rental',
+    #     'power_generator_battery_system',
+    #     'high_speed_backhaul_hub',
+    #     'router',
+    #     'microwave_backhaul_small',
+    #     'microwave_backhaul_medium',
+    #     'microwave_backhaul_large',
+    #     'fiber_backhaul_urban_m',
+    #     'fiber_backhaul_suburban_m',
+    #     'fiber_backhaul_rural_m',
+    # ]
+}
