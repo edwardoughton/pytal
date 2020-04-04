@@ -49,14 +49,8 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             country_parameters, lookup, ci)
 
         total_sites_required = site_density * region['area_km2']
-        region['new_sites'] = total_sites_required
 
-        # if total_sites_required > region['sites_estimated_total']:
-        #     region['new_sites'] = int(round(total_sites_required - region['sites_estimated_total']))
-        #     region['upgraded_sites'] = int(round(region['sites_estimated_total']))
-        # else:
-        #     region['new_sites'] = 0
-        #     region['upgraded_sites'] = int(round(total_sites_required))
+        region = estimate_site_upgrades(region, strategy, total_sites_required, country_parameters)
 
         total_network_cost = find_single_network_cost(
             country,
@@ -90,6 +84,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     For a given region, provide an optmized network.
 
     """
+
     networks = country_parameters['networks']
     demand = region['demand_mbps_km2']
     geotype = region['geotype'].split(' ')[0]
@@ -98,28 +93,28 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     generation = option['strategy'].split('_')[0]
 
     frequencies = country_parameters['frequencies']
-    frequencies = {
-        '4G':[
-            {
-                'frequency': 800,
-                'bandwidth': 10,
-            },
-            {
-                'frequency': 2600,
-                'bandwidth': 10,
-            },
-        ],
-        '5G':[
-            {
-                'frequency': 700,
-                'bandwidth': 10,
-            },
-            {
-                'frequency': 3500,
-                'bandwidth': 50,
-            },
-        ],
-    }
+    # frequencies = {
+    #     '4G':[
+    #         {
+    #             'frequency': 800,
+    #             'bandwidth': 10,
+    #         },
+    #         {
+    #             'frequency': 2600,
+    #             'bandwidth': 10,
+    #         },
+    #     ],
+    #     '5G':[
+    #         {
+    #             'frequency': 700,
+    #             'bandwidth': 10,
+    #         },
+    #         {
+    #             'frequency': 3500,
+    #             'bandwidth': 50,
+    #         },
+    #     ],
+    # }
     frequencies = frequencies[generation]
 
     ci = str(ci)
@@ -246,3 +241,49 @@ def pairwise(iterable):
     next(b, None)
 
     return zip(a, b)
+
+
+def estimate_site_upgrades(region, strategy, total_sites_required, country_parameters):
+    """
+    Estimate the number of greenfield sites and brownfield upgrades.
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+    total_sites_required : int
+        Number of sites needed to meet demand.
+    country_parameters : dict
+        All country specific parameters.
+
+    Returns
+    -------
+    region : dict
+        Contains all regional data.
+
+    """
+    generation = strategy.split('_')[0]
+
+    existing_sites = (
+        region['sites_estimated_total'] *
+        (country_parameters['proportion_of_sites'] / 100)
+    )
+
+    if total_sites_required > existing_sites:
+
+        region['new_sites'] = int(round(total_sites_required - existing_sites))
+
+        if generation == '4G' and region['sites_4g'] > 0 :
+            region['upgraded_sites'] = existing_sites - region['sites_4g']
+        else:
+            region['upgraded_sites'] = existing_sites
+
+    else:
+        region['new_sites'] = 0
+
+        if generation == '4G' and region['sites_4g'] > 0 :
+            region['upgraded_sites'] = total_sites_required - region['sites_4g']
+        else:
+            region['upgraded_sites'] = total_sites_required
+
+    return region
