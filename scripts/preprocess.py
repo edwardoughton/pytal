@@ -488,8 +488,6 @@ def get_regional_data(country):
 
     coverage = process_regional_coverage(country)
 
-    site_estimator = setup_site_estimator('SEN')
-
     single_country = gpd.read_file(path_country)
 
     print('----')
@@ -516,13 +514,6 @@ def get_regional_data(country):
             array = src.read(1)
             array[array <= 0] = 0
 
-            #get luminosity values
-            luminosity_median = [d['median'] for d in zonal_stats(
-                region['geometry'],
-                array,
-                stats=['median'],
-                affine=affine)][0]
-
             luminosity_summation = [d['sum'] for d in zonal_stats(
                 region['geometry'],
                 array,
@@ -535,15 +526,11 @@ def get_regional_data(country):
             array = src.read(1)
             array[array <= 0] = 0
 
-            #get luminosity values
             population_summation = [d['sum'] for d in zonal_stats(
                 region['geometry'], array, stats=['sum'], affine=affine)][0]
 
-
         area_km2 = round(area_of_polygon(region['geometry']) / 1e6)
 
-        if luminosity_median == None:
-            luminosity_median = 0
         if luminosity_summation == None:
             luminosity_summation = 0
 
@@ -571,30 +558,10 @@ def get_regional_data(country):
         else:
             coverage_4G_km2 = 0
 
-        try:
-            sites_km2 = estimate_numers_of_sites(
-                    site_estimator,
-                    np.array([(population_summation / area_km2)]).reshape(-1, 1)
-                )
-        except:
-            sites_km2 = 0
-
-        try:
-            sites_total = (
-                estimate_numers_of_sites(
-                site_estimator,
-                np.array([(population_summation / area_km2)]).reshape(-1, 1)
-                ) * coverage_GSM_km2
-            )
-        except:
-            sites_total = 0
-
         results.append({
             'GID_0': region['GID_0'],
             'GID_id': region[gid_level],
             'GID_level': gid_level,
-            # 'median_luminosity': luminosity_median,
-            # 'sum_luminosity': luminosity_summation,
             'mean_luminosity_km2': luminosity_summation / area_km2,
             'population': population_summation,
             'area_km2': area_km2,
@@ -602,9 +569,9 @@ def get_regional_data(country):
             'coverage_GSM_km2': round(coverage_GSM_km2 / area_km2 * 100, 1),
             'coverage_3G_km2': round(coverage_3G_km2 / area_km2 * 100, 1),
             'coverage_4G_km2': round(coverage_4G_km2 / area_km2 * 100, 1),
-            'sites_estimated_km2': sites_km2,
-            'sites_estimated_total': sites_total,
         })
+
+    results = estimate_sites(results, iso3)
 
     results_df = pd.DataFrame(results)
 
@@ -613,6 +580,69 @@ def get_regional_data(country):
     print('Completed {}'.format(single_country.NAME_0.values[0]))
 
     return print('Completed night lights data querying')
+
+
+def estimate_sites(data, iso3):
+    """
+
+    """
+    output = []
+
+    population = 0
+
+    for region in data:
+        population += int(region['population'])
+
+    path = os.path.join(DATA_RAW, 'wb_mobile_coverage', 'wb_population_coverage.csv')
+    coverage = pd.read_csv(path)
+    coverage = coverage.loc[coverage['Country ISO3'] == iso3]
+    coverage = coverage['2016'].values[0]
+
+    population_covered = population * (coverage / 100)
+
+    path = os.path.join(DATA_RAW, 'real_site_data', 'tower_counts', 'tower_counts.csv')
+    towers = pd.read_csv(path, encoding = "ISO-8859-1")
+    towers = towers.loc[towers['ISO_3digit'] == iso3]
+    towers = towers['count'].values[0]
+
+    towers_per_pop = towers / population_covered
+
+    data = sorted(data, key=lambda k: k['population_km2'], reverse=True)
+
+    covered_pop_so_far = 0
+
+    for region in data:
+
+        if covered_pop_so_far < population_covered:
+
+            sites_estimated_total = region['population'] * towers_per_pop
+            sites_estimated_km2 = region['population_km2'] * towers_per_pop
+
+        else:
+
+            sites_estimated_total = 0
+            sites_estimated_km2 = 0
+
+        output.append({
+                'GID_0': region['GID_0'],
+                'GID_id': region['GID_id'],
+                'GID_level': region['GID_level'],
+                'mean_luminosity_km2': region['mean_luminosity_km2'],
+                'population': region['population'],
+                'area_km2': region['area_km2'],
+                'population_km2': region['population_km2'],
+                'coverage_GSM_km2': region['coverage_GSM_km2'],
+                'coverage_3G_km2': region['coverage_3G_km2'],
+                'coverage_4G_km2': region['coverage_4G_km2'],
+                'sites_estimated_total': sites_estimated_total,
+                'sites_estimated_km2': sites_estimated_km2,
+                'sites_3G': region['coverage_3G_km2'] * sites_estimated_km2,
+                'sites_4G': region['coverage_4G_km2'] * sites_estimated_km2,
+            })
+
+        covered_pop_so_far += region['population']
+
+    return output
 
 
 def area_of_polygon(geom):
@@ -639,40 +669,6 @@ def length_of_line(geom):
     total_length = geod.line_length(*geom.xy)
 
     return abs(total_length)
-
-
-def setup_site_estimator(iso3):
-    """
-    Imports data and creates a linear_regressor object.
-
-    Parameters
-    ----------
-    iso3 : string
-        The three digit ISO3 code for the country site data that
-        we want to use.
-
-    Returns
-    -------
-    linear_regressor : object
-        Linear regression object.
-
-    """
-    path = os.path.join(DATA_RAW, 'real_site_data', iso3, 'results.csv')
-
-    data = pd.read_csv(path)
-
-    data = data.loc[data['country'] == iso3]
-
-    # values converts it into a numpy array
-    X = data['population_km2'].values.reshape(-1, 1)
-    # -1 means that calculate the dimension of rows, but have 1 column
-    Y = data['sites_km2'].values.reshape(-1, 1)
-    # create object for the class
-    linear_regressor = LinearRegression()
-    # perform linear regression
-    linear_regressor.fit(X, Y)
-
-    return linear_regressor
 
 
 def estimate_numers_of_sites(linear_regressor, x_value):
@@ -1592,30 +1588,30 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        #cluster 1
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-            'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
-        #cluster 2
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
-            'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
-        #cluster 3
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
-            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
-        # #cluster 4
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
-        #cluster 5
-        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
-        # #cluster 6
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
+        # #cluster 1
+        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
+        #     'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
+        # #cluster 2
+        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
+        # #cluster 3
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
+        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
+        # # #cluster 4
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
+        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
+        # #cluster 5
+        # {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
+        # # #cluster 6
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'subs_per_user': 1.8},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
             'pop_density_km2': 1000, 'settlement_size': 5000, 'subs_growth': 1.5,
             'subs_per_user': 1.8},
@@ -1631,32 +1627,32 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
         print('Getting regional data')
         get_regional_data(country)
 
-        print('Creating network')
-        create_network(country, country['pop_density_km2'], country['settlement_size'])
+        # print('Creating network')
+        # create_network(country, country['pop_density_km2'], country['settlement_size'])
 
-        print('Create backhaul lookup table')
-        backhaul_lut(country)
+        # print('Create backhaul lookup table')
+        # backhaul_lut(country)
 
-        print('Create core and regional hubs lookup table')
-        core_lut(country)
+        # print('Create core and regional hubs lookup table')
+        # core_lut(country)
 
-        print('Create subscription forcast')
-        forecast_subscriptions(country)
+        # print('Create subscription forcast')
+        # forecast_subscriptions(country)
