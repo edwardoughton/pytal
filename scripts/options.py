@@ -712,6 +712,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.5,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
