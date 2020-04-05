@@ -280,6 +280,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
         region['new_sites'] = int(round(total_sites_required - existing_sites))
 
         if existing_sites > 0:
+            print(region)
             if generation == '4G' and region['sites_4G'] > 0 :
                 region['upgraded_sites'] = existing_sites - region['sites_4G']
             else:
