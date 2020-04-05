@@ -1,5 +1,6 @@
 import pytest
-from pytal.assess import get_spectrum_costs, calculate_tax, calculate_profit, calculate_benefit_cost_ratio
+from pytal.assess import (get_spectrum_costs, calculate_tax, calculate_profit,
+    calculate_benefit_cost_ratio, assess)
 
 
 def test_get_spectrum_costs(setup_region, setup_option, setup_country_parameters):
@@ -39,3 +40,13 @@ def test_calculate_benefit_cost_ratio(setup_region, setup_country_parameters):
     setup_region[0]['total_revenue'] = 159e4
 
     assert calculate_benefit_cost_ratio(setup_region[0], setup_country_parameters) == 1
+
+
+def test_assess(setup_region, setup_option, setup_global_parameters, setup_country_parameters):
+
+    setup_region[0]['total_network_cost'] = 10000
+    setup_region[0]['total_revenue'] = 12000
+
+    answer = assess('MWI', setup_region, setup_option, setup_global_parameters, setup_country_parameters)
+
+    assert answer[0]['total_cost'] == 105000
