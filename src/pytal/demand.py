@@ -119,7 +119,7 @@ def get_per_user_capacity(geotype, option):
         return int(option['scenario'].split('_')[3])
 
     else:
-        print('Did not recognise geotype')
+        return 'Did not recognise geotype'
 
 
 def estimate_arpu(region, timestep, global_parameters, country_parameters):
