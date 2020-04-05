@@ -1,5 +1,5 @@
 import pytest
-from pytal.demand import estimate_demand
+from pytal.demand import estimate_demand, get_per_user_capacity, estimate_arpu
 
 
 def test_estimate_demand(
@@ -58,16 +58,50 @@ def test_estimate_demand(
         smartphones_on_network * 50 / 100 / 2
     )
 
-    # answer = estimate_demand(
-    #     setup_region_rural,
-    #     setup_option_high,
-    #     setup_global_parameters,
-    #     setup_country_parameters,
-    #     setup_timesteps,
-    #     setup_penetration_lut
-    # )
+    answer = estimate_demand(
+        setup_region_rural,
+        setup_option_high,
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_timesteps,
+        setup_penetration_lut
+    )
 
-    # # 1667 phones on network
-    # # arpu = 15
-    # # 40% subsidy
-    # assert round(answer[0]['total_revenue']) == round(5000 * 15 / 3)
+    # 1667 phones on network
+    # arpu = 15
+    # 40% subsidy
+    assert round(answer[0]['total_revenue']) == round(5000 * 15 / 3)
+
+
+def test_get_per_user_capacity():
+
+    answer = get_per_user_capacity('urban', {'scenario': 'S1_25_5_1'})
+
+    assert answer == 25
+
+    answer = get_per_user_capacity('suburban', {'scenario': 'S1_25_5_1'})
+
+    assert answer == 5
+
+    answer = get_per_user_capacity('rural', {'scenario': 'S1_25_5_1'})
+
+    assert answer == 1
+
+
+def test_estimate_arpu(setup_region, setup_timesteps, setup_global_parameters,
+    setup_country_parameters):
+
+    answer = estimate_arpu({'mean_luminosity_km2': 10}, 2020, setup_global_parameters,
+        setup_country_parameters)
+
+    assert answer == 15
+
+    answer = estimate_arpu({'mean_luminosity_km2': 2}, 2020, setup_global_parameters,
+        setup_country_parameters)
+
+    assert answer == 5
+
+    answer = estimate_arpu({'mean_luminosity_km2': 0}, 2020, setup_global_parameters,
+        setup_country_parameters)
+
+    assert answer == 2
