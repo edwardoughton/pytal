@@ -87,6 +87,10 @@ def test_get_per_user_capacity():
 
     assert answer == 1
 
+    answer = get_per_user_capacity('made up geotype', {'scenario': 'S1_25_5_1'})
+
+    assert answer == 'Did not recognise geotype'
+
 
 def test_estimate_arpu(setup_region, setup_timesteps, setup_global_parameters,
     setup_country_parameters):
