@@ -11,8 +11,9 @@ def setup_region():
     'area_km2': 2,
     'population_km2': 5000,
     'decile': 100,
-    'geotype': 'urban'
+    'geotype': 'urban',
     }]
+
 
 @fixture(scope='function')
 def setup_region_rural():
@@ -34,6 +35,7 @@ def setup_option():
         'scenario': 'S1_50_5_1',
         'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'
     }
+
 
 @fixture(scope='function')
 def setup_option_high():
@@ -75,6 +77,7 @@ def setup_country_parameters():
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': 3,
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {

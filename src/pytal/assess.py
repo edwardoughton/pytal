@@ -18,8 +18,10 @@ def assess(country, regions, option, global_parameters, country_parameters):
     regions : dataframe
         Geopandas dataframe of all regions.
     option : dict
-        Contains the scenario, strategy, and frequencies
-        with bandwidths.
+        Contains the scenario and strategy. The strategy string controls
+        the strategy variants being testes in the model and is defined based
+        on the type of technology generation, core and backhaul, and the level
+        of sharing, subsidy, spectrum and tax.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict

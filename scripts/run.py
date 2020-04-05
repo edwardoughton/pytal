@@ -236,7 +236,7 @@ def write_results(regional_results, folder):
         'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
 
     path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
-    national_results.to_csv(path,index=True)
+    national_results.to_csv(path,index=False)
 
     print('Writing decile results')
     decile_results = pd.DataFrame(regional_results)
@@ -249,25 +249,19 @@ def write_results(regional_results, folder):
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
-    decile_results.to_csv(path, index=True)
+    decile_results.to_csv(path, index=False)
 
     print('Writing regional results')
     regional_results = pd.DataFrame(regional_results)
+
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
+        'population_km2', 'upgraded_sites',
         'new_sites', 'total_revenue', 'total_cost',
     ]]
 
-    regional_results = regional_results.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
-
     path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
-    regional_results.to_csv(path, index=True)
-
-    # print('Writing cost results')
-    # costs_km2 = pd.DataFrame(costs_km2)
-    # path = os.path.join(folder,'cost_results_{}.csv'.format(decision_option))
-    # costs_km2.to_csv(path, index=False)
+    regional_results.to_csv(path, index=False)
 
 
 if __name__ == '__main__':
@@ -313,7 +307,7 @@ if __name__ == '__main__':
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
         'confidence': [50], #[5, 50, 95],
-        'networks': 3
+        'networks': 3,
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -371,7 +365,7 @@ if __name__ == '__main__':
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options:#[:1]:
+            for option in options:
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
@@ -382,7 +376,7 @@ if __name__ == '__main__':
                     print('CI: {}'.format(ci))
 
                     path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
-                    data = load_regions(path)#[:1]
+                    data = load_regions(path)
 
                     data_initial = data.to_dict('records')
 
