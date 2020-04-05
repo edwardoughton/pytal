@@ -68,7 +68,7 @@ def test_estimate_site_upgrades(
 
     #total sites across all opterators
     setup_region[0]['sites_estimated_total'] = 100
-    setup_region[0]['sites_4g'] = 0
+    setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
     answer = estimate_site_upgrades(
@@ -83,7 +83,7 @@ def test_estimate_site_upgrades(
 
     #total sites across all operators
     setup_region[0]['sites_estimated_total'] = 200
-    setup_region[0]['sites_4g'] = 50
+    setup_region[0]['sites_4G'] = 50
 
     #200 sites in total across two operators, hence 100 existing sites for this MNO
     #50 existing 4G sites, hence only 50 needing to be upgraded to 4G
@@ -98,7 +98,7 @@ def test_estimate_site_upgrades(
 
     #total sites across all operators
     setup_region[0]['sites_estimated_total'] = 0
-    setup_region[0]['sites_4g'] = 0
+    setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
     answer = estimate_site_upgrades(setup_region[0],
@@ -112,7 +112,7 @@ def test_estimate_site_upgrades(
 
     #total sites across all operators
     setup_region[0]['sites_estimated_total'] = 100
-    setup_region[0]['sites_4g'] = 0
+    setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
     answer = estimate_site_upgrades(setup_region[0],
