@@ -36,6 +36,7 @@ def setup_option():
         'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'
     }
 
+
 @fixture(scope='function')
 def setup_option_high():
     return {
