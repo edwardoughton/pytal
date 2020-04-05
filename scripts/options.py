@@ -8,7 +8,7 @@ Written by Ed Oughton
 
 January 2020
 
-#strategy is defined based on generation_core_backhaul_sharing
+#strategy is defined based on generation_core_backhaul_sharing_subsidy_spectrum_tax
 
 """
 OPTIONS = {

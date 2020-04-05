@@ -25,8 +25,10 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
     lookup : dict
         A dictionary containing the lookup capacities.
     option : dict
-        Contains the scenario, strategy, and frequencies
-        with bandwidths.
+        Contains the scenario and strategy. The strategy string controls
+        the strategy variants being testes in the model and is defined based
+        on the type of technology generation, core and backhaul, and the level
+        of sharing, subsidy, spectrum and tax.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict
@@ -50,7 +52,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
 
         total_sites_required = site_density * region['area_km2']
 
-        region = estimate_site_upgrades(region, strategy, total_sites_required, country_parameters)
+        region = estimate_site_upgrades(region, option['strategy'], total_sites_required, country_parameters)
 
         total_network_cost = find_single_network_cost(
             country,
@@ -251,6 +253,10 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
     ----------
     region : dict
         Contains all regional data.
+    strategy : dict
+        The strategy string controls the strategy variants being tested in the
+        model and is defined based on the type of technology generation, core
+        and backhaul, and the level of sharing, subsidy, spectrum and tax.
     total_sites_required : int
         Number of sites needed to meet demand.
     country_parameters : dict
@@ -273,16 +279,20 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
 
         region['new_sites'] = int(round(total_sites_required - existing_sites))
 
-        if generation == '4G' and region['sites_4g'] > 0 :
-            region['upgraded_sites'] = existing_sites - region['sites_4g']
+        if existing_sites > 0:
+            if generation == '4G' and region['sites_4G'] > 0 :
+                region['upgraded_sites'] = existing_sites - region['sites_4G']
+            else:
+                region['upgraded_sites'] = existing_sites
         else:
-            region['upgraded_sites'] = existing_sites
+            region['upgraded_sites'] = 0
 
     else:
         region['new_sites'] = 0
 
-        if generation == '4G' and region['sites_4g'] > 0 :
-            region['upgraded_sites'] = total_sites_required - region['sites_4g']
+        if generation == '4G' and region['sites_4G'] > 0 :
+            to_upgrade = total_sites_required - region['sites_4G']
+            region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
             region['upgraded_sites'] = total_sites_required
 
