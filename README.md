@@ -1,6 +1,9 @@
 pytal
 ====
 
+[![Build Status](https://travis-ci.com/edwardoughton/pytal.svg?branch=master)](https://travis-ci.com/edwardoughton/pytal)
+[![Coverage Status](https://coveralls.io/repos/github/edwardoughton/pytal/badge.svg?branch=master)](https://coveralls.io/github/edwardoughton/pytal?branch=master)
+
 Python Telecommunications Assessment Library
 
 **pyTAL** enables the assessment of telecommunication infrastructure, with the ultimate aim of
