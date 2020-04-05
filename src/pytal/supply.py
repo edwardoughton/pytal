@@ -50,7 +50,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         site_density = find_site_density(region, option,
             country_parameters, lookup, ci)
 
-        total_sites_required = site_density * region['area_km2']
+        total_sites_required = (site_density * region['area_km2']) // 5 + (21 % 5 > 0) #last part always rounds up
 
         region = estimate_site_upgrades(region, option['strategy'], total_sites_required, country_parameters)
 
@@ -275,14 +275,18 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
         (country_parameters['proportion_of_sites'] / 100)
     )
 
+    existing_4G_sites = (
+        region['sites_4G'] *
+        (country_parameters['proportion_of_sites'] / 100)
+    )
+    print(total_sites_required, existing_sites, existing_4G_sites)
     if total_sites_required > existing_sites:
 
         region['new_sites'] = int(round(total_sites_required - existing_sites))
 
         if existing_sites > 0:
-            print(region)
-            if generation == '4G' and region['sites_4G'] > 0 :
-                region['upgraded_sites'] = existing_sites - region['sites_4G']
+            if generation == '4G' and existing_4G_sites > 0 :
+                region['upgraded_sites'] = existing_sites - existing_4G_sites
             else:
                 region['upgraded_sites'] = existing_sites
         else:
@@ -291,8 +295,8 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
     else:
         region['new_sites'] = 0
 
-        if generation == '4G' and region['sites_4G'] > 0 :
-            to_upgrade = total_sites_required - region['sites_4G']
+        if generation == '4G' and existing_4G_sites > 0 :
+            to_upgrade = total_sites_required - existing_4G_sites
             region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
             region['upgraded_sites'] = total_sites_required
