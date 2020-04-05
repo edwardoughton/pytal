@@ -12,6 +12,7 @@ def setup_region():
     'population_km2': 5000,
     'decile': 100,
     'geotype': 'urban',
+    'demand_mbps_km2': 5000
     }]
 
 
