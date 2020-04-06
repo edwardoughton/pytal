@@ -37,32 +37,32 @@ def assess(country, regions, option, global_parameters, country_parameters):
 
     strategy = option['strategy']
 
-    subsidy = option['strategy'].split('_')[4]
+    regions = sorted(regions, key=lambda k: k['population_km2'], reverse=True)
+
+    available_for_cross_subsidy = 0
 
     for region in regions:
 
         # npv spectrum cost
-        region['total_spectrum_cost'] = get_spectrum_costs(region, option['strategy'], country_parameters)
+        region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'], country_parameters)
 
         #tax on investment
-        region['total_tax'] = calculate_tax(region, strategy, country_parameters)
+        region['tax'] = calculate_tax(region, strategy, country_parameters)
 
         #profit margin value calculated on all costs + taxes
-        region['total_profit'] = calculate_profit(region, country_parameters)
-
-        #revenue cost ratio = expenses / revenue
-        region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
-
-        if not subsidy == 'baseline':
-            subsidy_level = 'subsidy_{}'.format(subsidy)
-            region['total_network_cost'] = region['total_network_cost'] * (1 - (country_parameters['financials'][subsidy_level] / 100))
+        region['profit_margin'] = calculate_profit(region, country_parameters)
 
         region['total_cost'] = (
-            region['total_network_cost'] +
-            region['total_spectrum_cost'] +
-            region['total_tax'] +
-            region['total_profit']
+            region['network_cost'] +
+            region['spectrum_cost'] +
+            region['tax'] +
+            region['profit_margin']
         )
+
+        region, available_for_cross_subsidy = estimate_subsidies(region, available_for_cross_subsidy)
+        print(available_for_cross_subsidy)
+        #revenue cost ratio = expenses / revenue
+        region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
 
         output.append(region)
 
@@ -109,10 +109,7 @@ def calculate_tax(region, strategy, country_parameters):
 
     tax_rate = country_parameters['financials'][tax_rate]
 
-    investment = (
-        region['total_network_cost'] +
-        region['total_spectrum_cost']
-    )
+    investment = region['network_cost']
 
     tax = investment * (tax_rate / 100)
 
@@ -125,9 +122,9 @@ def calculate_profit(region, country_parameters):
 
     """
     investment = (
-        region['total_network_cost'] +
-        region['total_spectrum_cost'] +
-        region['total_tax']
+        region['network_cost'] +
+        region['spectrum_cost'] +
+        region['tax']
     )
 
     profit = investment * (country_parameters['financials']['profit_margin'] / 100)
@@ -135,18 +132,69 @@ def calculate_profit(region, country_parameters):
     return profit
 
 
+def estimate_subsidies(region, available_for_cross_subsidy):
+    """
+    Estimates either the contribution to cross-subsidies, or the
+    quantity of subsidy required.
+
+    Parameters
+    ----------
+    region : Dict
+        Contains all variable for a single region.
+    available_for_cross_subsidy : int
+        The amount of capital available for cross-subsidization.
+
+    Returns
+    -------
+    region : Dict
+        Contains all variable for a single region.
+    available_for_cross_subsidy : int
+        The amount of capital available for cross-subsidization.
+
+    """
+    excess = region['total_revenue'] - region['total_cost']
+
+    if excess > 0:
+        available_for_cross_subsidy += excess
+        region['available_cross_subsidy'] = excess
+        region['used_cross_subsidy'] = 0
+    else:
+        if available_for_cross_subsidy >= abs(excess):
+            region['available_cross_subsidy'] = 0
+            region['used_cross_subsidy'] = abs(excess)
+            available_for_cross_subsidy -= abs(excess)
+        elif 0 < available_for_cross_subsidy < abs(excess):
+            region['available_cross_subsidy'] = 0
+            region['used_cross_subsidy'] = available_for_cross_subsidy
+            available_for_cross_subsidy = 0
+        else:
+            region['available_cross_subsidy'] = 0
+            region['used_cross_subsidy'] = 0
+
+    required_state_subsidy = (region['total_cost'] -
+        (region['total_revenue'] + region['used_cross_subsidy']))
+
+    if required_state_subsidy > 0:
+        region['required_state_subsidy'] = required_state_subsidy
+    else:
+        region['required_state_subsidy'] = 0
+
+    return region, available_for_cross_subsidy
+
+
 def calculate_benefit_cost_ratio(region, country_parameters):
     """
+    Calculate the benefit cost ratio.
 
     """
     cost = (
-        region['total_network_cost'] +
-        region['total_spectrum_cost'] +
-        region['total_tax'] +
-        region['total_profit']
+        region['network_cost'] +
+        region['spectrum_cost'] +
+        region['tax'] +
+        region['profit_margin']
     )
 
-    revenue = region['total_revenue']
+    revenue = region['total_revenue'] + region['used_cross_subsidy']
 
     bcr = revenue / cost
 

@@ -54,7 +54,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
 
         region = estimate_site_upgrades(region, option['strategy'], total_sites_required, country_parameters)
 
-        total_network_cost = find_single_network_cost(
+        network_cost = find_single_network_cost(
             country,
             region,
             option['strategy'],
@@ -69,8 +69,8 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         region['strategy'] = option['strategy']
         region['confidence'] = ci
         region['site_density'] = site_density
-        region['total_network_cost'] = total_network_cost
-        # print('----total network cost {}'.format(total_network_cost))
+        region['network_cost'] = network_cost
+        # print('----total network cost {}'.format(network_cost))
         output_regions.append(region)
 
         # for cost_result in cost_results:
@@ -279,7 +279,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
         region['sites_4G'] *
         (country_parameters['proportion_of_sites'] / 100)
     )
-    print(total_sites_required, existing_sites, existing_4G_sites)
+
     if total_sites_required > existing_sites:
 
         region['new_sites'] = int(round(total_sites_required - existing_sites))
