@@ -182,4 +182,4 @@ def test_estimate_supply(
     )
 
     assert round(answer[0]['site_density'], 1) == 0.9
-    assert answer[0]['total_network_cost'] == 102150
+    assert answer[0]['network_cost'] == 102150
