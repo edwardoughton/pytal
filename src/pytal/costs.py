@@ -560,7 +560,7 @@ def get_backhaul_costs(country, region, backhaul, costs, backhaul_lut):
         cost = cost_per_meter * distance_m
 
     else:
-        print('Did not recognise the backhaul technology given')
+        return 'Did not recognise the backhaul technology'
 
     return cost
 
@@ -617,8 +617,7 @@ def get_core_costs(country, region, asset_type, costs, core_lut, core):
 
         return cost
 
-    else:
-        print('Did not recognise core asset type')
+    return 'Did not recognise core asset type'
 
 
 def discount_capex_and_opex(capex, global_parameters):
@@ -705,11 +704,8 @@ def calc_costs(cost_structure, global_parameters):
                     assets_counted.append(asset_name1)
 
                 else:
-                    print('Did not recognize cost type')
+                    return 'Did not recognize cost type'
 
-    # if len(assets_counted) < len(cost_structure):
-    #     print('Asset costs missing: Check names of assets in calc_cost function')
-    # print(assets_counted, cost_structure)
     return total_cost
 
 

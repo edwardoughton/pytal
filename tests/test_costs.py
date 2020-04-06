@@ -272,6 +272,9 @@ def test_get_backhaul_costs(setup_region, setup_costs, setup_backhaul_lut):
     assert get_backhaul_costs('MWI', setup_region[0], 'fiber',
         setup_costs, {'MWI.1.1.1_1': 1000}) == (setup_costs['fiber_backhaul_urban_m'] * 1000)
 
+    assert get_backhaul_costs('MWI', setup_region[0], 'incorrect_baclhaul_tech_name',
+        setup_costs, {'MWI.1.1.1_1': 1000}) == 'Did not recognise the backhaul technology'
+
 
 def test_get_core_costs(setup_region, setup_costs, setup_core_lut):
 
@@ -286,6 +289,9 @@ def test_get_core_costs(setup_region, setup_costs, setup_core_lut):
 
     assert get_core_costs('MWI', setup_region[0], 'regional_nodes', setup_costs,
         setup_core_lut, 'epc') == (setup_costs['regional_nodes_{}'.format('epc')] * 2)
+
+    assert get_core_costs('MWI', setup_region[0], 'incorrrect_asset_name', setup_costs,
+        setup_core_lut, 'epc') == 'Did not recognise core asset type'
 
 
 def test_discount_capex_and_opex(setup_global_parameters):
