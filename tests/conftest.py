@@ -56,6 +56,12 @@ def setup_global_parameters():
         'sectorization': 3,
         'confidence': [1, 10, 50],
         'networks': 2,
+        'cots_processing_split': 6,
+        'io_n2_n3_split': 6,
+        'low_latency_switch_split': 6,
+        'rack_split': 6,
+        'cloud_power_supply_converter_split': 6,
+        'software_split': 6,
     }
 
 
@@ -154,21 +160,37 @@ def setup_costs():
         #all costs in $USD
         'single_sector_antenna': 1500,
         'single_remote_radio_unit': 4000,
-        'single_baseband_unit': 10000,
+        'io_fronthaul': 1500,
+        'processing': 1500,
+        'io_s1_x2': 1500,
+        'control_unit': 1500,
+        'cooling_fans': 250,
+        'distributed_power_supply_converter': 250,
+        'power_generator_battery_system': 5000,
+        'bbu_cabinet': 500,
+        'fiber_fronthaul_urban_m': 10,
+        'fiber_fronthaul_suburban_m': 5,
+        'fiber_fronthaul_rural_m': 2,
+        'cots_processing': 500,
+        'io_n2_n3': 1500,
+        'low_latency_switch': 500,
+        'rack': 500,
+        'cloud_power_supply_converter': 1000,
+        'software': 50,
         'tower': 10000,
         'civil_materials': 5000,
-        'transportation': 10000,
+        'transportation': 5000,
         'installation': 5000,
-        'site_rental': 9600,
-        'power_generator_battery_system': 5000,
-        'high_speed_backhaul_hub': 15000,
+        'site_rental_urban': 9600,
+        'site_rental_suburban': 4000,
+        'site_rental_rural': 2000,
         'router': 2000,
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 5,
+        'fiber_backhaul_urban_m': 10,
         'fiber_backhaul_suburban_m': 5,
-        'fiber_backhaul_rural_m': 5,
+        'fiber_backhaul_rural_m': 2,
         'core_nodes_epc': 100000,
         'core_nodes_nsa': 150000,
         'core_nodes_sa': 200000,
@@ -209,7 +231,7 @@ def setup_ci():
 @fixture(scope='function')
 def setup_backhaul_lut():
     return {
-        'MWI.1.1.1_1': 1000
+        'MWI.1.1.1_1': 40
     }
 
 

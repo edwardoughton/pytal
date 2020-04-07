@@ -480,8 +480,8 @@ def get_regional_data(country):
 
     path_output = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
 
-    if os.path.exists(path_output):
-        return print('Regional data already exists')
+    # if os.path.exists(path_output):
+    #     return print('Regional data already exists')
 
     path_country = os.path.join(DATA_INTERMEDIATE, iso3,
         'national_outline.shp')
@@ -571,7 +571,9 @@ def get_regional_data(country):
             'coverage_4G_km2': round(coverage_4G_km2 / area_km2 * 100, 1),
         })
 
-    results = estimate_sites(results, iso3)
+    # backhaul_lut = estimate_backhaul(iso3, country['region'], '2025')
+
+    results = estimate_sites(results, iso3)#, backhaul_lut)
 
     results_df = pd.DataFrame(results)
 
@@ -582,7 +584,7 @@ def get_regional_data(country):
     return print('Completed night lights data querying')
 
 
-def estimate_sites(data, iso3):
+def estimate_sites(data, iso3):#, backhaul_lut):
     """
 
     """
@@ -607,9 +609,12 @@ def estimate_sites(data, iso3):
 
     towers_per_pop = towers / population_covered
 
+    # tower_backhaul_lut = estimate_backhaul_type(towers, backhaul_lut)
+
     data = sorted(data, key=lambda k: k['population_km2'], reverse=True)
 
     covered_pop_so_far = 0
+    # towers_so_far = 0
 
     for region in data:
 
@@ -618,10 +623,20 @@ def estimate_sites(data, iso3):
             sites_estimated_total = region['population'] * towers_per_pop
             sites_estimated_km2 = region['population_km2'] * towers_per_pop
 
+            # if towers_so_far < tower_backhaul_lut['fiber']:
+            #     backhaul = 'fiber'
+            # elif tower_backhaul_lut['fiber'] < towers_so_far < tower_backhaul_lut['copper']:
+            #     backhaul = 'copper'
+            # elif tower_backhaul_lut['copper'] < towers_so_far < tower_backhaul_lut['microwave']:
+            #     backhaul = 'microwave'
+            # elif tower_backhaul_lut['microwave'] < towers_so_far:
+            #     backhaul = 'satellite'
+
         else:
 
             sites_estimated_total = 0
             sites_estimated_km2 = 0
+            # backhaul = None
 
         output.append({
                 'GID_0': region['GID_0'],
@@ -638,11 +653,59 @@ def estimate_sites(data, iso3):
                 'sites_estimated_km2': sites_estimated_km2,
                 'sites_3G': region['coverage_3G_km2'] * sites_estimated_km2,
                 'sites_4G': region['coverage_4G_km2'] * sites_estimated_km2,
+                # 'backhaul': backhaul,
             })
 
         covered_pop_so_far += region['population']
+        # towers_so_far += sites_estimated_total
 
     return output
+
+
+def estimate_backhaul(iso3, region, year):
+    """
+
+    """
+    output = []
+
+    path = os.path.join(BASE_PATH, '..', 'backhaul', 'data_inputs', 'data_input.csv')
+    backhaul_lut = pd.read_csv(path)
+    backhaul_lut = backhaul_lut.to_dict('records')
+
+    for item in backhaul_lut:
+        if region == item['Region'] and int(item['Year']) == int(year):
+            output.append({
+                'tech': item['Technology'],
+                'percentage': int(item['Value']),
+            })
+
+    return output
+
+
+# def estimate_backhaul_type(towers, backhaul_lut):
+#     """
+#     Estimate backhaul type.
+
+#     """
+#     output = {}
+
+#     preference = [
+#         'fiber',
+#         'copper',
+#         'microwave',
+#         'satellite'
+#     ]
+
+#     towers_so_far = 0
+
+#     for tech in preference:
+#         for item in backhaul_lut:
+#             if tech == item['tech'].lower():
+#                 tower_count = int(round(towers * (item['percentage'] / 100)))
+#                 output[tech] = tower_count + towers_so_far
+#                 towers_so_far += tower_count
+
+#     return output
 
 
 def area_of_polygon(geom):
@@ -839,6 +902,7 @@ def estimate_core_nodes(iso3, pop_density_km2, settlement_size):
 
     for index, item in enumerate(nodes.to_dict('records')):
         output.append({
+
             'type': 'Feature',
             'geometry': mapping(item['geometry']),
             'properties': {
@@ -1590,31 +1654,31 @@ if __name__ == '__main__':
     countries = [
         # #cluster 1
         # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-        #     'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'S&SE Asia', 'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         # #cluster 2
         # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'LAC', 'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         # #cluster 3
         # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
-        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'LAC', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         # # #cluster 4
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         # #cluster 5
         # {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'MENA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         # # #cluster 6
         # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
+        #     'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
         #     'subs_per_user': 1.8},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
-            'pop_density_km2': 1000, 'settlement_size': 5000, 'subs_growth': 1.5,
-            'subs_per_user': 1.8},
+            'region': 'SSA', 'pop_density_km2': 1000, 'settlement_size': 5000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8},
 
         # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
         # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},

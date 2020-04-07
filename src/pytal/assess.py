@@ -60,7 +60,7 @@ def assess(country, regions, option, global_parameters, country_parameters):
         )
 
         region, available_for_cross_subsidy = estimate_subsidies(region, available_for_cross_subsidy)
-        print(available_for_cross_subsidy)
+
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
 

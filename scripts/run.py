@@ -236,7 +236,7 @@ def write_results(regional_results, folder):
         'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
 
     path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
-    national_results.to_csv(path,index=False)
+    national_results.to_csv(path, index=True)
 
     print('Writing decile results')
     decile_results = pd.DataFrame(regional_results)
@@ -249,7 +249,7 @@ def write_results(regional_results, folder):
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
-    decile_results.to_csv(path, index=False)
+    decile_results.to_csv(path, index=True)
 
     print('Writing regional results')
     regional_results = pd.DataFrame(regional_results)
@@ -261,7 +261,7 @@ def write_results(regional_results, folder):
     ]]
 
     path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
-    regional_results.to_csv(path, index=False)
+    regional_results.to_csv(path, index=True)
 
 
 if __name__ == '__main__':
@@ -275,29 +275,45 @@ if __name__ == '__main__':
         #all costs in $USD
         'single_sector_antenna': 1500,
         'single_remote_radio_unit': 4000,
-        'single_baseband_unit': 10000,
+        'io_fronthaul': 1500,
+        'processing': 1500,
+        'io_s1_x2': 1500,
+        'control_unit': 1500,
+        'cooling_fans': 250,
+        'distributed_power_supply_converter': 250,
+        'power_generator_battery_system': 5000,
+        'bbu_cabinet': 500,
+        'fiber_fronthaul_urban_m': 10,
+        'fiber_fronthaul_suburban_m': 5,
+        'fiber_fronthaul_rural_m': 2,
+        'cots_processing': 500,
+        'io_n2_n3': 1500,
+        'low_latency_switch': 500,
+        'rack': 500,
+        'cloud_power_supply_converter': 1000,
+        'software': 50,
         'tower': 10000,
         'civil_materials': 5000,
-        'transportation': 10000,
+        'transportation': 5000,
         'installation': 5000,
-        'site_rental': 9600,
-        'power_generator_battery_system': 5000,
-        'high_speed_backhaul_hub': 15000,
+        'site_rental_urban': 9600,
+        'site_rental_suburban': 4000,
+        'site_rental_rural': 2000,
         'router': 2000,
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 15,
-        'fiber_backhaul_suburban_m': 10,
-        'fiber_backhaul_rural_m': 5,
-        'core_nodes_epc': 50000,
-        'core_nodes_nsa': 50000,
-        'core_nodes_sa': 100000,
-        'core_edges': 10,
-        'regional_nodes_epc': 50000,
-        'regional_nodes_nsa': 100000,
-        'regional_nodes_sa': 150000,
-        'regional_edges': 8,
+        'fiber_backhaul_urban_m': 10,
+        'fiber_backhaul_suburban_m': 5,
+        'fiber_backhaul_rural_m': 2,
+        'core_nodes_epc': 100000,
+        'core_nodes_nsa': 150000,
+        'core_nodes_sa': 200000,
+        'core_edges': 20,
+        'regional_nodes_epc': 100000,
+        'regional_nodes_nsa': 150000,
+        'regional_nodes_sa': 200000,
+        'regional_edges': 10,
     }
 
     GLOBAL_PARAMETERS = {
@@ -308,6 +324,12 @@ if __name__ == '__main__':
         'sectorization': 3,
         'confidence': [50], #[5, 50, 95],
         'networks': 3,
+        'cots_processing_split': 6,
+        'io_n2_n3_split': 6,
+        'low_latency_switch_split': 6,
+        'rack_split': 6,
+        'cloud_power_supply_converter_split': 6,
+        'software_split': 6,
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -317,17 +339,17 @@ if __name__ == '__main__':
 
     countries = [
         #cluster 1
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
-        #cluster 2
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
-        # #cluster 3
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
-        # #cluster 4
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
-        # #cluster 5
-        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1},
-        # #cluster 6
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        # #cluster 2
+        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
+        # # #cluster 3
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
+        # # #cluster 4
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
+        # # #cluster 5
+        # {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1},
+        # # #cluster 6
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
         ]
 
