@@ -47,15 +47,19 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
 
     for region in regions:
 
-        site_density = find_site_density(region, option,
+        region['site_density'] = find_site_density(region, option,
             country_parameters, lookup, ci)
 
-        total_sites_required = (site_density * region['area_km2']) // 5 + (21 % 5 > 0) #last part always rounds up
+        total_sites_required = (region['site_density'] * region['area_km2']) // 5 + (21 % 5 > 0) #last part always rounds up
 
-        region = estimate_site_upgrades(region, option['strategy'], total_sites_required, country_parameters)
+        region = estimate_site_upgrades(
+            region,
+            option['strategy'],
+            total_sites_required,
+            country_parameters
+        )
 
         network_cost = find_single_network_cost(
-            country,
             region,
             option['strategy'],
             costs,
@@ -68,17 +72,11 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         region['scenario'] = option['scenario']
         region['strategy'] = option['strategy']
         region['confidence'] = ci
-        region['site_density'] = site_density
         region['network_cost'] = network_cost
-        # print('----total network cost {}'.format(network_cost))
+
         output_regions.append(region)
 
-        # for cost_result in cost_results:
-        #     cost_result['GID_0'] = iso3
-        #     cost_result['GID_id'] = region['GID_id']
-        #     output_costs.append(cost_result)
-
-    return output_regions#, output_costs
+    return output_regions
 
 
 def find_site_density(region, option, country_parameters, lookup, ci):
