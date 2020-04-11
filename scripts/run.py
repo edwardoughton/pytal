@@ -229,7 +229,7 @@ def write_results(regional_results, folder):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'new_sites', 'total_revenue', 'total_cost',
+        'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     national_results = national_results.groupby([
@@ -242,7 +242,7 @@ def write_results(regional_results, folder):
     decile_results = pd.DataFrame(regional_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'new_sites', 'total_revenue', 'total_cost',
+        'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     decile_results = decile_results.groupby([
@@ -257,7 +257,7 @@ def write_results(regional_results, folder):
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
         'population_km2', 'upgraded_sites',
-        'new_sites', 'total_revenue', 'total_cost',
+        'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
 
     path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
@@ -324,8 +324,10 @@ if __name__ == '__main__':
         'sectorization': 3,
         'confidence': [50], #[5, 50, 95],
         'networks': 3,
-        'cots_processing_split': 6,
-        'io_n2_n3_split': 6,
+        'io_n2_n3': 1,
+        'cots_processing_split_urban': 2,
+        'cots_processing_split_suburban': 4,
+        'cots_processing_split_rural': 16,
         'low_latency_switch_split': 6,
         'rack_split': 6,
         'cloud_power_supply_converter_split': 6,
