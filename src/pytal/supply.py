@@ -59,6 +59,8 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             country_parameters
         )
 
+        region = estimate_backhaul_upgrades(region, option['strategy'])
+
         network_cost = find_single_network_cost(
             region,
             option['strategy'],
@@ -93,28 +95,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     generation = option['strategy'].split('_')[0]
 
     frequencies = country_parameters['frequencies']
-    # frequencies = {
-    #     '4G':[
-    #         {
-    #             'frequency': 800,
-    #             'bandwidth': 10,
-    #         },
-    #         {
-    #             'frequency': 2600,
-    #             'bandwidth': 10,
-    #         },
-    #     ],
-    #     '5G':[
-    #         {
-    #             'frequency': 700,
-    #             'bandwidth': 10,
-    #         },
-    #         {
-    #             'frequency': 3500,
-    #             'bandwidth': 50,
-    #         },
-    #     ],
-    # }
+
     frequencies = frequencies[generation]
 
     ci = str(ci)
@@ -298,5 +279,51 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
             region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
             region['upgraded_sites'] = total_sites_required
+
+    return region
+
+
+def estimate_backhaul_upgrades(region, strategy):
+    """
+    Estimates the number of backhaul links needing to be upgraded.
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+    strategy : dict
+        The strategy string controls the strategy variants being tested in the
+        model and is defined based on the type of technology generation, core
+        and backhaul, and the level of sharing, subsidy, spectrum and tax.
+    country_parameters : dict
+        All country specific parameters.
+
+    Returns
+    -------
+    region : dict
+        Contains all regional data.
+
+    """
+    backhaul = strategy.split('_')[2]
+
+    all_sites = region['new_sites'] + region['upgraded_sites']
+
+    if backhaul == 'fiber':
+
+        existing_fiber = region['backhaul_fiber']
+
+        if existing_fiber < all_sites:
+            region['backhaul_new'] = all_sites - existing_fiber
+        else:
+            region['backhaul_new'] = 0
+
+    elif backhaul == 'microwave':
+
+        existing_backhaul = region['backhaul_microwave'] + region['backhaul_fiber']
+
+        if existing_backhaul < all_sites:
+            region['backhaul_new'] = all_sites - existing_backhaul
+        else:
+            region['backhaul_new'] = 0
 
     return region

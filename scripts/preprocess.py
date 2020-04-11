@@ -23,6 +23,7 @@ import networkx as nx
 from rtree import index
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import random
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -566,14 +567,14 @@ def get_regional_data(country):
             'population': population_summation,
             'area_km2': area_km2,
             'population_km2': population_summation / area_km2,
-            'coverage_GSM_km2': round(coverage_GSM_km2 / area_km2 * 100, 1),
-            'coverage_3G_km2': round(coverage_3G_km2 / area_km2 * 100, 1),
-            'coverage_4G_km2': round(coverage_4G_km2 / area_km2 * 100, 1),
+            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100, 1),
+            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100, 1),
+            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100, 1),
         })
 
-    # backhaul_lut = estimate_backhaul(iso3, country['region'], '2025')
+    backhaul_lut = estimate_backhaul(iso3, country['region'], '2025')
 
-    results = estimate_sites(results, iso3)#, backhaul_lut)
+    results = estimate_sites(results, iso3, backhaul_lut)
 
     results_df = pd.DataFrame(results)
 
@@ -584,7 +585,7 @@ def get_regional_data(country):
     return print('Completed night lights data querying')
 
 
-def estimate_sites(data, iso3):#, backhaul_lut):
+def estimate_sites(data, iso3, backhaul_lut):
     """
 
     """
@@ -609,34 +610,41 @@ def estimate_sites(data, iso3):#, backhaul_lut):
 
     towers_per_pop = towers / population_covered
 
-    # tower_backhaul_lut = estimate_backhaul_type(towers, backhaul_lut)
+    tower_backhaul_lut = estimate_backhaul_type(backhaul_lut)
 
     data = sorted(data, key=lambda k: k['population_km2'], reverse=True)
 
     covered_pop_so_far = 0
-    # towers_so_far = 0
 
     for region in data:
+
+        backhaul_fiber = 0
+        backhaul_copper = 0
+        backhaul_microwave = 0
+        backhaul_satellite = 0
 
         if covered_pop_so_far < population_covered:
 
             sites_estimated_total = region['population'] * towers_per_pop
             sites_estimated_km2 = region['population_km2'] * towers_per_pop
 
-            # if towers_so_far < tower_backhaul_lut['fiber']:
-            #     backhaul = 'fiber'
-            # elif tower_backhaul_lut['fiber'] < towers_so_far < tower_backhaul_lut['copper']:
-            #     backhaul = 'copper'
-            # elif tower_backhaul_lut['copper'] < towers_so_far < tower_backhaul_lut['microwave']:
-            #     backhaul = 'microwave'
-            # elif tower_backhaul_lut['microwave'] < towers_so_far:
-            #     backhaul = 'satellite'
+            for i in range(1, int(round(sites_estimated_total)) + 1):
+
+                num = random.uniform(0, 1)
+
+                if num < tower_backhaul_lut['fiber']:
+                    backhaul_fiber += 1
+                elif tower_backhaul_lut['fiber'] < num < tower_backhaul_lut['copper']:
+                    backhaul_copper += 1
+                elif tower_backhaul_lut['copper'] < num < tower_backhaul_lut['microwave']:
+                    backhaul_microwave += 1
+                elif tower_backhaul_lut['microwave'] < num:
+                    backhaul_satellite += 1
 
         else:
 
             sites_estimated_total = 0
             sites_estimated_km2 = 0
-            # backhaul = None
 
         output.append({
                 'GID_0': region['GID_0'],
@@ -646,18 +654,20 @@ def estimate_sites(data, iso3):#, backhaul_lut):
                 'population': region['population'],
                 'area_km2': region['area_km2'],
                 'population_km2': region['population_km2'],
-                'coverage_GSM_km2': region['coverage_GSM_km2'],
-                'coverage_3G_km2': region['coverage_3G_km2'],
-                'coverage_4G_km2': region['coverage_4G_km2'],
+                'coverage_GSM_percent': region['coverage_GSM_percent'],
+                'coverage_3G_percent': region['coverage_3G_percent'],
+                'coverage_4G_percent': region['coverage_4G_percent'],
                 'sites_estimated_total': sites_estimated_total,
                 'sites_estimated_km2': sites_estimated_km2,
-                'sites_3G': region['coverage_3G_km2'] * sites_estimated_km2,
-                'sites_4G': region['coverage_4G_km2'] * sites_estimated_km2,
-                # 'backhaul': backhaul,
+                'sites_3G': sites_estimated_total * (region['coverage_3G_percent'] /100),
+                'sites_4G': sites_estimated_total * (region['coverage_4G_percent'] /100),
+                'backhaul_fiber': backhaul_fiber,
+                'backhaul_copper': backhaul_copper,
+                'backhaul_microwave': backhaul_microwave,
+                'backhaul_satellite': backhaul_satellite,
             })
 
         covered_pop_so_far += region['population']
-        # towers_so_far += sites_estimated_total
 
     return output
 
@@ -682,30 +692,30 @@ def estimate_backhaul(iso3, region, year):
     return output
 
 
-# def estimate_backhaul_type(towers, backhaul_lut):
-#     """
-#     Estimate backhaul type.
+def estimate_backhaul_type(backhaul_lut):
+    """
+    Estimate backhaul type.
 
-#     """
-#     output = {}
+    """
+    output = {}
 
-#     preference = [
-#         'fiber',
-#         'copper',
-#         'microwave',
-#         'satellite'
-#     ]
+    preference = [
+        'fiber',
+        'copper',
+        'microwave',
+        'satellite'
+    ]
 
-#     towers_so_far = 0
+    perc_so_far = 0
 
-#     for tech in preference:
-#         for item in backhaul_lut:
-#             if tech == item['tech'].lower():
-#                 tower_count = int(round(towers * (item['percentage'] / 100)))
-#                 output[tech] = tower_count + towers_so_far
-#                 towers_so_far += tower_count
+    for tech in preference:
+        for item in backhaul_lut:
+            if tech == item['tech'].lower():
+                perc = item['percentage']
+                output[tech] = (perc + perc_so_far) / 100
+                perc_so_far += perc
 
-#     return output
+    return output
 
 
 def area_of_polygon(geom):
