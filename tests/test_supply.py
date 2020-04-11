@@ -1,6 +1,6 @@
 import pytest
 from pytal.demand import estimate_demand
-from pytal.supply import estimate_supply, find_site_density, estimate_site_upgrades
+from pytal.supply import estimate_supply, find_site_density, estimate_site_upgrades, estimate_backhaul_upgrades
 
 
 def test_find_site_density(
@@ -166,8 +166,12 @@ def test_estimate_supply(
     ):
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 0
+    setup_region[0]['sites_estimated_total'] = 100
     setup_region[0]['sites_4G'] = 0
+    setup_region[0]['backhaul_fiber'] = 0
+    setup_region[0]['backhaul_copper'] = 0
+    setup_region[0]['backhaul_microwave'] = 0
+    setup_region[0]['backhaul_satellite'] = 0
 
     answer = estimate_supply('MWI',
         setup_region,
@@ -182,4 +186,50 @@ def test_estimate_supply(
     )
 
     assert round(answer[0]['site_density'], 1) == 0.9
-    assert answer[0]['network_cost'] == 70551
+    # assert answer[0]['network_cost'] == 44575
+
+
+def test_estimate_backhaul_upgrades(
+    setup_region,
+    ):
+
+    setup_region[0]['new_sites'] = 50
+    setup_region[0]['upgraded_sites'] = 50
+
+    setup_region[0]['backhaul_fiber'] = 20
+    setup_region[0]['backhaul_copper'] = 20
+    setup_region[0]['backhaul_microwave'] = 50
+    setup_region[0]['backhaul_satellite'] = 10
+
+    answer = estimate_backhaul_upgrades(
+        setup_region[0],
+        '4G_epc_fiber_baseline_baseline_baseline_baseline',
+    )
+
+    assert answer['backhaul_new'] == 80
+
+    answer = estimate_backhaul_upgrades(
+        setup_region[0],
+        '4G_epc_microwave_baseline_baseline_baseline_baseline',
+    )
+
+    assert answer['backhaul_new'] == 30
+
+    setup_region[0]['backhaul_fiber'] = 100
+
+    answer = estimate_backhaul_upgrades(
+        setup_region[0],
+        '4G_epc_fiber_baseline_baseline_baseline_baseline',
+    )
+
+    assert answer['backhaul_new'] == 0
+
+    setup_region[0]['backhaul_fiber'] = 0
+    setup_region[0]['backhaul_microwave'] = 100
+
+    answer = estimate_backhaul_upgrades(
+        setup_region[0],
+        '4G_epc_microwave_baseline_baseline_baseline_baseline',
+    )
+
+    assert answer['backhaul_new'] == 0
