@@ -15,27 +15,25 @@ data <- select(data, country, scenario, strategy, confidence, decile, area_km2, 
 
 data <- data[(data$confidence == 50),]
 
-data$country = factor(data$country, levels=c("PAK",
-                                             "MEX",
-                                             "PER",
-                                             "UGA",
-                                             "DZA",
+data$country = factor(data$country, levels=c("UGA",
                                              "KEN",
-                                             "SEN"),
-                       labels=c("Pakistan (C1)",
-                                "Mexico (C2)",
-                                "Peru (C3)",
-                                "Uganda (C4)",
-                                "Algeria (C5)",
-                                "Kenya (C6)",
-                                'Senegal (C6)'))
+                                             "SEN",
+                                             "PAK",
+                                             "PER",
+                                             "MEX"),
+                                   labels=c("Uganda (C1)",
+                                            "Kenya (C2)",
+                                            "Senegal (C2)",
+                                            "Pakistan (C3)",
+                                            "Peru (C5)",
+                                            "Mexico (C6)"))
 
 data$scenario = factor(data$scenario, levels=c("S1_25_5_1",
                                                "S2_100_20_5",
                                                "S3_400_80_20"),
-                                     labels=c("S1 (50 Mbps)",
+                                     labels=c("S1 (25 Mbps)",
                                               "S2 (100 Mbps)",
-                                              "S3 (200 Mbps)"))
+                                              "S3 (400 Mbps)"))
 
 data$strategy = factor(data$strategy, levels=c("4G_epc_microwave_baseline_baseline_baseline_baseline",
                                                "4G_epc_fiber_baseline_baseline_baseline_baseline",
@@ -50,7 +48,8 @@ data <- data[order(data$country, data$scenario, data$strategy, data$decile),]
 
 data <- data %>%
   group_by(country, scenario, strategy) %>%
-  mutate(cost_sum_bn = cumsum(round(total_cost / 1e9, 2)))
+  mutate(cost_sum_bn = cumsum(round(total_cost / 1e9, 2)),
+         revenue_sum_bn = cumsum(round(total_revenue / 1e9, 2)),)
 
 panel <- ggplot(data, aes(x=decile, y=cost_sum_bn, colour=strategy, group=strategy)) + 
   geom_line() +
@@ -68,6 +67,31 @@ path = file.path(folder, 'figures', 'results_technology_options.png')
 ggsave(path, units="in", width=8, height=11.5, dpi=300)
 print(panel)
 dev.off()
+
+data <- data[order(data$country, data$scenario, data$strategy, data$decile),]
+
+data <- data %>%
+  group_by(country, scenario, strategy) %>%
+  mutate(cost_sum_bn = cumsum(round(total_cost / 1e9, 2)))
+
+panel <- ggplot(data, aes(x=decile, y=cost_sum_bn, colour=strategy, group=strategy)) + 
+  geom_line() +
+  scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
+  labs(title = "Impact of Technology", colour=NULL,
+       subtitle = "Results reported by scenario, decile and country",
+       x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
+  scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
+  theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  guides(colour=guide_legend(ncol=4)) +
+  facet_wrap(scenario~country, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
+
+path = file.path(folder, 'figures', 'results_technology_options.png')
+ggsave(path, units="in", width=8, height=11.5, dpi=300)
+print(panel)
+dev.off()
+
+
 ##################
 
 #load data
