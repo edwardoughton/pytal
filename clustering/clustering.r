@@ -99,6 +99,20 @@ data <- na.omit(data)
 #rename variable to cluster
 names(data)[names(data) == 'fit.cluster'] <- 'cluster'
 
+cluster_1 <- data$cluster[data$country=='uganda'][1]
+cluster_2 <- data$cluster[data$country=='kenya'][1]
+cluster_3 <- data$cluster[data$country=='pakistan'][1]
+cluster_4 <- data$cluster[data$country=='albania'][1]
+cluster_5 <- data$cluster[data$country=='peru'][1]
+cluster_6 <- data$cluster[data$country=='mexico'][1] 
+
+data$cluster[data$cluster== cluster_1] <- 'C1'
+data$cluster[data$cluster== cluster_2] <- 'C2'
+data$cluster[data$cluster== cluster_3] <- 'C3'
+data$cluster[data$cluster== cluster_4] <- 'C4'
+data$cluster[data$cluster== cluster_5] <- 'C5'
+data$cluster[data$cluster== cluster_6] <- 'C6'
+
 #select desired columns
 long <- select(data, country, coverage_4g, pop_density, gdp_per_cap, cluster, income, region, ISO_3digit)
 
@@ -110,8 +124,8 @@ long$metric = factor(long$metric, levels=c("gdp_per_cap", "pop_density", "covera
                                   labels=c("GDP per capita", "Population Density", "4G Coverage"))
 long$income = factor(long$income, levels=c("Low income", "Lower middle income", "Upper middle income"),
                                   labels=c("Low income", "Lower middle income", "Upper middle income"))
-long$cluster = factor(long$cluster, levels=c('1', '2', '3', '4', '5', '6'),
-                     labels=c('1','2','3','4','5','6'))
+
+long$cluster = factor(long$cluster, levels=c('C1', 'C2', 'C3', 'C4', 'C5', 'C6'))
 
 #rename columns
 names(long)[names(long) == 'region'] <- 'Region'
@@ -120,7 +134,9 @@ names(long)[names(long) == 'income'] <- 'Income'
 boxplot <- ggplot(long, aes(cluster, value, colour=cluster, shape=Income)) + 
   geom_boxplot(aes(group=factor(cluster))) +
   geom_jitter(width = 0.4, height=0.5, size=1.7) + theme(legend.position = "bottom") +
-  scale_colour_manual(values = c("#009E73", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00")) + #"#999999", "#CC79A7"
+  #green, light_blue, organge, yellow, dark blue, dark organge
+  # scale_colour_manual(values = c("#009E73", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00")) + 
+  scale_colour_manual(values = c("#F0E442","#E69F00","#D55E00", "#0072B2", "#56B4E9","#009E73")) + 
   expand_limits(x = 0, y = 0) + 
   guides(colour=FALSE, shape=FALSE) + #guide_legend(ncol=3, title=NULL), guide_legend(ncol=2, reverse=T, title=NULL 
   scale_y_continuous(breaks = seq(-2, 8, by = 1)) +
@@ -251,7 +267,7 @@ cluster_map <- ggplot() +
        subtitle = "Clustering based on GDP Per Capita, Population Density and 4G Coverage") +
   theme(legend.position = "bottom") +
   guides(fill=guide_legend(ncol=8)) +
-  scale_fill_manual(values = c("#009E73", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00", "#999999", "#000000"))
+  scale_fill_manual(values = c("#F0E442","#E69F00","#D55E00", "#0072B2", "#56B4E9","#009E73", "#999999", "#000000"))
 
 #export to folder
 path = file.path(folder, 'figures', 'map.tiff')
