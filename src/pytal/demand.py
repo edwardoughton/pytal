@@ -7,9 +7,8 @@ Winter 2020
 
 """
 
-
 def estimate_demand(regions, option, global_parameters,
-    country_parameters, timesteps, penetration_lut):
+    country_parameters, timesteps, penetration_lut, smartphone_lut):
     """
     Estimate the total revenue based on current demand.
 
@@ -41,6 +40,11 @@ def estimate_demand(regions, option, global_parameters,
 
     for region in regions:
 
+        geotype = region['geotype'].split(' ')[0]
+        if geotype == 'suburban':
+            geotype = 'urban'
+        smartphones = smartphone_lut[geotype]
+
         revenue = []
         demand_mbps_km2 = []
 
@@ -55,14 +59,14 @@ def estimate_demand(regions, option, global_parameters,
 
         for timestep in timesteps:
 
-            penetration = penetration_lut[timestep]
-
             region['arpu'] = estimate_arpu(
                 region,
                 timestep,
                 global_parameters,
                 country_parameters
             )
+
+            penetration = penetration_lut[timestep]
 
             #cell_penetration : float
             #Number of cell phones per member of the population.
@@ -78,8 +82,7 @@ def estimate_demand(regions, option, global_parameters,
             #phones : int
             #Total number of smartphones on the network being modeled.
             region['smartphones_on_network'] = (
-               region['phones_on_network'] *
-               country_parameters['smartphone_pen'])
+                region['phones_on_network'] * smartphones['smartphone'])
 
             # demand_mbps_km2 : float
             # Total demand in mbps / km^2.
