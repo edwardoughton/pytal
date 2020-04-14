@@ -303,6 +303,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.4,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
@@ -453,6 +454,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.4,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
@@ -503,6 +505,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.4,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
@@ -614,6 +617,7 @@ COUNTRY_PARAMETERS = {
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': 3,
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
@@ -665,6 +669,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.4,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {
@@ -813,6 +818,7 @@ COUNTRY_PARAMETERS = {
         },
         'smartphone_pen': 0.4,
         'networks': 3,
+        'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
                 {

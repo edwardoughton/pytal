@@ -2,6 +2,7 @@ import pytest
 from pytal.demand import estimate_demand, get_per_user_capacity, estimate_arpu
 
 
+
 def test_estimate_demand(
     setup_region,
     setup_region_rural,
@@ -19,7 +20,8 @@ def test_estimate_demand(
         setup_global_parameters,
         setup_country_parameters,
         setup_timesteps,
-        setup_penetration_lut
+        setup_penetration_lut,
+        {'urban': {'smartphone': 0.5}}
     )
 
     # pop = 10000
@@ -64,7 +66,8 @@ def test_estimate_demand(
         setup_global_parameters,
         setup_country_parameters,
         setup_timesteps,
-        setup_penetration_lut
+        setup_penetration_lut,
+        {'rural': {'smartphone': 0.5}}
     )
 
     # 1667 phones on network

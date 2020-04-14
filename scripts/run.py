@@ -172,6 +172,62 @@ def load_penetration(path):
     return output
 
 
+def load_smartphones(country, path):
+    """
+    Load phone types forecast. The function either uses the specific data
+    for the country being modeled, or data from another country in the same
+    cluster. If no data are present for the country of the cluster, it
+    defaults to the mean values across all surveyed countries.
+
+    """
+    cluster = country['cluster']
+    iso3 = country['iso3']
+
+    countries = set()
+
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            countries.add(row['iso3'])
+
+    output = {}
+    all_data = {
+        'urban': [],
+        'rural': []
+    }
+
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            if iso3 in list(countries):
+                if row['iso3'] == iso3:
+                    iso3 = row['iso3']
+                    settlement = row['Settlement'].lower()
+                    output[settlement] = {
+                        'basic': float(row['Basic']) / 100,
+                        'feature': float(row['Feature']) / 100,
+                        'smartphone': float(row['Smartphone']) / 100,
+                    }
+            elif row['cluster'] == cluster:
+                settlement = row['Settlement'].lower()
+                output[settlement] = {
+                    'basic': float(row['Basic']) / 100,
+                    'feature': float(row['Feature']) / 100,
+                    'smartphone': float(row['Smartphone']) / 100,
+                }
+            else:
+                settlement = row['Settlement'].lower()
+                all_data[settlement].append(float(row['Smartphone']) / 100)
+
+    if len(output) == 0:
+        output = {
+            'urban': {'smartphone': sum(all_data['urban']) / len(all_data['urban'])},
+            'rural': {'smartphone': sum(all_data['rural']) / len(all_data['rural'])},
+        }
+
+    return output
+
+
 def load_backhaul_lut(path):
     """
 
@@ -340,19 +396,13 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        #cluster 1
-        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
-        # #cluster 2
-        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
-        # # #cluster 3
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
-        # # #cluster 4
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
-        # # #cluster 5
-        # {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1},
-        # # #cluster 6
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C1'},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C2'},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C2'},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2, 'cluster': 'C3'},
+        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C4'},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1, 'cluster': 'C5'},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C6'},
         ]
 
     decision_options = [
@@ -376,6 +426,10 @@ if __name__ == '__main__':
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
             filename = 'subs_forecast.csv'
             penetration_lut = load_penetration(os.path.join(folder, filename))
+
+            folder = os.path.join(DATA_RAW, 'wb_smartphone_survey')
+            filename = 'wb_smartphone_survey.csv'
+            smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
             filename = 'backhaul_lut.csv'
@@ -410,7 +464,8 @@ if __name__ == '__main__':
                         GLOBAL_PARAMETERS,
                         country_parameters,
                         TIMESTEPS,
-                        penetration_lut
+                        penetration_lut,
+                        smartphone_lut
                     )
 
                     data_supply = estimate_supply(

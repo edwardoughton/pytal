@@ -1662,42 +1662,35 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # #cluster 1
-        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-        #     'region': 'S&SE Asia', 'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
-        # #cluster 2
-        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'region': 'LAC', 'pop_density_km2': 5000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
-        # #cluster 3
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
-        #     'region': 'LAC', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
-        # # #cluster 4
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-        #     'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
-        # #cluster 5
-        # {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'region': 'MENA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
-        # # #cluster 6
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000, 'subs_growth': 1.5,
-        #     'subs_per_user': 1.8},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
+            'region': 'S&SE Asia', 'pop_density_km2': 5000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8,
+        },
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'LAC', 'pop_density_km2': 5000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1,
+            'region': 'LAC', 'pop_density_km2': 2000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
+            'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
+        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'MENA', 'pop_density_km2': 2000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000,
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'SSA', 'pop_density_km2': 1000, 'settlement_size': 5000,
-            'subs_growth': 1.5, 'subs_per_user': 1.8},
-
-        # {'iso3': 'ETH', 'iso2': 'ET', 'regional_level': 3, 'regional_nodes_level': 2},
-        # {'iso3': 'BOL', 'iso2': 'BO', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'COD', 'iso2': 'CD', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'GBR', 'iso2': 'GB', 'regional_level': 2, 'regional_nodes_level': 2},
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'TZA', 'iso2': 'TZ', 'regional_level': 2, 'regional_nodes_level': 1},
-        # {'iso3': 'ZAF', 'iso2': 'ZA', 'regional_level': 2, 'regional_nodes_level': 2},
-        ]
+            'subs_growth': 1.5, 'subs_per_user': 1.8
+        },
+    ]
 
     for country in countries:
 
