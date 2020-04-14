@@ -109,6 +109,6 @@ venv.bak/
 /results/*
 /spectrum/figures/*
 /backhaul/figures/*
-/clustering/figures/*
+/clustering/figures*
 /subscriptions/data_inputs/*
 /smartphones/figures/*
