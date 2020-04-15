@@ -120,13 +120,13 @@ def process_country_shapes(country):
     single_country['geometry'] = single_country.apply(
         exclude_small_shapes, axis=1)
 
-    print('Simplifying geometries')
-    single_country['geometry'] = single_country.simplify(
-        tolerance = 0.005,
-        preserve_topology=True).buffer(0.01).simplify(
-        tolerance = 0.005,
-        preserve_topology=True
-    )
+    # print('Simplifying geometries')
+    # single_country['geometry'] = single_country.simplify(
+    #     tolerance = 0.0005,
+    #     preserve_topology=True).buffer(0.0001).simplify(
+    #     tolerance = 0.0005,
+    #     preserve_topology=True
+    # )
 
     print('Adding ISO country code and other global information')
     glob_info_path = os.path.join(BASE_PATH, 'global_information.csv')
@@ -181,13 +181,13 @@ def process_regions(country):
         print('Excluding small shapes')
         regions['geometry'] = regions.apply(exclude_small_shapes, axis=1)
 
-        print('Simplifying geometries')
-        regions['geometry'] = regions.simplify(
-            tolerance = 0.005,
-            preserve_topology=True).buffer(0.01).simplify(
-                tolerance = 0.005,
-                preserve_topology=True
-            )
+        # print('Simplifying geometries')
+        # regions['geometry'] = regions.simplify(
+        #     tolerance = 0.0005,
+        #     preserve_topology=True).buffer(0.0001).simplify(
+        #         tolerance = 0.0005,
+        #         preserve_topology=True
+        #     )
         try:
             print('Writing global_regions.shp to file')
             regions.to_file(path_processed, driver='ESRI Shapefile')
@@ -392,7 +392,7 @@ def process_coverage_shapes(country):
             print('Simplifying geometries')
             coverage['geometry'] = coverage.simplify(
                 tolerance = 0.005,
-                preserve_topology=True).buffer(0.01).simplify(
+                preserve_topology=True).buffer(0.0001).simplify(
                 tolerance = 0.005,
                 preserve_topology=True
             )
@@ -563,13 +563,13 @@ def get_regional_data(country):
             'GID_0': region['GID_0'],
             'GID_id': region[gid_level],
             'GID_level': gid_level,
-            'mean_luminosity_km2': luminosity_summation / area_km2,
+            'mean_luminosity_km2': luminosity_summation / area_km2 if luminosity_summation else 0,
             'population': population_summation,
             'area_km2': area_km2,
-            'population_km2': population_summation / area_km2,
-            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100, 1),
-            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100, 1),
-            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100, 1),
+            'population_km2': population_summation / area_km2 if population_summation else 0,
+            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100 if coverage_GSM_km2 else 0, 1),
+            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100 if coverage_3G_km2 else 0, 1),
+            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100 if coverage_4G_km2 else 0, 1),
         })
 
     backhaul_lut = estimate_backhaul(iso3, country['region'], '2025')
@@ -594,6 +594,10 @@ def estimate_sites(data, iso3, backhaul_lut):
     population = 0
 
     for region in data:
+
+        if region['population'] == None:
+            continue
+
         population += int(region['population'])
 
     path = os.path.join(DATA_RAW, 'wb_mobile_coverage', 'wb_population_coverage.csv')
@@ -666,6 +670,9 @@ def estimate_sites(data, iso3, backhaul_lut):
                 'backhaul_microwave': backhaul_microwave,
                 'backhaul_satellite': backhaul_satellite,
             })
+
+        if region['population'] == None:
+            continue
 
         covered_pop_so_far += region['population']
 
@@ -1678,8 +1685,8 @@ if __name__ == '__main__':
             'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000,
             'subs_growth': 1.5, 'subs_per_user': 1.8
         },
-        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'MENA', 'pop_density_km2': 2000, 'settlement_size': 20000,
+        {'iso3': 'KHM', 'iso2': 'KH', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'S&SE Asia', 'pop_density_km2': 2000, 'settlement_size': 20000,
             'subs_growth': 1.5, 'subs_per_user': 1.8
         },
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
@@ -1694,32 +1701,32 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        # print('Processing country boundary')
-        # process_country_shapes(country)
+        print('Processing country boundary')
+        process_country_shapes(country)
 
-        # print('Processing regions')
-        # process_regions(country)
+        print('Processing regions')
+        process_regions(country)
 
-        # print('Processing settlement layer')
-        # process_settlement_layer(country)
+        print('Processing settlement layer')
+        process_settlement_layer(country)
 
-        # print('Processing night lights')
-        # process_night_lights(country)
+        print('Processing night lights')
+        process_night_lights(country)
 
-        # print('Processing coverage shapes')
-        # process_coverage_shapes(country)
+        print('Processing coverage shapes')
+        process_coverage_shapes(country)
 
         print('Getting regional data')
         get_regional_data(country)
 
-        # print('Creating network')
-        # create_network(country, country['pop_density_km2'], country['settlement_size'])
+        print('Creating network')
+        create_network(country, country['pop_density_km2'], country['settlement_size'])
 
-        # print('Create backhaul lookup table')
-        # backhaul_lut(country)
+        print('Create backhaul lookup table')
+        backhaul_lut(country)
 
-        # print('Create core and regional hubs lookup table')
-        # core_lut(country)
+        print('Create core and regional hubs lookup table')
+        core_lut(country)
 
-        # print('Create subscription forcast')
-        # forecast_subscriptions(country)
+        print('Create subscription forcast')
+        forecast_subscriptions(country)
