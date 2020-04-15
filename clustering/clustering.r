@@ -6,6 +6,28 @@ library(ggrepel)
 require(rgdal)
 library(ggpubr)
 
+#some data were missing from the world bank
+#Sudan had the population density taken from WorldoMeter: https://www.worldometers.info/world-population/sudan-population/
+#Countries with missing GDP per capita information were supplemented with WB data. These include:
+# Greenland
+# New Caledonia
+# Venezuela, RB
+# Faroe Islands
+# Bahamas, The
+# Iran, Islamic Rep.
+# French Polynesia
+# Syrian Arab Republic
+# Northern Mariana Islands
+# Isle of Man
+# Liechtenstein
+# Cayman Islands
+# Virgin Islands (U.S.)
+# Guam
+# Aruba
+# Barbados
+# Bermuda
+# Curacao
+
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -28,7 +50,7 @@ mydata <- mydata[which(mydata$income != 'High income'), ]
 mydata <- mydata[which(mydata$area >= 5000), ]
 
 #drop countries <1000km
-mydata <- mydata[which(mydata$pop_density < 1000), ]
+mydata <- mydata[which(mydata$pop_density < 500), ]
 
 #get statistical summary
 summary(mydata)
@@ -99,12 +121,12 @@ data <- na.omit(data)
 #rename variable to cluster
 names(data)[names(data) == 'fit.cluster'] <- 'cluster'
 
-cluster_1 <- data$cluster[data$country=='uganda'][1]
+cluster_1 <- data$cluster[data$country=='malawi'][1]
 cluster_2 <- data$cluster[data$country=='kenya'][1]
 cluster_3 <- data$cluster[data$country=='pakistan'][1]
-cluster_4 <- data$cluster[data$country=='albania'][1]
+cluster_4 <- data$cluster[data$country=='morocco'][1]
 cluster_5 <- data$cluster[data$country=='peru'][1]
-cluster_6 <- data$cluster[data$country=='mexico'][1] 
+cluster_6 <- data$cluster[data$country=='mexico'][1]
 
 data$cluster[data$cluster== cluster_1] <- 'C1'
 data$cluster[data$cluster== cluster_2] <- 'C2'
@@ -126,6 +148,7 @@ long$income = factor(long$income, levels=c("Low income", "Lower middle income", 
                                   labels=c("Low income", "Lower middle income", "Upper middle income"))
 
 long$cluster = factor(long$cluster, levels=c('C1', 'C2', 'C3', 'C4', 'C5', 'C6'))
+# long$cluster = factor(long$cluster, levels=c(1,2,3,4,5,6))
 
 #rename columns
 names(long)[names(long) == 'region'] <- 'Region'
@@ -139,7 +162,7 @@ boxplot <- ggplot(long, aes(cluster, value, colour=cluster, shape=Income)) +
   scale_colour_manual(values = c("#F0E442","#E69F00","#D55E00", "#0072B2", "#56B4E9","#009E73")) + 
   expand_limits(x = 0, y = 0) + 
   guides(colour=FALSE, shape=FALSE) + #guide_legend(ncol=3, title=NULL), guide_legend(ncol=2, reverse=T, title=NULL 
-  scale_y_continuous(breaks = seq(-2, 8, by = 1)) +
+  scale_y_continuous(breaks = seq(-2, 8, by = 1), limits=c(-2,3)) +
   labs(title = "Summary Statistics by Cluster Number", x='Cluster Number', y='Mean Centred Values',
        subtitle = "Squares indicate Upper Middle Income, Triangles indicate Lower Middle Income, Circles indicate Lower Income") +
   facet_wrap(~metric)
