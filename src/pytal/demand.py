@@ -40,6 +40,9 @@ def estimate_demand(regions, option, global_parameters,
 
     for region in regions:
 
+        if not region['area_km2'] > 0:
+            continue
+
         geotype = region['geotype'].split(' ')[0]
         if geotype == 'suburban':
             geotype = 'urban'
