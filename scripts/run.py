@@ -157,6 +157,20 @@ def find_country_list(continent_list):
     return country_list, country_regional_levels
 
 
+def load_cluster(path, iso3):
+    """
+    Load cluster number. You need to make sure the
+    R clustering script (pytal/clustering/clustering.r)
+    has been run first.
+
+    """
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            if row['ISO_3digit'] == iso3:
+                return row['cluster']
+
+
 def load_penetration(path):
     """
     Load penetration forecast.
@@ -359,9 +373,9 @@ if __name__ == '__main__':
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 10,
-        'fiber_backhaul_suburban_m': 5,
-        'fiber_backhaul_rural_m': 2,
+        'fiber_backhaul_urban_m': 20,
+        'fiber_backhaul_suburban_m': 10,
+        'fiber_backhaul_rural_m': 5,
         'core_nodes_epc': 100000,
         'core_nodes_nsa': 150000,
         'core_nodes_sa': 200000,
@@ -369,7 +383,7 @@ if __name__ == '__main__':
         'regional_nodes_epc': 100000,
         'regional_nodes_nsa': 150000,
         'regional_nodes_sa': 200000,
-        'regional_edges': 10,
+        'regional_edges': 20,
     }
 
     GLOBAL_PARAMETERS = {
@@ -378,7 +392,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [50], #[5, 50, 95],
+        'confidence': [95], #[5, 50, 95],
         'networks': 3,
         'io_n2_n3': 1,
         'cots_processing_split_urban': 2,
@@ -396,13 +410,13 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C1'},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C2'},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C2'},
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2, 'cluster': 'C3'},
-        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C4'},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1, 'cluster': 'C5'},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C6'},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
         ]
 
     decision_options = [
@@ -423,6 +437,10 @@ if __name__ == '__main__':
 
             country_parameters = COUNTRY_PARAMETERS[iso3]
 
+            folder = os.path.join(BASE_PATH, '..', 'clustering', 'results')
+            filename = 'data_clustering_results.csv'
+            country['cluster'] = load_cluster(os.path.join(folder, filename), iso3)
+
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
             filename = 'subs_forecast.csv'
             penetration_lut = load_penetration(os.path.join(folder, filename))
@@ -431,11 +449,11 @@ if __name__ == '__main__':
             filename = 'wb_smartphone_survey.csv'
             smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
+            folder = os.path.join(DATA_INTERMEDIATE, iso3)
             filename = 'backhaul_lut.csv'
             backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+            folder = os.path.join(DATA_INTERMEDIATE, iso3)
             filename = 'core_lut.csv'
             core_lut = load_core_lut(os.path.join(folder, filename))
 
