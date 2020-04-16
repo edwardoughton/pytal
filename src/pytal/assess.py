@@ -33,18 +33,15 @@ def assess(country, regions, option, global_parameters, country_parameters):
         Contains all output data.
 
     """
-    output = []
+    interim = []
 
     strategy = option['strategy']
-
-    regions = sorted(regions, key=lambda k: k['population_km2'], reverse=True)
-
     available_for_cross_subsidy = 0
 
     for region in regions:
 
         # npv spectrum cost
-        region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'], country_parameters)
+        region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'], global_parameters, country_parameters)
 
         #tax on investment
         region['tax'] = calculate_tax(region, strategy, country_parameters)
@@ -59,17 +56,46 @@ def assess(country, regions, option, global_parameters, country_parameters):
             region['profit_margin']
         )
 
-        region, available_for_cross_subsidy = estimate_subsidies(region, available_for_cross_subsidy)
-
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
+
+        region = allocate_available_excess(region)
+        available_for_cross_subsidy += region['available_cross_subsidy']
+
+        interim.append(region)
+
+    interim = sorted(interim, key=lambda k: k['deficit'], reverse=False)
+
+    output = []
+
+    for region in interim:
+
+        region, available_for_cross_subsidy = estimate_subsidies(
+            region, available_for_cross_subsidy)
 
         output.append(region)
 
     return output
 
 
-def get_spectrum_costs(region, strategy, country_parameters):
+def allocate_available_excess(region):
+    """
+    Allocate available excess capital (if any).
+
+    """
+    difference = region['total_revenue'] - region['total_cost']
+
+    if difference > 0:
+        region['available_cross_subsidy'] = difference
+        region['deficit'] = 0
+    else:
+        region['available_cross_subsidy'] = 0
+        region['deficit'] = abs(difference)
+
+    return region
+
+
+def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     """
     Calculate spectrum costs.
 
@@ -89,11 +115,11 @@ def get_spectrum_costs(region, strategy, country_parameters):
     for frequency in frequencies:
         if frequency['frequency'] < 1000:
             cost_usd_mhz_pop = country_parameters['financials'][coverage_spectrum_cost]
-            cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
+            cost = cost_usd_mhz_pop * frequency['bandwidth'] * (population / global_parameters['networks'])
             all_costs.append(cost)
         else:
             cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
-            cost = cost_usd_mhz_pop * frequency['bandwidth'] * population
+            cost = cost_usd_mhz_pop * frequency['bandwidth'] * (population / global_parameters['networks'])
             all_costs.append(cost)
 
     return sum(all_costs)
@@ -152,24 +178,19 @@ def estimate_subsidies(region, available_for_cross_subsidy):
         The amount of capital available for cross-subsidization.
 
     """
-    excess = region['total_revenue'] - region['total_cost']
+    if region['deficit'] > 0:
 
-    if excess > 0:
-        available_for_cross_subsidy += excess
-        region['available_cross_subsidy'] = excess
-        region['used_cross_subsidy'] = 0
-    else:
-        if available_for_cross_subsidy >= abs(excess):
-            region['available_cross_subsidy'] = 0
-            region['used_cross_subsidy'] = abs(excess)
-            available_for_cross_subsidy -= abs(excess)
-        elif 0 < available_for_cross_subsidy < abs(excess):
-            region['available_cross_subsidy'] = 0
+        if available_for_cross_subsidy >= region['deficit']:
+            region['used_cross_subsidy'] = region['deficit']
+            available_for_cross_subsidy -= region['deficit']
+        elif 0 < available_for_cross_subsidy < region['deficit']:
             region['used_cross_subsidy'] = available_for_cross_subsidy
             available_for_cross_subsidy = 0
         else:
-            region['available_cross_subsidy'] = 0
             region['used_cross_subsidy'] = 0
+
+    else:
+        region['used_cross_subsidy'] = 0
 
     required_state_subsidy = (region['total_cost'] -
         (region['total_revenue'] + region['used_cross_subsidy']))
@@ -194,7 +215,7 @@ def calculate_benefit_cost_ratio(region, country_parameters):
         region['profit_margin']
     )
 
-    revenue = region['total_revenue'] + region['used_cross_subsidy']
+    revenue = region['total_revenue']
 
     bcr = revenue / cost
 
