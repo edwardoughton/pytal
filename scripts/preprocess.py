@@ -120,13 +120,13 @@ def process_country_shapes(country):
     single_country['geometry'] = single_country.apply(
         exclude_small_shapes, axis=1)
 
-    print('Simplifying geometries')
-    single_country['geometry'] = single_country.simplify(
-        tolerance = 0.005,
-        preserve_topology=True).buffer(0.01).simplify(
-        tolerance = 0.005,
-        preserve_topology=True
-    )
+    # print('Simplifying geometries')
+    # single_country['geometry'] = single_country.simplify(
+    #     tolerance = 0.0005,
+    #     preserve_topology=True).buffer(0.0001).simplify(
+    #     tolerance = 0.0005,
+    #     preserve_topology=True
+    # )
 
     print('Adding ISO country code and other global information')
     glob_info_path = os.path.join(BASE_PATH, 'global_information.csv')
@@ -181,13 +181,13 @@ def process_regions(country):
         print('Excluding small shapes')
         regions['geometry'] = regions.apply(exclude_small_shapes, axis=1)
 
-        print('Simplifying geometries')
-        regions['geometry'] = regions.simplify(
-            tolerance = 0.005,
-            preserve_topology=True).buffer(0.01).simplify(
-                tolerance = 0.005,
-                preserve_topology=True
-            )
+        # print('Simplifying geometries')
+        # regions['geometry'] = regions.simplify(
+        #     tolerance = 0.0005,
+        #     preserve_topology=True).buffer(0.0001).simplify(
+        #         tolerance = 0.0005,
+        #         preserve_topology=True
+        #     )
         try:
             print('Writing global_regions.shp to file')
             regions.to_file(path_processed, driver='ESRI Shapefile')
@@ -392,7 +392,7 @@ def process_coverage_shapes(country):
             print('Simplifying geometries')
             coverage['geometry'] = coverage.simplify(
                 tolerance = 0.005,
-                preserve_topology=True).buffer(0.01).simplify(
+                preserve_topology=True).buffer(0.0001).simplify(
                 tolerance = 0.005,
                 preserve_topology=True
             )
@@ -563,13 +563,13 @@ def get_regional_data(country):
             'GID_0': region['GID_0'],
             'GID_id': region[gid_level],
             'GID_level': gid_level,
-            'mean_luminosity_km2': luminosity_summation / area_km2,
+            'mean_luminosity_km2': luminosity_summation / area_km2 if luminosity_summation else 0,
             'population': population_summation,
             'area_km2': area_km2,
-            'population_km2': population_summation / area_km2,
-            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100, 1),
-            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100, 1),
-            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100, 1),
+            'population_km2': population_summation / area_km2 if population_summation else 0,
+            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100 if coverage_GSM_km2 else 0, 1),
+            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100 if coverage_3G_km2 else 0, 1),
+            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100 if coverage_4G_km2 else 0, 1),
         })
 
     backhaul_lut = estimate_backhaul(iso3, country['region'], '2025')
@@ -594,6 +594,10 @@ def estimate_sites(data, iso3, backhaul_lut):
     population = 0
 
     for region in data:
+
+        if region['population'] == None:
+            continue
+
         population += int(region['population'])
 
     path = os.path.join(DATA_RAW, 'wb_mobile_coverage', 'wb_population_coverage.csv')
@@ -666,6 +670,9 @@ def estimate_sites(data, iso3, backhaul_lut):
                 'backhaul_microwave': backhaul_microwave,
                 'backhaul_satellite': backhaul_satellite,
             })
+
+        if region['population'] == None:
+            continue
 
         covered_pop_so_far += region['population']
 
@@ -1477,25 +1484,7 @@ def core_lut(country):
     return print('Completed core and hubs lut')
 
 
-def load_country_lut(path):
-    """
-    Load iso country list data.
-
-    """
-    output = []
-
-    with open(path) as source:
-        reader = csv.DictReader(source)
-        for item in reader:
-            output.append({
-                'country': item['country'],
-                'ISO_3digit': item['ISO_3digit'],
-            })
-
-    return output
-
-
-def load_subscription_data(path, country, country_lut):
+def load_subscription_data(path, iso3):
     """
     Load in itu cell phone subscription data.
 
@@ -1515,53 +1504,21 @@ def load_subscription_data(path, country, country_lut):
 
     """
     output = []
-    unmatched = []
 
-    years = [
-        '2005',
-        '2006',
-        '2007',
-        '2008',
-        '2009',
-        '2010',
-        '2011',
-        '2012',
-        '2013',
-        '2014',
-        '2015',
-        '2016',
-        '2017',
-    ]
+    historical_data = pd.read_csv(path, encoding = "ISO-8859-1")
+    historical_data = historical_data.to_dict('records')
 
-    with open(path) as source:
-        reader = csv.DictReader(source)
-        for item in reader:
+    for year in range(2010, 2021):
+        year = str(year)
+        for item in historical_data:
+            if item['iso3'] == iso3:
+                output.append({
+                    'country': iso3,
+                    'penetration': float(item[year]) * 100,
+                    'year':  year,
+                })
 
-            #get 3 digital iso code from country name
-            for country_code in country_lut:
-
-                if item['country'] == country_code['country']:
-                    iso_code = country_code['ISO_3digit']
-
-            if not country == iso_code:
-                continue
-
-            keys = [k for k in item.keys()]
-
-            for year in years:
-                if year in keys:
-                    try:
-                        output.append({
-                            'country': iso_code,
-                            'year': int(year),
-                            'penetration': float(item[year]),
-                        })
-                    except:
-                        unmatched.append(item['country'])
-
-            iso_code = None
-
-    return output, unmatched
+    return output
 
 
 def forecast_linear(country, historical_data, start_point, end_point, horizon):
@@ -1584,17 +1541,6 @@ def forecast_linear(country, historical_data, start_point, end_point, horizon):
 
     subs_growth = country['subs_growth']
 
-    for item in historical_data:
-
-        unique_users = round(item['penetration'] / country['subs_per_user'], 2)
-
-        output.append({
-            'country': item['country'],
-            'year': item['year'],
-            'penetration': item['penetration'],
-            'unique_users': unique_users
-        })
-
     year_0 = sorted(historical_data, key = lambda i: i['year'], reverse=True)[0]
 
     for year in range(start_point, end_point + 1):
@@ -1606,13 +1552,10 @@ def forecast_linear(country, historical_data, start_point, end_point, horizon):
 
         if year not in [item['year'] for item in output]:
 
-            unique_users = round(penetration / country['subs_per_user'], 2)
-
             output.append({
                 'country': country['iso3'],
                 'year': year,
                 'penetration': round(penetration, 2),
-                'unique_users': unique_users
             })
 
     return output
@@ -1624,13 +1567,10 @@ def forecast_subscriptions(country):
     """
     iso3 = country['iso3']
 
-    path = os.path.join(BASE_PATH, 'global_information.csv')
-    country_lut = load_country_lut(path)
+    path = os.path.join(DATA_RAW, 'gsma', 'gsma_unique_subscribers.csv')
+    historical_data = load_subscription_data(path, country['iso3'])
 
-    path = os.path.join(DATA_RAW, 'itu', 'Mobile_cellular_2000-2018_Dec2019.csv')
-    historical_data, unmatched = load_subscription_data(path, iso3, country_lut)
-
-    start_point = 2018
+    start_point = 2021
     end_point = 2030
     horizon = 4
 
@@ -1642,7 +1582,7 @@ def forecast_subscriptions(country):
         horizon
     )
 
-    forecast_df = pd.DataFrame(forecast)
+    forecast_df = pd.DataFrame(historical_data + forecast)
 
     path = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
 
@@ -1678,10 +1618,6 @@ if __name__ == '__main__':
             'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000,
             'subs_growth': 1.5, 'subs_per_user': 1.8
         },
-        {'iso3': 'DZA', 'iso2': 'DZ', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'MENA', 'pop_density_km2': 2000, 'settlement_size': 20000,
-            'subs_growth': 1.5, 'subs_per_user': 1.8
-        },
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
             'region': 'SSA', 'pop_density_km2': 2000, 'settlement_size': 20000,
             'subs_growth': 1.5, 'subs_per_user': 1.8
@@ -1709,8 +1645,8 @@ if __name__ == '__main__':
         # print('Processing coverage shapes')
         # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
 
         # print('Creating network')
         # create_network(country, country['pop_density_km2'], country['settlement_size'])
@@ -1721,5 +1657,5 @@ if __name__ == '__main__':
         # print('Create core and regional hubs lookup table')
         # core_lut(country)
 
-        # print('Create subscription forcast')
-        # forecast_subscriptions(country)
+        print('Create subscription forcast')
+        forecast_subscriptions(country)

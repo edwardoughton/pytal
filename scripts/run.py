@@ -35,15 +35,6 @@ def load_regions(path):
     """
     regions = pd.read_csv(path)
 
-    try:
-        #[0,10,20,30,40,50,60,70,80,90,100] #labels=[100,90,80,70,60,50,40,30,20,10,0],
-        regions['decile'] = pd.qcut(regions['population'], q=11, precision=0,
-                            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop')
-    except:
-        #[0,25,50,75,100] #labels=[100, 75, 50, 25, 0],
-        regions['decile'] = pd.qcut(regions['population'], q=5, precision=0,
-                            labels=[0,25,50,75,100], duplicates='drop')
-
     regions['geotype'] = regions.apply(define_geotype, axis=1)
 
     return regions
@@ -155,6 +146,20 @@ def find_country_list(continent_list):
         })
 
     return country_list, country_regional_levels
+
+
+def load_cluster(path, iso3):
+    """
+    Load cluster number. You need to make sure the
+    R clustering script (pytal/clustering/clustering.r)
+    has been run first.
+
+    """
+    with open(path, 'r') as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            if row['ISO_3digit'] == iso3:
+                return row['cluster']
 
 
 def load_penetration(path):
@@ -275,6 +280,15 @@ def load_core_lut(path):
 
     return output
 
+def define_deciles(regions):
+
+    regions['decile'] = regions.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply(
+            pd.qcut, q=11, precision=0,
+            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop')
+
+    return regions
+
 
 def write_results(regional_results, folder):
     """
@@ -294,24 +308,40 @@ def write_results(regional_results, folder):
     path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
     national_results.to_csv(path, index=True)
 
-    print('Writing decile results')
+    print('Writing general decile results')
     decile_results = pd.DataFrame(regional_results)
+    decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
         'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
-
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
     decile_results.to_csv(path, index=True)
 
+    print('Writing cost decile results')
+    decile_cost_results = pd.DataFrame(regional_results)
+    decile_cost_results = define_deciles(decile_cost_results)
+    decile_cost_results = decile_cost_results[[
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'total_revenue',
+        'network_cost', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'available_cross_subsidy', 'deficit', 'used_cross_subsidy', 'required_state_subsidy',
+    ]]
+
+    decile_cost_results = decile_cost_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+
+    path = os.path.join(folder,'decile_cost_results_{}.csv'.format(decision_option))
+    decile_cost_results.to_csv(path, index=True)
+
     print('Writing regional results')
     regional_results = pd.DataFrame(regional_results)
-
+    regional_results = define_deciles(regional_results)
     regional_results = regional_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
+        'GID_0', 'scenario', 'strategy', 'decile',
+        'confidence', 'population', 'area_km2',
         'population_km2', 'upgraded_sites',
         'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
@@ -359,9 +389,9 @@ if __name__ == '__main__':
         'microwave_backhaul_small': 10000,
         'microwave_backhaul_medium': 20000,
         'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 10,
-        'fiber_backhaul_suburban_m': 5,
-        'fiber_backhaul_rural_m': 2,
+        'fiber_backhaul_urban_m': 20,
+        'fiber_backhaul_suburban_m': 10,
+        'fiber_backhaul_rural_m': 5,
         'core_nodes_epc': 100000,
         'core_nodes_nsa': 150000,
         'core_nodes_sa': 200000,
@@ -369,7 +399,7 @@ if __name__ == '__main__':
         'regional_nodes_epc': 100000,
         'regional_nodes_nsa': 150000,
         'regional_nodes_sa': 200000,
-        'regional_edges': 10,
+        'regional_edges': 20,
     }
 
     GLOBAL_PARAMETERS = {
@@ -378,7 +408,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [50], #[5, 50, 95],
+        'confidence': [95], #[5, 50, 95],
         'networks': 3,
         'io_n2_n3': 1,
         'cots_processing_split_urban': 2,
@@ -396,13 +426,13 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C1'},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C2'},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2, 'cluster': 'C2'},
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2, 'cluster': 'C3'},
-        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C4'},
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1, 'cluster': 'C5'},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1, 'cluster': 'C6'},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
+        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
         ]
 
     decision_options = [
@@ -417,11 +447,15 @@ if __name__ == '__main__':
 
         regional_results = []
 
-        for country in countries:
+        for country in countries:#[:1]:
 
             iso3 = country['iso3']
 
             country_parameters = COUNTRY_PARAMETERS[iso3]
+
+            folder = os.path.join(BASE_PATH, '..', 'clustering', 'results')
+            filename = 'data_clustering_results.csv'
+            country['cluster'] = load_cluster(os.path.join(folder, filename), iso3)
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
             filename = 'subs_forecast.csv'
@@ -431,11 +465,11 @@ if __name__ == '__main__':
             filename = 'wb_smartphone_survey.csv'
             smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'backhaul')
+            folder = os.path.join(DATA_INTERMEDIATE, iso3)
             filename = 'backhaul_lut.csv'
             backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'core')
+            folder = os.path.join(DATA_INTERMEDIATE, iso3)
             filename = 'core_lut.csv'
             core_lut = load_core_lut(os.path.join(folder, filename))
 
