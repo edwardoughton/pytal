@@ -35,15 +35,6 @@ def load_regions(path):
     """
     regions = pd.read_csv(path)
 
-    try:
-        #[0,10,20,30,40,50,60,70,80,90,100] #labels=[100,90,80,70,60,50,40,30,20,10,0],
-        regions['decile'] = pd.qcut(regions['population'], q=11, precision=0,
-                            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop')
-    except:
-        #[0,25,50,75,100] #labels=[100, 75, 50, 25, 0],
-        regions['decile'] = pd.qcut(regions['population'], q=5, precision=0,
-                            labels=[0,25,50,75,100], duplicates='drop')
-
     regions['geotype'] = regions.apply(define_geotype, axis=1)
 
     return regions
@@ -289,6 +280,15 @@ def load_core_lut(path):
 
     return output
 
+def define_deciles(regions):
+
+    regions['decile'] = regions.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply(
+            pd.qcut, q=11, precision=0,
+            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop')
+
+    return regions
+
 
 def write_results(regional_results, folder):
     """
@@ -308,24 +308,40 @@ def write_results(regional_results, folder):
     path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
     national_results.to_csv(path, index=True)
 
-    print('Writing decile results')
+    print('Writing general decile results')
     decile_results = pd.DataFrame(regional_results)
+    decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
         'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
-
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
     decile_results.to_csv(path, index=True)
 
+    print('Writing cost decile results')
+    decile_cost_results = pd.DataFrame(regional_results)
+    decile_cost_results = define_deciles(decile_cost_results)
+    decile_cost_results = decile_cost_results[[
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'total_revenue',
+        'network_cost', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'available_cross_subsidy', 'deficit', 'used_cross_subsidy', 'required_state_subsidy',
+    ]]
+
+    decile_cost_results = decile_cost_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+
+    path = os.path.join(folder,'decile_cost_results_{}.csv'.format(decision_option))
+    decile_cost_results.to_csv(path, index=True)
+
     print('Writing regional results')
     regional_results = pd.DataFrame(regional_results)
-
+    regional_results = define_deciles(regional_results)
     regional_results = regional_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
+        'GID_0', 'scenario', 'strategy', 'decile',
+        'confidence', 'population', 'area_km2',
         'population_km2', 'upgraded_sites',
         'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
@@ -414,7 +430,7 @@ if __name__ == '__main__':
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
-        {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
+        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 3, 'regional_nodes_level': 1},
         {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
         ]
@@ -431,7 +447,7 @@ if __name__ == '__main__':
 
         regional_results = []
 
-        for country in countries:
+        for country in countries:#[:1]:
 
             iso3 = country['iso3']
 
