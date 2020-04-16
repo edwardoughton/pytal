@@ -17,24 +17,24 @@ data <- data[(data$confidence == 95),]
 data <- data[!(data$country == 'SEN'),]
 
 data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
-                                               "S2_100_20_10",
-                                               "S3_400_40_20"),
+                                               "S2_200_50_25",
+                                               "S3_400_100_50"),
                        labels=c("S1 (25 Mbps)",
-                                "S2 (100 Mbps)",
+                                "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
 
 data$country = factor(data$country, levels=c("UGA",
                                              "KEN",
-                                             # "SEN",
+                                             "SEN",
                                              "PAK",
-                                             "KHM",
+                                             # "KHM",
                                              "PER",
                                              "MEX"),
                                    labels=c("Uganda (C1)",
                                             "Kenya (C2)",
-                                            # "Senegal (C2)",
+                                            "Senegal (C2)",
                                             "Pakistan (C3)",
-                                            "Cambodia (C4)",
+                                            # "Cambodia (C4)",
                                             "Peru (C5)",
                                             "Mexico (C6)"))
 
@@ -73,8 +73,8 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
   labs(colour=NULL,
-  #   title = "Impact of Technology", 
-  # subtitle = "Results reported by scenario, decile and country",
+    title = "Impact of Technology",
+  subtitle = "Results reported by scenario, decile and country",
   x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
   scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
   theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
@@ -95,24 +95,14 @@ data <- data[!(data$total_cost == "NA"),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
-data1 <- select(data, country, scenario, strategy, confidence, decile, total_revenue)
-data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
-data1$strategy <- "Revenue" 
-names(data1)[names(data1) == 'total_revenue'] <- 'value'
-data2 <- select(data, country, scenario, strategy, confidence, decile, total_cost)
-names(data2)[names(data2) == 'total_cost'] <- 'value'
-data <- rbind(data1, data2)
+# data$value <- round(data$value, 4)
 
-remove(data1, data2)
-
-data$value <- round(data$value, 4)
-
-data <- data[!(data$value == "NA"),]
-
-#assuming the data is at the subregional level, aggregate by scenario, strategy etc..
-data <- aggregate( . ~ country + strategy + scenario + decile, FUN=sum, data=data)
-
-# data <- data %>% separate('strategy', c('gen', 'core', 'backhaul', 'sharing', 'subsidy', 'spectrum', 'tax'), "_")
+data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
+                                               "S2_200_50_25",
+                                               "S3_400_100_50"),
+                       labels=c("S1 (25 Mbps)",
+                                "S2 (200 Mbps)",
+                                "S3 (400 Mbps)"))
 
 data$country = factor(data$country, levels=c("UGA",
                                              "KEN",
@@ -127,12 +117,17 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$scenario = factor(data$scenario, levels=c("S1_25_5_1",
-                                               "S2_100_20_5",
-                                               "S3_400_80_20"),
-                       labels=c("S1 (25 Mbps)",
-                                "S2 (100 Mbps)",
-                                "S3 (400 Mbps)"))
+data1 <- select(data, country, scenario, strategy, confidence, decile, total_revenue)
+data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
+data1$strategy <- "Revenue" 
+names(data1)[names(data1) == 'total_revenue'] <- 'value'
+data2 <- select(data, country, scenario, strategy, confidence, decile, total_cost)
+names(data2)[names(data2) == 'total_cost'] <- 'value'
+data <- rbind(data1, data2)
+
+remove(data1, data2)
+
+data <- data[!(data$value == "NA"),]
 
 data$strategy = factor(data$strategy, levels=c("Revenue",
                                               "5G_nsa_microwave_baseline_baseline_baseline_baseline",
@@ -146,7 +141,7 @@ data$strategy = factor(data$strategy, levels=c("Revenue",
 data <- data[order(data$country, data$scenario, data$strategy, data$decile),]
 
 data <- data %>%
-  group_by(country, scenario, strategy) %>%
+  group_by(country, strategy, scenario) %>%
   mutate(cumulative_value_bn = cumsum(round(value / 1e9, 3)))
 
 panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, group=strategy)) + 
@@ -158,100 +153,79 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
        x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
   guides(colour=guide_legend(ncol=4)) +
-  facet_wrap(scenario~country, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
+  facet_wrap(country~scenario, scales = "free",  ncol = 3) #facet_grid(scenario~country)#
 
 path = file.path(folder, 'figures', 'results_business_model_options.png')
 ggsave(path, units="in", width=8, height=11.5, dpi=300)
 print(panel)
 dev.off()
 
-
 ##################
-# 
-# folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-# 
-# #load data
-# data <- read.csv(file.path(folder, '..', 'results', 'decile_results_policy_options.csv'))
-# 
-# data <- data[!(data$total_cost == "NA"),]
-# 
-# names(data)[names(data) == 'GID_0'] <- 'country'
-# 
-# data1 <- select(data, country, scenario, strategy, confidence, decile, total_revenue)
-# data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
-# data1$strategy <- "Revenue" 
-# names(data1)[names(data1) == 'total_revenue'] <- 'value'
-# data2 <- select(data, country, scenario, strategy, confidence, decile, total_cost)
-# names(data2)[names(data2) == 'total_cost'] <- 'value'
-# data <- rbind(data1, data2)
-# 
-# remove(data1, data2)
-# 
-# data <- data[!(data$value == "NA"),]
-# 
-# data <- data[(data$strategy == '5G_nsa_microwave_baseline_baseline_baseline_baseline' |
-#               data$strategy == '5G_nsa_microwave_baseline_low_baseline_baseline' |
-#               data$strategy == '5G_nsa_microwave_baseline_high_baseline_baseline'),]
-# 
-# # data <- data %>% separate('strategy', c('gen', 'core', 'backhaul', 'sharing', 'subsidy', 'spectrum', 'tax'), "_")
-# 
-# data$country = factor(data$country, levels=c("UGA",
-#                                              "KEN",
-#                                              "SEN",
-#                                              "PAK",
-#                                              "PER",
-#                                              "MEX"),
-#                       labels=c("Uganda (C1)",
-#                                "Kenya (C2)",
-#                                "Senegal (C2)",
-#                                "Pakistan (C3)",
-#                                "Peru (C5)",
-#                                "Mexico (C6)"))
-# 
-# data$scenario = factor(data$scenario, levels=c("S1_25_5_1",
-#                                                "S2_100_20_5",
-#                                                "S3_400_80_20"),
-#                        labels=c("S1 (25 Mbps)",
-#                                 "S2 (100 Mbps)",
-#                                 "S3 (400 Mbps)"))
-# 
-# data$strategy = factor(data$strategy, levels=c("Revenue",
-#                                                "5G_nsa_microwave_baseline_baseline_baseline_baseline",
-#                                                "5G_nsa_microwave_baseline_low_baseline_baseline",
-#                                                "5G_nsa_microwave_baseline_high_baseline_baseline"),
-#                        labels=c("Revenue",
-#                                 "Baseline (No sharing)",
-#                                 "Passive (Site Sharing)",
-#                                 "Active (RAN and Site Sharing)"))
-# 
-# data$strategy = factor(data$subsidy, levels=c("baseline",
-#                                               "low",
-#                                               "high"),
-#                                      labels=c("Baseline (No Subsidy)",
-#                                               "Low (10% Subsidy)",
-#                                               "High (20% Subsidy)"))
-# 
-# data <- data[order(data$country, data$scenario, data$strategy),]
-# 
-# data <- data %>%
-#   group_by(country, scenario, strategy) %>%
-#   mutate(cost_sum_bn = cumsum(round(total_cost / 1e9, 2)))
-# 
-# panel <- ggplot(data, aes(x=decile, y=cost_sum_bn, colour=strategy, group=strategy)) +
-#   geom_line() +
-#   scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
-#   labs(title = "Impact of Supply-Side Subsidies", colour=NULL,
-#        subtitle = "Results reported by scenario, decile and country",
-#        x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) +
-#   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
-#   guides(colour=guide_legend(ncol=3)) +
-#   facet_wrap(scenario~country, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
-# 
-# path = file.path(folder, 'figures', 'results_supply_subsidy.png')
-# ggsave(path, units="in", width=8, height=11.5, dpi=300)
-# print(panel)
-# dev.off()
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+
+#load data
+data <- read.csv(file.path(folder, '..', 'results', 'decile_cost_results_policy_options.csv'))
+
+data <- data[!(data$total_cost == "NA"),]
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+data <- data[(data$strategy == '5G_nsa_microwave_baseline_baseline_baseline_baseline'),]
+
+data <- select(data, country, strategy, scenario, decile, network_cost, spectrum_cost, tax, profit_margin, 
+              used_cross_subsidy, required_state_subsidy)
+
+data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
+                                               "S2_200_50_25",
+                                               "S3_400_100_50"),
+                       labels=c("S1 (25 Mbps)",
+                                "S2 (200 Mbps)",
+                                "S3 (400 Mbps)"))
+
+data$country = factor(data$country, levels=c("UGA",
+                                             "KEN",
+                                             "SEN",
+                                             "PAK",
+                                             "PER",
+                                             "MEX"),
+                      labels=c("Uganda (Cluster 1)",
+                               "Kenya (Cluster 2)",
+                               "Senegal (Cluster 2)",
+                               "Pakistan (Cluster 3)",
+                               "Peru (Cluster 5)",
+                               "Mexico (Cluster 6)"))
+data <- gather(data, metric, value, network_cost:required_state_subsidy)
+
+data$metric = factor(data$metric, levels=c("network_cost",
+                                             "spectrum_cost",
+                                             "tax",
+                                             "profit_margin",
+                                             "used_cross_subsidy",
+                                             "required_state_subsidy"),
+                      labels=c("Network Cost",
+                               "Spectrum Cost",
+                               "Tax",
+                               "Profit Margin",
+                               "Cross-Subsidy",
+                               "Required State Subsidy"))
+
+
+panel <- ggplot(data, aes(x=decile, y=(value/1e9), group=metric, fill=metric)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Spectral", name = NULL, direction=1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
+  labs(title = "Cost Composition", colour=NULL,
+       subtitle = "Results reported by scenario, decile and country",
+       x = NULL, y = "Cost (Billions $USD)") +
+  scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
+  guides(fill=guide_legend(ncol =6)) +
+  facet_wrap(country~scenario, scales = "free",  ncol = 3) #facet_grid(scenario~country)#
+
+path = file.path(folder, 'figures', 'results_cost_composition.png')
+ggsave(path, units="in", width=8, height=11.5, dpi=300)
+print(panel)
+dev.off()
 
 
 
@@ -283,7 +257,12 @@ data <- select(data, country, scenario, strategy, decile, value)
 
 data <- data[!(data$value == "NA"),]
 
-# data <- data %>% separate('strategy', c('gen', 'core', 'backhaul', 'sharing', 'subsidy', 'spectrum', 'tax'), "_")
+data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
+                                               "S2_200_50_25",
+                                               "S3_400_100_50"),
+                       labels=c("S1 (25 Mbps)",
+                                "S2 (200 Mbps)",
+                                "S3 (400 Mbps)"))
 
 data$country = factor(data$country, levels=c("UGA",
                                              "KEN",
@@ -298,13 +277,6 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$scenario = factor(data$scenario, levels=c("S1_25_5_1",
-                                               "S2_100_20_5",
-                                               "S3_400_80_20"),
-                       labels=c("S1 (25 Mbps)",
-                                "S2 (100 Mbps)",
-                                "S3 (400 Mbps)"))
-
 data$strategy = factor(data$strategy, levels=c("Revenue",
                                                 "5G_nsa_microwave_baseline_baseline_baseline_baseline",
                                                "5G_nsa_microwave_baseline_baseline_low_baseline",
@@ -317,7 +289,7 @@ data$strategy = factor(data$strategy, levels=c("Revenue",
 data <- data[order(data$country, data$scenario, data$strategy),]
 
 data <- data %>%
-  group_by(country, scenario, strategy) %>%
+  group_by(country, strategy, scenario) %>%
   mutate(cumulative_value_bn = cumsum(round(value / 1e9, 3)))
 
 panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, group=strategy)) + 
@@ -329,7 +301,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
        x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
   guides(colour=guide_legend(ncol=4)) +
-  facet_wrap(scenario~country, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
+  facet_wrap(country~scenario, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
 
 path = file.path(folder, 'figures', 'results_spectrum_costs.png')
 ggsave(path, units="in", width=8, height=11.5, dpi=300)
@@ -364,10 +336,12 @@ data <- data[(data$strategy == 'Revenue' |
 
 data <- data[!(data$value == "NA"),]
 
-#assuming the data is at the subregional level, aggregate by scenario, strategy etc..
-# data <- aggregate( . ~ country + strategy + scenario + decile, FUN=sum, data=data)
-
-# data <- data %>% separate('strategy', c('gen', 'core', 'backhaul', 'sharing', 'subsidy', 'spectrum', 'tax'), "_")
+data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
+                                               "S2_200_50_25",
+                                               "S3_400_100_50"),
+                       labels=c("S1 (25 Mbps)",
+                                "S2 (200 Mbps)",
+                                "S3 (400 Mbps)"))
 
 data$country = factor(data$country, levels=c("UGA",
                                              "KEN",
@@ -382,13 +356,6 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$scenario = factor(data$scenario, levels=c("S1_25_5_1",
-                                               "S2_100_20_5",
-                                               "S3_400_80_20"),
-                       labels=c("S1 (25 Mbps)",
-                                "S2 (100 Mbps)",
-                                "S3 (400 Mbps)"))
-print(unique(data$strategy))
 data$strategy = factor(data$strategy, levels=c('Revenue',
                                                "5G_nsa_microwave_baseline_baseline_baseline_baseline",
                                                "5G_nsa_microwave_baseline_baseline_baseline_low",
@@ -401,7 +368,7 @@ data$strategy = factor(data$strategy, levels=c('Revenue',
 data <- data[order(data$country, data$scenario, data$strategy),]
 
 data <- data %>%
-  group_by(country, scenario, strategy) %>%
+  group_by(country, strategy, scenario) %>%
   mutate(cumulative_value_bn = cumsum(round(value / 1e9, 3)))
 
 panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, group=strategy)) + 
@@ -413,7 +380,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
        x = NULL, y = "Cost (Billions $USD)") + scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
   guides(colour=guide_legend(ncol=4)) +
-  facet_wrap(scenario~country, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
+  facet_wrap(country~scenario, scales = "free_y",  ncol = 3) #facet_grid(scenario~country)#
 
 path = file.path(folder, 'figures', 'results_tax_rate.png')
 ggsave(path, units="in", width=8, height=11.5, dpi=300)
