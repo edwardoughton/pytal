@@ -18,11 +18,11 @@ OPTIONS = {
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
@@ -30,11 +30,11 @@ OPTIONS = {
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
@@ -42,11 +42,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
@@ -54,11 +54,11 @@ OPTIONS = {
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
     ],
@@ -68,11 +68,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
@@ -80,11 +80,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
@@ -92,11 +92,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
     ],
@@ -106,47 +106,23 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_5',
-            'strategy': '5G_nsa_microwave_baseline_low_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_100_20_10',
-            'strategy': '5G_nsa_microwave_baseline_low_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_40_20',
-            'strategy': '5G_nsa_microwave_baseline_low_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_5',
-            'strategy': '5G_nsa_microwave_baseline_high_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_100_20_10',
-            'strategy': '5G_nsa_microwave_baseline_high_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_40_20',
-            'strategy': '5G_nsa_microwave_baseline_high_baseline_baseline',
         },
         {
             'scenario': 'S1_25_10_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
@@ -154,11 +130,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
@@ -166,11 +142,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
@@ -178,11 +154,11 @@ OPTIONS = {
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
         },
         {
-            'scenario': 'S2_100_20_10',
+            'scenario': 'S2_200_50_25',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
         },
         {
-            'scenario': 'S3_400_40_20',
+            'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
         },
     ]
@@ -197,7 +173,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -247,7 +223,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -297,7 +273,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -348,7 +324,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -398,7 +374,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -448,7 +424,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -499,7 +475,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -550,7 +526,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -601,7 +577,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -657,7 +633,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -714,7 +690,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -725,7 +701,7 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 15,
+                    'bandwidth': 30,
                 },
                 {
                     'frequency': 2600,
@@ -762,7 +738,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -813,7 +789,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -863,7 +839,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
@@ -914,7 +890,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 20,
+            'high': 15,
             'medium': 10,
             'low': 5,
         },
