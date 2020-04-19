@@ -353,6 +353,7 @@ def test_discount_opex(setup_global_parameters):
 
 def test_calc_costs(setup_region, setup_global_parameters):
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['new_sites'] = 1
 
@@ -421,6 +422,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     setup_global_parameters, setup_country_parameters,
     setup_backhaul_lut, setup_core_lut):
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
@@ -440,6 +442,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     #~68k is a single 4G greenfield site
     assert answer == 110322
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
@@ -460,6 +463,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     #11952 is a new backhaul (10k capex + opex of 1952)
     assert answer == (110322 + 11952)
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
