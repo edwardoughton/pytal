@@ -151,7 +151,7 @@ def find_country_list(continent_list):
 def load_cluster(path, iso3):
     """
     Load cluster number. You need to make sure the
-    R clustering script (pytal/clustering/clustering.r)
+    R clustering script (pytal/vis/clustering/clustering.r)
     has been run first.
 
     """
@@ -172,7 +172,7 @@ def load_penetration(path):
     with open(path, 'r') as source:
         reader = csv.DictReader(source)
         for row in reader:
-            output[int(row['year'])] = float(row['unique_users'])
+            output[int(row['year'])] = float(row['penetration'])
 
     return output
 
@@ -233,20 +233,6 @@ def load_smartphones(country, path):
     return output
 
 
-def load_backhaul_lut(path):
-    """
-
-    """
-    output = {}
-
-    with open(path, 'r') as source:
-        reader = csv.DictReader(source)
-        for row in reader:
-            output[row['GID_id']] = int(float(row['distance_m']))
-
-    return output
-
-
 def load_core_lut(path):
     """
 
@@ -259,14 +245,14 @@ def load_core_lut(path):
             interim.append({
                 'GID_id': row['GID_id'],
                 'asset': row['asset'],
-                'value': int(row['value']),
+                'value': int(round(float(row['value']))),
             })
 
     asset_types = [
-        'core_edges',
-        'core_nodes',
-        'regional_edges',
-        'regional_nodes'
+        'core_edge',
+        'core_node',
+        'regional_edge',
+        'regional_node'
     ]
 
     output = {}
@@ -279,6 +265,47 @@ def load_core_lut(path):
                 output[asset_type] = asset_dict
 
     return output
+
+
+def load_backhaul_lut(path):
+    """
+    Simulations show that for every 10x increase in node density,
+    there is a 3.2x decrease in backhaul length.
+
+    node_density_km2, average_distance_km, increase_in_density, decrease_in_distance
+    0.000001, 606.0, 10, 3.2
+    0.00001, 189.0, 10, 3.8
+    0.0001, 50.0, 10, 3.1
+    0.001, 16.0, 10, 3.2
+    0.01, 5.0, 10, 3.2
+    0.1, 1.6, 10, 3.2
+    1.0, 0.5,
+
+    """
+    # output = []
+
+    # with open(path, 'r') as source:
+    #     reader = csv.DictReader(source)
+    #     for row in reader:
+    #         output.append({
+    #             'node_density_km2': float(row['node_density_km2']),
+    #             'average_distance_km': int(round(float(row['average_distance_km']))),
+    #         })
+
+    output = [
+        {'node_density_km2': 0.00000001, 'average_distance_m': 5242880},
+        {'node_density_km2': 0.0000001, 'average_distance_m': 1638400},
+        {'node_density_km2': 0.000001, 'average_distance_m': 512000},
+        {'node_density_km2': 0.00001, 'average_distance_m': 160000},
+        {'node_density_km2': 0.0001, 'average_distance_m': 50000},
+        {'node_density_km2': 0.001, 'average_distance_m': 16000},
+        {'node_density_km2': 0.01, 'average_distance_m': 5000},
+        {'node_density_km2': 0.1, 'average_distance_m': 1500},
+        {'node_density_km2': 1.0,	'average_distance_m': 500},
+    ]
+
+    return output
+
 
 def define_deciles(regions):
 
@@ -392,14 +419,14 @@ if __name__ == '__main__':
         'fiber_backhaul_urban_m': 20,
         'fiber_backhaul_suburban_m': 10,
         'fiber_backhaul_rural_m': 5,
-        'core_nodes_epc': 100000,
-        'core_nodes_nsa': 150000,
-        'core_nodes_sa': 200000,
-        'core_edges': 20,
-        'regional_nodes_epc': 100000,
-        'regional_nodes_nsa': 150000,
-        'regional_nodes_sa': 200000,
-        'regional_edges': 20,
+        'core_node_epc': 200000,
+        'core_node_nsa': 300000,
+        'core_node_sa': 400000,
+        'core_edge': 20,
+        'regional_node_epc': 100000,
+        'regional_node_nsa': 150000,
+        'regional_node_sa': 200000,
+        'regional_edge': 20,
     }
 
     GLOBAL_PARAMETERS = {
@@ -414,10 +441,12 @@ if __name__ == '__main__':
         'cots_processing_split_urban': 2,
         'cots_processing_split_suburban': 4,
         'cots_processing_split_rural': 16,
-        'low_latency_switch_split': 6,
-        'rack_split': 6,
-        'cloud_power_supply_converter_split': 6,
-        'software_split': 6,
+        'io_n2_n3_split': 7,
+        'low_latency_switch_split': 7,
+        'rack_split': 7,
+        'cloud_power_supply_converter_split': 7,
+        'software_split': 7,
+        'cloud_backhaul_split': 7,
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -453,7 +482,7 @@ if __name__ == '__main__':
 
             country_parameters = COUNTRY_PARAMETERS[iso3]
 
-            folder = os.path.join(BASE_PATH, '..', 'clustering', 'results')
+            folder = os.path.join(BASE_PATH, '..', 'vis', 'clustering', 'results')
             filename = 'data_clustering_results.csv'
             country['cluster'] = load_cluster(os.path.join(folder, filename), iso3)
 
@@ -466,18 +495,18 @@ if __name__ == '__main__':
             smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
             folder = os.path.join(DATA_INTERMEDIATE, iso3)
-            filename = 'backhaul_lut.csv'
-            backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
-
-            folder = os.path.join(DATA_INTERMEDIATE, iso3)
             filename = 'core_lut.csv'
             core_lut = load_core_lut(os.path.join(folder, filename))
+
+            folder = os.path.join(DATA_INTERMEDIATE, iso3)
+            filename = 'backhaul_lut.csv'
+            backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
 
             print('-----')
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options:
+            for option in options:#[:1]:
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
