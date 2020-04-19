@@ -24,6 +24,7 @@ from rtree import index
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import random
+import math
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -1444,7 +1445,7 @@ def fit_regional_edges(country):
     return print('Regional edge fitting complete')
 
 
-def core_lut(country):
+def generate_core_lut(country):
     """
     Generate core lut.
 
@@ -1528,6 +1529,107 @@ def core_lut(country):
     output.to_csv(path, index=False)
 
     return print('Completed core lut')
+
+
+# def generate_backhaul_lut(country):
+#     """
+#     Simulate backhaul distance given a 100km^2 area.
+#       Simulations show that for every 10x increase in node density,
+#       there is a 3.2x decrease in backhaul length.
+
+
+    # node_density_km2	average_distance_km
+    # 0.000001	606.0	10	 3.2
+    # 0.00001	189.0	10	 3.8
+    # 0.0001	50.0	10	 3.1
+    # 0.001	16.0	10	 3.2
+    # 0.01	5.0	10	 3.2
+    # 0.1	1.6	10	 3.2
+    # 1	0.5
+
+#     """
+#     iso3 = country['iso3']
+
+#     output = []
+
+#     number_of_regional_nodes_range = [1, 10, 100, 1000, 10000]
+
+#     area_km2 = 1e6
+
+#     for number_of_regional_nodes in number_of_regional_nodes_range:
+
+#         sites = []
+
+#         for i in range(1, int(round(max(number_of_regional_nodes_range) + 1))):
+#             x = random.uniform(0, round(math.sqrt(area_km2)))
+#             y = random.uniform(0, round(math.sqrt(area_km2)))
+#             sites.append({
+#                 'geometry': {
+#                     'type': 'Point',
+#                     'coordinates': (x, y)
+#                 },
+#                 'properties': {
+#                     'id': i
+#                 }
+#             })
+#         print(len(sites))
+#         regional_nodes = []
+
+#         for i in range(1, number_of_regional_nodes + 1):
+#             x = random.uniform(0, round(math.sqrt(area_km2)))
+#             y = random.uniform(0, round(math.sqrt(area_km2)))
+#             regional_nodes.append({
+#                 'geometry': {
+#                     'type': 'Point',
+#                     'coordinates': (x, y)
+#                 },
+#                 'properties': {
+#                     'id': i
+#                 }
+#             })
+#         print(len(regional_nodes))
+#         distances = []
+
+#         idx = index.Index()
+
+#         for regional_node in regional_nodes:
+#             idx.insert(
+#                 regional_node['properties']['id'],
+#                 shape(regional_node['geometry']).bounds,
+#                 regional_node)
+
+#         for site in sites:
+
+#             geom1 = shape(site['geometry'])
+
+#             nearest_regional_node = [i for i in idx.nearest((geom1.bounds))][0]
+
+#             for regional_node in regional_nodes:
+#                 if regional_node['properties']['id'] == nearest_regional_node:
+
+#                     x1 = site['geometry']['coordinates'][0]
+#                     x2 = regional_node['geometry']['coordinates'][0]
+#                     y1 = site['geometry']['coordinates'][1]
+#                     y2 = regional_node['geometry']['coordinates'][1]
+
+#                     distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+#                     distances.append(distance)
+
+#         output.append({
+#             'node_density_km2': round(number_of_regional_nodes / area_km2, 8),
+#             'average_distance_km': int(round(sum(distances) / len(distances))),
+#         })
+
+#     output = pd.DataFrame(output)
+
+#     filename = 'backhaul_lut.csv'
+#     folder = os.path.join(DATA_INTERMEDIATE, iso3)
+#     path = os.path.join(folder, filename)
+
+#     output.to_csv(path, index=False)
+
+#     return output
 
 
 def load_subscription_data(path, iso3):
@@ -1670,40 +1772,43 @@ if __name__ == '__main__':
 
     for country in countries:
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
 
-        print('Generating agglomeration lookup table')
-        generate_agglomeration_lut(country)
+        # print('Generating agglomeration lookup table')
+        # generate_agglomeration_lut(country)
 
-        print('Find regional nodes')
-        find_regional_nodes(country)
+        # print('Find regional nodes')
+        # find_regional_nodes(country)
 
-        print('Fit edges')
-        input_path = os.path.join(DATA_INTERMEDIATE, country['iso3'], 'network', 'core_nodes.shp')
-        output_path = os.path.join(DATA_INTERMEDIATE, country['iso3'], 'network', 'core_edges.shp')
-        fit_edges(input_path, output_path)
+        # print('Fit edges')
+        # input_path = os.path.join(DATA_INTERMEDIATE, country['iso3'], 'network', 'core_nodes.shp')
+        # output_path = os.path.join(DATA_INTERMEDIATE, country['iso3'], 'network', 'core_edges.shp')
+        # fit_edges(input_path, output_path)
 
-        print('Fit regional edges')
-        fit_regional_edges(country)
+        # print('Fit regional edges')
+        # fit_regional_edges(country)
 
-        print('Create core lookup table')
-        core_lut(country)
+        # print('Create core lookup table')
+        # generate_core_lut(country)
 
-        print('Create subscription forcast')
-        forecast_subscriptions(country)
+        print('Create backhaul lookup table')
+        generate_backhaul_lut(country)
+
+        # print('Create subscription forcast')
+        # forecast_subscriptions(country)

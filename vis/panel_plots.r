@@ -118,7 +118,7 @@ data$country = factor(data$country, levels=c("UGA",
                                "Mexico (C6)"))
 
 data1 <- select(data, country, scenario, strategy, confidence, decile, total_revenue)
-data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
+data1 <- data1[(data1$strategy == "5G_sa_fiber_baseline_baseline_baseline_baseline"),]
 data1$strategy <- "Revenue" 
 names(data1)[names(data1) == 'total_revenue'] <- 'value'
 data2 <- select(data, country, scenario, strategy, confidence, decile, total_cost)
@@ -130,9 +130,9 @@ remove(data1, data2)
 data <- data[!(data$value == "NA"),]
 
 data$strategy = factor(data$strategy, levels=c("Revenue",
-                                              "5G_nsa_microwave_baseline_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_passive_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_active_baseline_baseline_baseline"),
+                                              "5G_sa_fiber_baseline_baseline_baseline_baseline",
+                                               "5G_sa_fiber_passive_baseline_baseline_baseline",
+                                               "5G_sa_fiber_active_baseline_baseline_baseline"),
                                       labels=c("Revenue",
                                               "Baseline (No sharing)",
                                               "Passive (Site Sharing)",

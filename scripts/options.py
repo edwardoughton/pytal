@@ -65,39 +65,39 @@ OPTIONS = {
     'business_model_options': [
         {
             'scenario': 'S1_25_10_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
             'scenario': 'S2_200_50_25',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
             'scenario': 'S3_400_100_50',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
             'scenario': 'S1_25_10_5',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_passive_baseline_baseline_baseline',
         },
         {
             'scenario': 'S2_200_50_25',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_passive_baseline_baseline_baseline',
         },
         {
             'scenario': 'S3_400_100_50',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_passive_baseline_baseline_baseline',
         },
         {
             'scenario': 'S1_25_10_5',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_active_baseline_baseline_baseline',
         },
         {
             'scenario': 'S2_200_50_25',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_active_baseline_baseline_baseline',
         },
         {
             'scenario': 'S3_400_100_50',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
+            'strategy': '5G_sa_fiber_active_baseline_baseline_baseline',
         },
     ],
     'policy_options': [

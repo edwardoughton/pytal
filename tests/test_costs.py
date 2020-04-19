@@ -3,7 +3,7 @@ import math
 from pytal.costs import (greenfield_4g, upgrade_to_4g, greenfield_5g_nsa,
     upgrade_to_5g_nsa, greenfield_5g_sa, upgrade_to_5g_sa, get_fronthaul_costs,
     get_backhaul_costs, get_core_costs, discount_opex, discount_capex_and_opex,
-    calc_costs, find_single_network_cost)
+    calc_costs, find_single_network_cost, estimate_backhaul_length)
 
 #test approach is to:
 #test each function which returns the cost structure
@@ -273,50 +273,71 @@ def test_get_fronthaul_costs(setup_region, setup_costs):
         setup_costs['fiber_fronthaul_urban_m'] * math.sqrt(1/setup_region[0]['site_density'])) * 1000
 
 
-def test_get_backhaul_costs(setup_region, setup_costs, setup_backhaul_lut):
+def test_get_backhaul_costs(setup_region, setup_costs, setup_backhaul_lut, setup_core_lut):
 
     assert get_backhaul_costs(setup_region[0], 'microwave',
-        setup_costs, {'MWI.1.1.1_1': 1000}) == (setup_costs['microwave_backhaul_small'])
+        setup_costs, setup_backhaul_lut, setup_core_lut) == (setup_costs['microwave_backhaul_small'])
+
+    setup_region[0]['area_km2'] = 5000
 
     assert get_backhaul_costs(setup_region[0], 'microwave',
-        setup_costs, {'MWI.1.1.1_1': 21000}) == (setup_costs['microwave_backhaul_medium'])
+        setup_costs, setup_backhaul_lut, setup_core_lut) == (setup_costs['microwave_backhaul_medium'])
+
+    setup_region[0]['area_km2'] = 10000
 
     assert get_backhaul_costs(setup_region[0], 'microwave',
-        setup_costs, {'MWI.1.1.1_1': 41000}) == (setup_costs['microwave_backhaul_large'])
+        setup_costs, setup_backhaul_lut, setup_core_lut) == (setup_costs['microwave_backhaul_large'])
+
+    setup_region[0]['area_km2'] = 2
 
     assert get_backhaul_costs(setup_region[0], 'fiber',
-        setup_costs, {'MWI.1.1.1_1': 1000}) == (setup_costs['fiber_backhaul_urban_m'] * 1000)
+        setup_costs, setup_backhaul_lut, setup_core_lut) == (setup_costs['fiber_backhaul_urban_m'] * 500)
 
     assert get_backhaul_costs(setup_region[0], 'incorrect_baclhaul_tech_name',
-        setup_costs, {'MWI.1.1.1_1': 1000}) == 'Did not recognise the backhaul technology'
+        setup_costs, setup_backhaul_lut, setup_core_lut) == 'Did not recognise the backhaul technology'
+
+
+def test_estimate_backhaul_length(setup_backhaul_lut):
+
+    assert estimate_backhaul_length(1, setup_backhaul_lut) == 500
+
+    assert estimate_backhaul_length(0.1, setup_backhaul_lut) == 1500
+
+    assert estimate_backhaul_length(0.00000001, setup_backhaul_lut) == 5242880
+
+    assert estimate_backhaul_length(0.145, setup_backhaul_lut) == 1450
+
+    assert estimate_backhaul_length(0.000000001, setup_backhaul_lut) == 5242880
+
+    assert estimate_backhaul_length(2, setup_backhaul_lut) == 500
 
 
 def test_get_core_costs(setup_region, setup_costs, setup_core_lut):
 
-    assert get_core_costs(setup_region[0], 'core_edges', setup_costs,
-        setup_core_lut, 'epc') == (setup_costs['core_edges'] * 1000)
+    assert get_core_costs(setup_region[0], 'core_edge', setup_costs,
+        setup_core_lut, 'epc') == (setup_costs['core_edge'] * 1000)
 
-    assert get_core_costs(setup_region[0], 'core_nodes', setup_costs,
-        setup_core_lut, 'epc') == (setup_costs['core_nodes_{}'.format('epc')] * 2)
+    assert get_core_costs(setup_region[0], 'core_node', setup_costs,
+        setup_core_lut, 'epc') == (setup_costs['core_node_{}'.format('epc')] * 2)
 
-    assert get_core_costs(setup_region[0], 'regional_edges', setup_costs,
-        setup_core_lut, 'epc') == (setup_costs['regional_edges'] * 1000)
+    assert get_core_costs(setup_region[0], 'regional_edge', setup_costs,
+        setup_core_lut, 'epc') == (setup_costs['regional_edge'] * 1000)
 
-    assert get_core_costs(setup_region[0], 'regional_nodes', setup_costs,
-        setup_core_lut, 'epc') == (setup_costs['regional_nodes_{}'.format('epc')] * 2)
+    assert get_core_costs(setup_region[0], 'regional_node', setup_costs,
+        setup_core_lut, 'epc') == (setup_costs['regional_node_{}'.format('epc')] * 2)
 
     assert get_core_costs(setup_region[0], 'incorrrect_asset_name', setup_costs,
         setup_core_lut, 'epc') == 'Did not recognise core asset type'
 
     setup_region[0]['GID_id'] == 'unknown'
 
-    assert get_core_costs(setup_region[0], 'core_edges', setup_costs,
+    assert get_core_costs(setup_region[0], 'core_edge', setup_costs,
         setup_core_lut, 'epc') == 20000
 
-    assert get_core_costs(setup_region[0], 'regional_edges', setup_costs,
+    assert get_core_costs(setup_region[0], 'regional_edge', setup_costs,
         setup_core_lut, 'epc') == 10000
 
-    assert get_core_costs(setup_region[0], 'regional_nodes', setup_costs,
+    assert get_core_costs(setup_region[0], 'regional_node', setup_costs,
         setup_core_lut, 'epc') == 200000
 
 
@@ -332,6 +353,7 @@ def test_discount_opex(setup_global_parameters):
 
 def test_calc_costs(setup_region, setup_global_parameters):
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['new_sites'] = 1
 
@@ -400,6 +422,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     setup_global_parameters, setup_country_parameters,
     setup_backhaul_lut, setup_core_lut):
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
@@ -419,6 +442,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     #~68k is a single 4G greenfield site
     assert answer == 110322
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
@@ -439,6 +463,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
     #11952 is a new backhaul (10k capex + opex of 1952)
     assert answer == (110322 + 11952)
 
+    setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['site_density'] = 0.5
@@ -478,7 +503,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
 
     answer = find_single_network_cost(
         setup_region[0],
-        '5G_sa_microwave_baseline_baseline_baseline_baseline',
+        '5G_sa_fiber_baseline_baseline_baseline_baseline',
         setup_costs,
         setup_global_parameters,
         setup_country_parameters,
@@ -486,7 +511,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer == 57381
+    assert answer == 63357.0
 
     setup_region[0]['new_sites'] = 0
     setup_region[0]['upgraded_sites'] = 1
@@ -495,7 +520,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
 
     answer = find_single_network_cost(
         setup_region[0],
-        '5G_sa_microwave_baseline_baseline_baseline_baseline',
+        '5G_sa_fiber_baseline_baseline_baseline_baseline',
         setup_costs,
         setup_global_parameters,
         setup_country_parameters,
@@ -503,7 +528,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer == 57381
+    assert answer == 63357
 
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
@@ -512,7 +537,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
 
     answer = find_single_network_cost(
         setup_region[0],
-        '5G_sa_microwave_baseline_baseline_baseline_baseline',
+        '5G_sa_fiber_baseline_baseline_baseline_baseline',
         setup_costs,
         setup_global_parameters,
         setup_country_parameters,
@@ -520,7 +545,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer == 140738
+    assert answer == 152690
 
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 0
@@ -529,7 +554,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
 
     answer = find_single_network_cost(
         setup_region[0],
-        '5G_sa_microwave_baseline_baseline_baseline_baseline',
+        '5G_sa_fiber_baseline_baseline_baseline_baseline',
         setup_costs,
         setup_global_parameters,
         setup_country_parameters,
@@ -537,7 +562,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer == 444422
+    assert answer == 450398.0
 
     setup_region[0]['new_sites'] = 10
     setup_region[0]['upgraded_sites'] = 10
@@ -546,7 +571,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
 
     answer = find_single_network_cost(
         setup_region[0],
-        '5G_sa_microwave_baseline_baseline_baseline_baseline',
+        '5G_sa_fiber_baseline_baseline_baseline_baseline',
         setup_costs,
         setup_global_parameters,
         setup_country_parameters,
@@ -554,4 +579,4 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer == 1332280
+    assert answer == 1451800.0

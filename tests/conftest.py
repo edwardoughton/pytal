@@ -59,11 +59,12 @@ def setup_global_parameters():
         'cots_processing_split_urban': 2,
         'cots_processing_split_suburban': 4,
         'cots_processing_split_rural': 16,
-        'io_n2_n3_split': 6,
-        'low_latency_switch_split': 6,
-        'rack_split': 6,
-        'cloud_power_supply_converter_split': 6,
-        'software_split': 6,
+        'io_n2_n3_split': 7,
+        'low_latency_switch_split': 7,
+        'rack_split': 7,
+        'cloud_power_supply_converter_split': 7,
+        'software_split': 7,
+        'cloud_backhaul_split': 7,
     }
 
 
@@ -193,14 +194,14 @@ def setup_costs():
         'fiber_backhaul_urban_m': 10,
         'fiber_backhaul_suburban_m': 5,
         'fiber_backhaul_rural_m': 2,
-        'core_nodes_epc': 100000,
-        'core_nodes_nsa': 150000,
-        'core_nodes_sa': 200000,
-        'core_edges': 20,
-        'regional_nodes_epc': 100000,
-        'regional_nodes_nsa': 150000,
-        'regional_nodes_sa': 200000,
-        'regional_edges': 10,
+        'core_node_epc': 100000,
+        'core_node_nsa': 150000,
+        'core_node_sa': 200000,
+        'core_edge': 20,
+        'regional_node_epc': 100000,
+        'regional_node_nsa': 150000,
+        'regional_node_sa': 200000,
+        'regional_edge': 10,
     }
 
 
@@ -232,24 +233,32 @@ def setup_ci():
 
 @fixture(scope='function')
 def setup_backhaul_lut():
-    return {
-        'MWI.1.1.1_1': 40
-    }
+    return [
+        {'node_density_km2': 0.00000001, 'average_distance_m': 5242880},
+        {'node_density_km2': 0.0000001, 'average_distance_m': 1638400},
+        {'node_density_km2': 0.000001, 'average_distance_m': 512000},
+        {'node_density_km2': 0.00001, 'average_distance_m': 160000},
+        {'node_density_km2': 0.0001, 'average_distance_m': 50000},
+        {'node_density_km2': 0.001, 'average_distance_m': 16000},
+        {'node_density_km2': 0.01, 'average_distance_m': 5000},
+        {'node_density_km2': 0.1, 'average_distance_m': 1500},
+        {'node_density_km2': 1.0,	'average_distance_m': 500},
+    ]
 
 
 @fixture(scope='function')
 def setup_core_lut():
     return {
-        'core_edges': {
+        'core_edge': {
             'MWI.1.1.1_1': 1000
         },
-        'core_nodes': {
+        'core_node': {
             'MWI.1.1.1_1': 2
         },
-        'regional_edges': {
+        'regional_edge': {
             'MWI.1.1.1_1': 1000
         },
-        'regional_nodes': {
+        'regional_node': {
             'MWI.1.1.1_1': 2
         },
     }
