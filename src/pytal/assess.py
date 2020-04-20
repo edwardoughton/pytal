@@ -56,6 +56,8 @@ def assess(country, regions, option, global_parameters, country_parameters):
             region['profit_margin']
         )
 
+        region['cost_per_sp_user'] = region['total_cost'] / region['smartphones_on_network']
+
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
 
@@ -107,19 +109,34 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
 
     spectrum_cost = strategy.split('_')[5]
 
-    coverage_spectrum_cost = 'spectrum_coverage_{}_usd_mhz_pop'.format(spectrum_cost)
-    capacity_spectrum_cost = 'spectrum_capacity_{}_usd_mhz_pop'.format(spectrum_cost)
+    coverage_spectrum_cost = 'spectrum_coverage_baseline_usd_mhz_pop'
+    capacity_spectrum_cost = 'spectrum_capacity_baseline_usd_mhz_pop'
+
+    coverage_cost_usd_mhz_pop = country_parameters['financials'][coverage_spectrum_cost]
+    capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
+
+    if spectrum_cost == 'low':
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.5
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.5
+
+    if spectrum_cost == 'high':
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 1.5
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 1.5
 
     all_costs = []
 
     for frequency in frequencies:
         if frequency['frequency'] < 1000:
-            cost_usd_mhz_pop = country_parameters['financials'][coverage_spectrum_cost]
-            cost = cost_usd_mhz_pop * frequency['bandwidth'] * (population / global_parameters['networks'])
+            cost = (
+                coverage_cost_usd_mhz_pop * frequency['bandwidth'] *
+                (population / global_parameters['networks'])
+            )
             all_costs.append(cost)
         else:
-            cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
-            cost = cost_usd_mhz_pop * frequency['bandwidth'] * (population / global_parameters['networks'])
+            cost = (
+                capacity_cost_usd_mhz_pop * frequency['bandwidth'] *
+                (population / global_parameters['networks'])
+            )
             all_costs.append(cost)
 
     return sum(all_costs)

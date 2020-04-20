@@ -13,6 +13,16 @@ def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters,
     assert get_spectrum_costs(setup_region[0], setup_option['strategy'],
         setup_global_parameters, setup_country_parameters) == 30000
 
+    setup_region[0]['new_sites'] = 1
+
+    # test high spectrum costs which are 50% higher
+    assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_high_baseline',
+        setup_global_parameters, setup_country_parameters) == 30000 * 1.5
+
+    # test low spectrum costs which are 50% low
+    assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_low_baseline',
+        setup_global_parameters, setup_country_parameters) == 30000 * 0.5
+
 
 def test_calculate_tax(setup_region, setup_option, setup_country_parameters):
 
@@ -132,6 +142,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters)
             'population_km2': 500,
             'total_revenue': 20000,
             'network_cost': 5000,
+            'smartphones_on_network': 250
         },
         {
             'GID_id': 'b',
@@ -139,6 +150,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters)
             'population_km2': 250,
             'total_revenue': 12000,
             'network_cost': 8000,
+            'smartphones_on_network': 250
         },
     ]
 
@@ -174,6 +186,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters)
             'population_km2': 500,
             'total_revenue': 20000,
             'network_cost': 5200,
+            'smartphones_on_network': 250,
         },
         {
             'GID_id': 'b',
@@ -181,6 +194,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters)
             'population_km2': 500,
             'total_revenue': 2500,
             'network_cost': 5200,
+            'smartphones_on_network': 250,
         },
     ]
 
