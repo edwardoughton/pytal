@@ -186,7 +186,6 @@ def test_estimate_supply(
     )
 
     assert round(answer[0]['site_density'], 1) == 0.9
-    # assert answer[0]['network_cost'] == 44575
 
 
 def test_estimate_backhaul_upgrades(
