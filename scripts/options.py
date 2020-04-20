@@ -167,6 +167,55 @@ OPTIONS = {
 
 COUNTRY_PARAMETERS = {
 
+
+    'ALB': {
+        'luminosity': {
+            'high': 5,
+            'medium': 1,
+        },
+        'arpu': {
+            'high': 10,
+            'medium': 7,
+            'low': 5,
+        },
+        'networks': 3,
+        'frequencies': {
+            '4G': [
+                {
+                    'frequency': 800,
+                    'bandwidth': 10,
+                },
+                {
+                    'frequency': 1800,
+                    'bandwidth': 10,
+                },
+            ],
+            '5G': [
+                {
+                    'frequency': 700,
+                    'bandwidth': 10,
+                },
+                {
+                    'frequency': 3500,
+                    'bandwidth': 50,
+                },
+            ]
+        },
+        'financials': {
+            'profit_margin': 20,
+            'subsidy_low': 5,
+            'subsidy_high': 20,
+            'spectrum_low_usd_mhz_pop': 1.07,
+            'spectrum_baseline_usd_mhz_pop': 2.14,
+            'spectrum_high_usd_mhz_pop': 4.24,
+            'spectrum_coverage_baseline_usd_mhz_pop': 2,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.5,
+            'tax_low': 10,
+            'tax_baseline': 25,
+            'tax_high': 40,
+            },
+        },
+
     'BOL': {
         'luminosity': {
             'high': 5,
@@ -177,7 +226,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -227,7 +275,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -277,7 +324,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'proportion_of_sites': 50,
         'frequencies': {
@@ -328,7 +374,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -378,7 +423,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -424,11 +468,10 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 10,
+            'high': 12,
+            'medium': 9,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'proportion_of_sites': 50,
         'frequencies': {
@@ -457,12 +500,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.02,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -479,7 +518,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'proportion_of_sites': 50,
         'frequencies': {
@@ -530,7 +568,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'proportion_of_sites': 50,
         'frequencies': {
@@ -559,12 +596,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.003,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.001,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -633,9 +666,9 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 10,
-            'low': 5,
+            'high': 8,
+            'medium': 5,
+            'low': 2,
         },
         # also GSMA, 2019 (same report as above)
         # smartphone pen was 10% in 2017, so assume 15% in 2020
@@ -671,12 +704,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.00037,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0001,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -691,10 +720,9 @@ COUNTRY_PARAMETERS = {
         },
         'arpu': {
             'high': 15,
-            'medium': 10,
+            'medium': 12,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'proportion_of_sites': 50,
         'frequencies': {
@@ -719,12 +747,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -738,8 +762,8 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 10,
+            'high': 10,
+            'medium': 8,
             'low': 5,
         },
         'smartphone_pen': 0.5,
@@ -771,12 +795,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.04,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -793,7 +813,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -821,12 +840,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.03,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -839,12 +854,11 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 10,
-            'low': 5,
+            'high': 10,
+            'medium': 3,
+            'low': 2,
         },
-        'smartphone_pen': 0.4,
-        'networks': 3,
+        'networks': 2,
         'proportion_of_sites': 50,
         'frequencies': {
             '4G': [
@@ -872,12 +886,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.03,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -894,7 +904,6 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 5,
         },
-        'smartphone_pen': 0.4,
         'networks': 3,
         'frequencies': {
             '4G': [
@@ -922,12 +931,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.03,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
