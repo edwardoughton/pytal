@@ -1531,105 +1531,104 @@ def generate_core_lut(country):
     return print('Completed core lut')
 
 
-# def generate_backhaul_lut(country):
-#     """
-#     Simulate backhaul distance given a 100km^2 area.
-#       Simulations show that for every 10x increase in node density,
-#       there is a 3.2x decrease in backhaul length.
+def generate_backhaul_lut(country):
+    """
+    Simulate backhaul distance given a 100km^2 area.
+      Simulations show that for every 10x increase in node density,
+      there is a 3.2x decrease in backhaul length.
 
+    node_density_km2	average_distance_km
+    0.000001	606.0	10	 3.2
+    0.00001	189.0	10	 3.8
+    0.0001	50.0	10	 3.1
+    0.001	16.0	10	 3.2
+    0.01	5.0	10	 3.2
+    0.1	1.6	10	 3.2
+    1	0.5
 
-    # node_density_km2	average_distance_km
-    # 0.000001	606.0	10	 3.2
-    # 0.00001	189.0	10	 3.8
-    # 0.0001	50.0	10	 3.1
-    # 0.001	16.0	10	 3.2
-    # 0.01	5.0	10	 3.2
-    # 0.1	1.6	10	 3.2
-    # 1	0.5
+    """
+    filename = 'backhaul_lut.csv'
+    folder = os.path.join(DATA_INTERMEDIATE)
+    path = os.path.join(folder, filename)
 
-#     """
-#     iso3 = country['iso3']
+    if os.path.exists(path):
+        return print('Backhaul LUT already generated')
 
-#     output = []
+    output = []
 
-#     number_of_regional_nodes_range = [1, 10, 100, 1000, 10000]
+    number_of_regional_nodes_range = [1, 10, 100, 1000, 10000]
 
-#     area_km2 = 1e6
+    area_km2 = 1e6
 
-#     for number_of_regional_nodes in number_of_regional_nodes_range:
+    for number_of_regional_nodes in number_of_regional_nodes_range:
 
-#         sites = []
+        sites = []
 
-#         for i in range(1, int(round(max(number_of_regional_nodes_range) + 1))):
-#             x = random.uniform(0, round(math.sqrt(area_km2)))
-#             y = random.uniform(0, round(math.sqrt(area_km2)))
-#             sites.append({
-#                 'geometry': {
-#                     'type': 'Point',
-#                     'coordinates': (x, y)
-#                 },
-#                 'properties': {
-#                     'id': i
-#                 }
-#             })
-#         print(len(sites))
-#         regional_nodes = []
+        for i in range(1, int(round(max(number_of_regional_nodes_range) + 1))):
+            x = random.uniform(0, round(math.sqrt(area_km2)))
+            y = random.uniform(0, round(math.sqrt(area_km2)))
+            sites.append({
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': (x, y)
+                },
+                'properties': {
+                    'id': i
+                }
+            })
 
-#         for i in range(1, number_of_regional_nodes + 1):
-#             x = random.uniform(0, round(math.sqrt(area_km2)))
-#             y = random.uniform(0, round(math.sqrt(area_km2)))
-#             regional_nodes.append({
-#                 'geometry': {
-#                     'type': 'Point',
-#                     'coordinates': (x, y)
-#                 },
-#                 'properties': {
-#                     'id': i
-#                 }
-#             })
-#         print(len(regional_nodes))
-#         distances = []
+        regional_nodes = []
 
-#         idx = index.Index()
+        for i in range(1, number_of_regional_nodes + 1):
+            x = random.uniform(0, round(math.sqrt(area_km2)))
+            y = random.uniform(0, round(math.sqrt(area_km2)))
+            regional_nodes.append({
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': (x, y)
+                },
+                'properties': {
+                    'id': i
+                }
+            })
 
-#         for regional_node in regional_nodes:
-#             idx.insert(
-#                 regional_node['properties']['id'],
-#                 shape(regional_node['geometry']).bounds,
-#                 regional_node)
+        distances = []
 
-#         for site in sites:
+        idx = index.Index()
 
-#             geom1 = shape(site['geometry'])
+        for regional_node in regional_nodes:
+            idx.insert(
+                regional_node['properties']['id'],
+                shape(regional_node['geometry']).bounds,
+                regional_node)
 
-#             nearest_regional_node = [i for i in idx.nearest((geom1.bounds))][0]
+        for site in sites:
 
-#             for regional_node in regional_nodes:
-#                 if regional_node['properties']['id'] == nearest_regional_node:
+            geom1 = shape(site['geometry'])
 
-#                     x1 = site['geometry']['coordinates'][0]
-#                     x2 = regional_node['geometry']['coordinates'][0]
-#                     y1 = site['geometry']['coordinates'][1]
-#                     y2 = regional_node['geometry']['coordinates'][1]
+            nearest_regional_node = [i for i in idx.nearest((geom1.bounds))][0]
 
-#                     distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+            for regional_node in regional_nodes:
+                if regional_node['properties']['id'] == nearest_regional_node:
 
-#                     distances.append(distance)
+                    x1 = site['geometry']['coordinates'][0]
+                    x2 = regional_node['geometry']['coordinates'][0]
+                    y1 = site['geometry']['coordinates'][1]
+                    y2 = regional_node['geometry']['coordinates'][1]
 
-#         output.append({
-#             'node_density_km2': round(number_of_regional_nodes / area_km2, 8),
-#             'average_distance_km': int(round(sum(distances) / len(distances))),
-#         })
+                    distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-#     output = pd.DataFrame(output)
+                    distances.append(distance)
 
-#     filename = 'backhaul_lut.csv'
-#     folder = os.path.join(DATA_INTERMEDIATE, iso3)
-#     path = os.path.join(folder, filename)
+        output.append({
+            'node_density_km2': round(number_of_regional_nodes / area_km2, 8),
+            'average_distance_km': int(round(sum(distances) / len(distances))),
+        })
 
-#     output.to_csv(path, index=False)
+    output = pd.DataFrame(output)
+    output.to_csv(path, index=False)
 
-#     return output
+    return print('Completed backhaul LUT processing')
 
 
 def load_subscription_data(path, iso3):

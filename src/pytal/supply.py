@@ -61,20 +61,19 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
 
         region = estimate_backhaul_upgrades(region, option['strategy'])
 
-        network_cost = find_single_network_cost(
+        region = find_single_network_cost(
             region,
-            option['strategy'],
+            option,
             costs,
             global_parameters,
             country_parameters,
             backhaul_lut,
-            core_lut
+            core_lut,
         )
 
         region['scenario'] = option['scenario']
         region['strategy'] = option['strategy']
         region['confidence'] = ci
-        region['network_cost'] = network_cost
 
         output_regions.append(region)
 
@@ -86,7 +85,6 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     For a given region, provide an optmized network.
 
     """
-
     networks = country_parameters['networks']
     demand = region['demand_mbps_km2']
     geotype = region['geotype'].split(' ')[0]

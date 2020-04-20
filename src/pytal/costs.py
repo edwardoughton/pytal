@@ -9,8 +9,9 @@ https://github.com/edwardoughton/pysim5g
 """
 import math
 from itertools import tee
+import collections, functools, operator
 
-def find_single_network_cost(region, strategy, costs, global_parameters,
+def find_single_network_cost(region, option, costs, global_parameters,
     country_parameters, backhaul_lut, core_lut):
     """
     Calculates the annual total cost using capex and opex.
@@ -19,8 +20,8 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
     ----------
     region : dict
         The region being assessed and all associated parameters.
-    strategy : str
-        Infrastructure sharing strategy.
+    # strategy : str
+    #     Infrastructure sharing strategy.
     costs : dict
         Contains the costs of each necessary equipment item.
     global_parameters : dict
@@ -37,6 +38,7 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
         opex costs.
 
     """
+    strategy = option['strategy']
     generation = strategy.split('_')[0]
     core = strategy.split('_')[1]
 
@@ -47,6 +49,7 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
     new_backhaul = region['backhaul_new']
 
     regional_cost = []
+    regional_asset_cost = []
 
     for i in range(1, int(all_sites) + 1):
 
@@ -57,9 +60,10 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
 
         if i <= upgraded_sites and generation == '5G' and core == 'nsa':
@@ -69,9 +73,10 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
 
         if i <= upgraded_sites and generation == '5G' and core == 'sa':
@@ -81,9 +86,10 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
 
         if i > upgraded_sites and generation == '4G':
@@ -93,9 +99,10 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
 
         if i > upgraded_sites and generation == '5G' and core == 'nsa':
@@ -105,9 +112,10 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
 
         if i > upgraded_sites and generation == '5G' and core == 'sa':
@@ -117,11 +125,25 @@ def find_single_network_cost(region, strategy, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul_quant, global_parameters)
 
             regional_cost.append(total_cost)
+            regional_asset_cost.append(cost_by_asset)
 
-    return sum(regional_cost)
+
+    counter = collections.Counter()
+    for d in regional_asset_cost:
+        counter.update(d)
+    test = dict(counter)
+
+    network_cost = 0
+    for k, v in test.items():
+        region[k] = v
+        network_cost += v
+
+    region['network_cost'] = network_cost
+
+    return region
 
 
 def backhaul_quantity(i, new_backhaul):
@@ -162,10 +184,10 @@ def greenfield_4g(region, strategy, costs, global_parameters,
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, backhaul_lut, core_lut),
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -208,10 +230,10 @@ def upgrade_to_4g(region, strategy, costs, global_parameters,
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, backhaul_lut, core_lut),
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -259,10 +281,10 @@ def greenfield_5g_nsa(region, strategy, costs,
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, backhaul_lut, core_lut),
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -305,10 +327,10 @@ def upgrade_to_5g_nsa(region, strategy, costs,
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, backhaul_lut, core_lut),
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -357,10 +379,10 @@ def greenfield_5g_sa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -404,10 +426,10 @@ def upgrade_to_5g_sa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
-        'core_edges': get_core_costs(region, 'core_edge', costs, core_lut, core),
-        'code_nodes': get_core_costs(region, 'core_node', costs, core_lut, core),
-        'regional_edges': get_core_costs(region, 'regional_edge', costs, core_lut, core),
-        'regional_nodes': get_core_costs(region, 'regional_node', costs, core_lut, core),
+        'core_edge': get_core_costs(region, 'core_edge', costs, core_lut, core),
+        'core_node': get_core_costs(region, 'core_node', costs, core_lut, core),
+        'regional_edge': get_core_costs(region, 'regional_edge', costs, core_lut, core),
+        'regional_node': get_core_costs(region, 'regional_node', costs, core_lut, core),
     }
 
     cost_structure = {}
@@ -447,8 +469,8 @@ def get_backhaul_costs(region, backhaul, costs, backhaul_lut, core_lut):
     backhaul_tech = backhaul.split('_')[0]
     geotype = region['geotype'].split(' ')[0]
 
-    regional_nodes = core_lut['regional_node'][region['GID_id']]
-    node_density_km2 = regional_nodes / region['area_km2']
+    regional_node = core_lut['regional_node'][region['GID_id']]
+    node_density_km2 = regional_node / region['area_km2']
     distance_m = estimate_backhaul_length(node_density_km2, backhaul_lut)
 
     if backhaul_tech == 'microwave':
@@ -644,6 +666,7 @@ def calc_costs(region, cost_structure, backhaul_quantity, global_parameters):
     geotype = region['geotype'].split(' ')[0]
 
     total_cost = 0
+    cost_by_asset = []
 
     for asset_name1, cost in cost_structure.items():
         for asset_name2, type_of_cost in COST_TYPE.items():
@@ -652,7 +675,8 @@ def calc_costs(region, cost_structure, backhaul_quantity, global_parameters):
                 if asset_name1 == 'backhaul' and backhaul_quantity == 0:
                     continue
 
-                if region['sites_4G'] > 0 and asset_name1 in [
+                #take share of 'sites_4G' against 'sites_estimated_total'
+                if region['sites_4G'] > 0 and asset_name1 in [ #what about for SA? Existing 4G may be microwave.
                     'core_edge',
                     'core_node',
                     'regional_edge',
@@ -694,18 +718,87 @@ def calc_costs(region, cost_structure, backhaul_quantity, global_parameters):
                         quantity = all_sites / global_parameters['cloud_backhaul_split']
                         cost = cost * (quantity // 5 + (21 % 5 > 0)) #last part rounds up
 
-                    total_cost += cost
-
                 elif type_of_cost == 'capex':
-                    total_cost += cost
+                    cost = cost
 
                 elif type_of_cost == 'opex':
-                    total_cost += discount_opex(cost, global_parameters)
+                    cost = discount_opex(cost, global_parameters)
 
                 else:
                     return 'Did not recognize cost type'
 
-    return total_cost
+                total_cost += cost
+
+                cost_by_asset.append({
+                    'asset': asset_name1,
+                    'cost': cost,
+                })
+
+    cost_by_asset = {item['asset']: item['cost'] for item in cost_by_asset}
+
+    ran = [
+        'single_sector_antenna',
+        'single_remote_radio_unit',
+        'io_fronthaul',
+        'processing',
+        'io_s1_x2',
+        'control_unit',
+        'cooling_fans',
+        'distributed_power_supply_converter',
+        'bbu_cabinet',
+        'cots_processing',
+        'io_n2_n3',
+        'low_latency_switch',
+        'rack',
+        'cloud_power_supply_converter',
+        'software'
+    ]
+
+    backhaul_fronthaul = [
+        'fronthaul',
+        'backhaul',
+    ]
+
+    civils = [
+        'tower',
+        'civil_materials',
+        'transportation',
+        'installation',
+        'site_rental',
+        'power_generator_battery_system',
+    ]
+
+    core = [
+        'cloud_backhaul',
+        'regional_node',
+        'regional_edge',
+        'core_node',
+        'core_edge',
+    ]
+
+    ran_cost = 0
+    backhaul_fronthaul_cost = 0
+    civils_cost = 0
+    core_cost = 0
+
+    for key, value in cost_by_asset.items():
+        if key in ran:
+            ran_cost += value
+        if key in backhaul_fronthaul:
+            backhaul_fronthaul_cost += value
+        if key in civils:
+            civils_cost += value
+        if key in core:
+            core_cost += value
+
+    cost_by_asset = {
+        'ran': ran_cost,
+        'backhaul_fronthaul': backhaul_fronthaul_cost,
+        'civils': civils_cost,
+        'core_network': core_cost,
+    }
+
+    return total_cost, cost_by_asset
 
 
 INFRA_SHARING_ASSETS = {
@@ -773,5 +866,8 @@ COST_TYPE = {
     'power_generator_battery_system': 'capex_and_opex',
     'backhaul': 'capex_and_opex',
     'cloud_backhaul': 'capex_and_opex',
-
+    'regional_node': 'capex_and_opex',
+    'regional_edge': 'capex_and_opex',
+    'core_node': 'capex_and_opex',
+    'core_edge': 'capex_and_opex',
 }

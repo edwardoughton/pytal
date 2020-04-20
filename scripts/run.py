@@ -310,9 +310,9 @@ def load_backhaul_lut(path):
 def define_deciles(regions):
 
     regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply(
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).cost_per_sp_user.apply(
             pd.qcut, q=11, precision=0,
-            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop')
+            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop')
 
     return regions
 
@@ -339,8 +339,8 @@ def write_results(regional_results, folder):
     decile_results = pd.DataFrame(regional_results)
     decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'area_km2',
-        'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population',
+        'area_km2', 'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
@@ -352,9 +352,11 @@ def write_results(regional_results, folder):
     decile_cost_results = pd.DataFrame(regional_results)
     decile_cost_results = define_deciles(decile_cost_results)
     decile_cost_results = decile_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'total_revenue',
-        'network_cost', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
-        'available_cross_subsidy', 'deficit', 'used_cross_subsidy', 'required_state_subsidy',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population',
+        'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
+        'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
+        'required_state_subsidy',
     ]]
 
     decile_cost_results = decile_cost_results.groupby([
@@ -370,7 +372,7 @@ def write_results(regional_results, folder):
         'GID_0', 'scenario', 'strategy', 'decile',
         'confidence', 'population', 'area_km2',
         'population_km2', 'upgraded_sites',
-        'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
+        'upgraded_sites','new_sites', 'total_revenue', 'total_cost', 'cost_per_sp_user',
     ]]
 
     path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
@@ -419,14 +421,14 @@ if __name__ == '__main__':
         'fiber_backhaul_urban_m': 20,
         'fiber_backhaul_suburban_m': 10,
         'fiber_backhaul_rural_m': 5,
-        'core_node_epc': 200000,
-        'core_node_nsa': 300000,
-        'core_node_sa': 400000,
+        'core_node_epc': 100000,
+        'core_node_nsa': 100000,
+        'core_node_sa': 200000,
         'core_edge': 20,
-        'regional_node_epc': 100000,
-        'regional_node_nsa': 150000,
-        'regional_node_sa': 200000,
-        'regional_edge': 20,
+        'regional_node_epc': 50000,
+        'regional_node_nsa': 50000,
+        'regional_node_sa': 100000,
+        'regional_edge': 5,
     }
 
     GLOBAL_PARAMETERS = {
@@ -475,6 +477,7 @@ if __name__ == '__main__':
         options = OPTIONS[decision_option]
 
         regional_results = []
+        regional_cost_structure = []
 
         for country in countries:#[:1]:
 
@@ -498,7 +501,7 @@ if __name__ == '__main__':
             filename = 'core_lut.csv'
             core_lut = load_core_lut(os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3)
+            folder = os.path.join(DATA_INTERMEDIATE)
             filename = 'backhaul_lut.csv'
             backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
 

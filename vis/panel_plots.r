@@ -173,7 +173,8 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 
 data <- data[(data$strategy == '5G_nsa_microwave_baseline_baseline_baseline_baseline'),]
 
-data <- select(data, country, strategy, scenario, decile, network_cost, spectrum_cost, tax, profit_margin, 
+data <- select(data, country, strategy, scenario, decile, ran, backhaul_fronthaul, civils, 
+               core_network, spectrum_cost, tax, profit_margin, 
               used_cross_subsidy, required_state_subsidy)
 
 data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
@@ -195,38 +196,45 @@ data$country = factor(data$country, levels=c("UGA",
                                "Pakistan (Cluster 3)",
                                "Peru (Cluster 5)",
                                "Mexico (Cluster 6)"))
-data <- gather(data, metric, value, network_cost:required_state_subsidy)
 
-data$metric = factor(data$metric, levels=c("network_cost",
-                                             "spectrum_cost",
-                                             "tax",
-                                             "profit_margin",
-                                             "used_cross_subsidy",
-                                             "required_state_subsidy"),
-                      labels=c("Network Cost",
-                               "Spectrum Cost",
-                               "Tax",
-                               "Profit Margin",
+data <- gather(data, metric, value, ran:required_state_subsidy)
+
+data$metric = factor(data$metric, levels=c("required_state_subsidy",
+                                           "used_cross_subsidy",
+                                           "profit_margin",
+                                           "tax",
+                                           "spectrum_cost",
+                                           "ran",
+                                           'backhaul_fronthaul',
+                                           'civils',
+                                           'core_network'
+                                             ),
+                      labels=c("Required State Subsidy",
                                "Cross-Subsidy",
-                               "Required State Subsidy"))
-
+                               "Profit Margin",
+                               "Tax",
+                               "Spectrum Cost",
+                               "Radio Access Network",
+                               "Front/Backhaul",
+                               "Civil Works and Site",
+                               'Core Network'
+                               ))
 
 panel <- ggplot(data, aes(x=decile, y=(value/1e9), group=metric, fill=metric)) +
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Spectral", name = NULL, direction=1) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "right") +
   labs(title = "Cost Composition", colour=NULL,
        subtitle = "Results reported by scenario, decile and country",
        x = NULL, y = "Cost (Billions $USD)") +
   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
-  guides(fill=guide_legend(ncol =6)) +
+  guides(fill=guide_legend(ncol =1)) +
   facet_wrap(country~scenario, scales = "free",  ncol = 3) #facet_grid(scenario~country)#
 
 path = file.path(folder, 'figures', 'results_cost_composition.png')
 ggsave(path, units="in", width=8, height=11.5, dpi=300)
 print(panel)
 dev.off()
-
 
 
 ##################Spectrum
