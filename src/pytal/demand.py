@@ -53,13 +53,6 @@ def estimate_demand(regions, option, global_parameters,
 
         scenario_per_user_capacity = get_per_user_capacity(region['geotype'], option)
 
-        # subsidy_level = 'subsidy_{}'.format(subsidy)
-
-        # if not subsidy_level == 'subsidy_baseline': #region['geotype'] == 'rural' and
-        #     subsidy_factor = 1 + (country_parameters['financials'][subsidy_level] / 100)
-        # else:
-        #     subsidy_factor = 1
-
         for timestep in timesteps:
 
             region['arpu'] = estimate_arpu(
