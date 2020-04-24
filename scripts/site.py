@@ -452,7 +452,8 @@ def load_albania(path, regions, folder):
 
     print('Reading Albania data')
     sites = pd.read_csv(path, encoding = "ISO-8859-1")
-    sites = sites[['Code of antena', 'LATITUDE', 'LONGITUDE']]
+    sites = sites[['LATITUDE', 'LONGITUDE']]
+    sites = sites.drop_duplicates()
     sites = gpd.GeoDataFrame(
         sites, geometry=gpd.points_from_xy(sites.LONGITUDE, sites.LATITUDE))
     sites = sites.dropna()
@@ -481,7 +482,7 @@ def process_albania():
     path = os.path.join(DATA_INTERMEDIATE, 'ALB', 'regions', 'regions_2_ALB.shp')
     regions = load_regions(path)
 
-    filename = 'lte_cells.csv'
+    filename = 'all_data.csv'
     path = os.path.join(DATA_RAW, 'ALB', filename)
 
     sites = load_albania(path, regions, folder)
@@ -491,8 +492,8 @@ def process_albania():
 if __name__ == "__main__":
 
     countries = [
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2},
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2},
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2},
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2},
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2},
     ]
 
@@ -507,11 +508,11 @@ if __name__ == "__main__":
         print('Processing coverage shapes')
         process_coverage_shapes(country)
 
-        if country['iso3'] == 'KEN':
-            process_kenya()
+        # if country['iso3'] == 'KEN':
+        #     process_kenya()
 
-        if country['iso3'] == 'SEN':
-            process_senegal()
+        # if country['iso3'] == 'SEN':
+        #     process_senegal()
 
         if country['iso3'] == 'ALB':
             process_albania()
