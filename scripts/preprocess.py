@@ -594,6 +594,15 @@ def estimate_sites(data, iso3, backhaul_lut):
     """
     output = []
 
+    existing_site_data_path = os.path.join(DATA_INTERMEDIATE, iso3, 'sites', 'sites.csv')
+
+    existing_site_data = {}
+    if os.path.exists(existing_site_data_path):
+        site_data = pd.read_csv(existing_site_data_path)
+        site_data = site_data.to_dict('records')
+        for item in site_data:
+            existing_site_data[item['GID_id']] = item['sites']
+
     population = 0
 
     for region in data:
@@ -625,33 +634,38 @@ def estimate_sites(data, iso3, backhaul_lut):
 
     for region in data:
 
+        #first try to use actual data
+        if len(existing_site_data) > 0:
+            sites_estimated_total = existing_site_data[region['GID_id']]
+            sites_estimated_km2 = sites_estimated_total / region['area_km2']
+
+        #or if we don't have data estimate sites per area
+        else:
+            if covered_pop_so_far < population_covered:
+                sites_estimated_total = region['population'] * towers_per_pop
+                sites_estimated_km2 = region['population_km2'] * towers_per_pop
+
+            else:
+                sites_estimated_total = 0
+                sites_estimated_km2 = 0
+
         backhaul_fiber = 0
         backhaul_copper = 0
         backhaul_microwave = 0
         backhaul_satellite = 0
 
-        if covered_pop_so_far < population_covered:
+        for i in range(1, int(round(sites_estimated_total)) + 1):
 
-            sites_estimated_total = region['population'] * towers_per_pop
-            sites_estimated_km2 = region['population_km2'] * towers_per_pop
+            num = random.uniform(0, 1)
 
-            for i in range(1, int(round(sites_estimated_total)) + 1):
-
-                num = random.uniform(0, 1)
-
-                if num < tower_backhaul_lut['fiber']:
-                    backhaul_fiber += 1
-                elif tower_backhaul_lut['fiber'] < num < tower_backhaul_lut['copper']:
-                    backhaul_copper += 1
-                elif tower_backhaul_lut['copper'] < num < tower_backhaul_lut['microwave']:
-                    backhaul_microwave += 1
-                elif tower_backhaul_lut['microwave'] < num:
-                    backhaul_satellite += 1
-
-        else:
-
-            sites_estimated_total = 0
-            sites_estimated_km2 = 0
+            if num <= tower_backhaul_lut['fiber']:
+                backhaul_fiber += 1
+            elif tower_backhaul_lut['fiber'] < num <= tower_backhaul_lut['copper']:
+                backhaul_copper += 1
+            elif tower_backhaul_lut['copper'] < num <= tower_backhaul_lut['microwave']:
+                backhaul_microwave += 1
+            elif tower_backhaul_lut['microwave'] < num:
+                backhaul_satellite += 1
 
         output.append({
                 'GID_0': region['GID_0'],
@@ -688,7 +702,7 @@ def estimate_backhaul(iso3, region, year):
     """
     output = []
 
-    path = os.path.join(BASE_PATH, '..', 'backhaul', 'data_inputs', 'data_input.csv')
+    path = os.path.join(BASE_PATH, 'raw', 'gsma', 'backhaul.csv')
     backhaul_lut = pd.read_csv(path)
     backhaul_lut = backhaul_lut.to_dict('records')
 
@@ -1271,8 +1285,8 @@ def find_regional_nodes(country):
     output_path = os.path.join(folder, 'network', 'core_nodes.shp')
     regional_output_path = os.path.join(folder, 'network', 'regional_nodes')
 
-    # if os.path.exists(output_path):
-    #     return print('Regional nodes layer already generated')
+    if os.path.exists(output_path):
+        return print('Regional nodes layer already generated')
 
     folder = os.path.dirname(output_path)
     if not os.path.exists(folder):
@@ -1454,6 +1468,13 @@ def generate_core_lut(country):
     level = country['regional_level']
     regional_level = 'GID_{}'.format(level)
 
+    filename = 'core_lut.csv'
+    folder = os.path.join(DATA_INTERMEDIATE, iso3)
+    output_path = os.path.join(folder, filename)
+
+    if os.path.exists(output_path):
+        return print('Core LUT already generated')
+
     filename = 'regions_{}_{}.shp'.format(level, iso3)
     folder = os.path.join(DATA_INTERMEDIATE, iso3, 'regions')
     path = os.path.join(folder, filename)
@@ -1522,11 +1543,7 @@ def generate_core_lut(country):
 
     output = pd.DataFrame(output)
 
-    filename = 'core_lut.csv'
-    folder = os.path.join(DATA_INTERMEDIATE, iso3)
-    path = os.path.join(folder, filename)
-
-    output.to_csv(path, index=False)
+    output.to_csv(output_path, index=False)
 
     return print('Completed core lut')
 
@@ -1698,7 +1715,7 @@ def forecast_subscriptions(country):
 
     forecast_df.to_csv(os.path.join(path, 'subs_forecast.csv'), index=False)
 
-    path = os.path.join(BASE_PATH, '..', 'subscriptions', 'data_inputs')
+    path = os.path.join(BASE_PATH, '..', 'vis', 'subscriptions')
     forecast_df.to_csv(os.path.join(path, '{}.csv'.format(iso3)), index=False)
 
     return print('Completed subscription forecast')
@@ -1749,24 +1766,30 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-            'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 2,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
+        #     'region': 'SSA', 'pop_density_km2': 100, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
+        #     'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 2,
+            'region': 'Europe', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
         },
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_nodes_level': 1,
-            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
-        },
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
-        },
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
-        },
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
-        },
-        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
-            'region': 'SSA', 'pop_density_km2': 100, 'settlement_size': 1000, 'subs_growth': 1.5,
-        },
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
+        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 1, 'regional_nodes_level': 1,
+        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+        # },
     ]
 
     for country in countries:
@@ -1786,8 +1809,8 @@ if __name__ == '__main__':
         # print('Processing coverage shapes')
         # process_coverage_shapes(country)
 
-        # print('Getting regional data')
-        # get_regional_data(country)
+        print('Getting regional data')
+        get_regional_data(country)
 
         # print('Generating agglomeration lookup table')
         # generate_agglomeration_lut(country)
@@ -1806,8 +1829,8 @@ if __name__ == '__main__':
         # print('Create core lookup table')
         # generate_core_lut(country)
 
-        print('Create backhaul lookup table')
-        generate_backhaul_lut(country)
+        # print('Create backhaul lookup table')
+        # generate_backhaul_lut(country)
 
         # print('Create subscription forcast')
         # forecast_subscriptions(country)
