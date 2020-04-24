@@ -309,15 +309,17 @@ def load_backhaul_lut(path):
 
 def define_deciles(regions):
 
+    regions = regions.sort_values(by='population_km2', ascending=True)
+
     regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).cost_per_sp_user.apply(
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply( #cost_per_sp_user
             pd.qcut, q=11, precision=0,
-            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop')
+            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop') # [0,10,20,30,40,50,60,70,80,90,100]
 
     return regions
 
 
-def write_results(regional_results, folder):
+def write_results(regional_results, folder, metric):
     """
     Write all results.
 
@@ -326,33 +328,40 @@ def write_results(regional_results, folder):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
+        'population_km2', 'phones_on_network',
         'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
 
     national_results = national_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
+    national_results['cost_per_network_user'] = (
+        national_results['total_cost'] / national_results['phones_on_network'])
 
-    path = os.path.join(folder,'national_results_{}.csv'.format(decision_option))
+    path = os.path.join(folder,'national_results_{}.csv'.format(metric))
     national_results.to_csv(path, index=True)
 
     print('Writing general decile results')
     decile_results = pd.DataFrame(regional_results)
     decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
+        'phones_on_network',
         'area_km2', 'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+    decile_results['cost_per_network_user'] = (
+        decile_results['total_cost'] / decile_results['phones_on_network'])
 
-    path = os.path.join(folder,'decile_results_{}.csv'.format(decision_option))
+    path = os.path.join(folder,'decile_results_{}.csv'.format(metric))
     decile_results.to_csv(path, index=True)
 
     print('Writing cost decile results')
     decile_cost_results = pd.DataFrame(regional_results)
     decile_cost_results = define_deciles(decile_cost_results)
     decile_cost_results = decile_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
+        'phones_on_network',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
         'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
@@ -361,8 +370,10 @@ def write_results(regional_results, folder):
 
     decile_cost_results = decile_cost_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+    decile_cost_results['cost_per_network_user'] = (
+        decile_cost_results['total_cost'] / decile_cost_results['phones_on_network'])
 
-    path = os.path.join(folder,'decile_cost_results_{}.csv'.format(decision_option))
+    path = os.path.join(folder,'decile_cost_results_{}.csv'.format(metric))
     decile_cost_results.to_csv(path, index=True)
 
     print('Writing regional results')
@@ -371,12 +382,28 @@ def write_results(regional_results, folder):
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile',
         'confidence', 'population', 'area_km2',
-        'population_km2', 'upgraded_sites',
-        'upgraded_sites','new_sites', 'total_revenue', 'total_cost', 'cost_per_sp_user',
+        'population_km2', 'phones_on_network',
+        'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
+    regional_results['cost_per_network_user'] = (
+        regional_results['total_cost'] / regional_results['phones_on_network'])
 
-    path = os.path.join(folder,'regional_results_{}.csv'.format(decision_option))
+    path = os.path.join(folder,'regional_results_{}.csv'.format(metric))
     regional_results.to_csv(path, index=True)
+
+
+def allocate_deciles(data):
+    """
+    Convert to pandas df, define deciles, and then return as a list of dicts.
+
+    """
+    data = pd.DataFrame(data)
+
+    data = define_deciles(data)
+
+    data = data.to_dict('records')
+
+    return data
 
 
 if __name__ == '__main__':
@@ -415,20 +442,23 @@ if __name__ == '__main__':
         'site_rental_suburban': 4000,
         'site_rental_rural': 2000,
         'router': 2000,
-        'microwave_backhaul_small': 10000,
-        'microwave_backhaul_medium': 20000,
-        'microwave_backhaul_large': 40000,
-        'fiber_backhaul_urban_m': 20,
-        'fiber_backhaul_suburban_m': 10,
-        'fiber_backhaul_rural_m': 5,
-        'core_node_epc': 100000,
-        'core_node_nsa': 100000,
-        'core_node_sa': 200000,
-        'core_edge': 20,
-        'regional_node_epc': 50000,
-        'regional_node_nsa': 50000,
+        'microwave_backhaul_small': 5000,
+        'microwave_backhaul_medium': 10000,
+        'microwave_backhaul_large': 15000,
+        'fiber_backhaul_urban_m': 25,
+        'fiber_backhaul_suburban_m': 15,
+        'fiber_backhaul_rural_m': 10,
+        'core_node_epc': 50000,
+        'core_node_nsa': 50000,
+        'core_node_sa': 50000,
+        'core_edge': 10,
+        'regional_node_epc': 25000,
+        'regional_node_nsa': 25000,
         'regional_node_sa': 100000,
         'regional_edge': 5,
+        'regional_node_lower_epc': 5000,
+        'regional_node_lower_nsa': 5000,
+        'regional_node_lower_sa': 10000,
     }
 
     GLOBAL_PARAMETERS = {
@@ -437,7 +467,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [95], #[5, 50, 95],
+        'confidence': [50], #[5, 50, 95],
         'networks': 3,
         'io_n2_n3': 1,
         'cots_processing_split_urban': 2,
@@ -458,10 +488,11 @@ if __name__ == '__main__':
 
     countries = [
         {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 2},
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
-        # {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
         ]
@@ -472,7 +503,7 @@ if __name__ == '__main__':
         'policy_options'
     ]
 
-    for decision_option in decision_options:
+    for decision_option in decision_options:#[:1]:
 
         options = OPTIONS[decision_option]
 
@@ -509,7 +540,7 @@ if __name__ == '__main__':
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
 
-            for option in options:#[:1]:
+            for option in options:#[:3]:
 
                 print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
@@ -555,9 +586,11 @@ if __name__ == '__main__':
                         country_parameters,
                     )
 
-                    regional_results = regional_results + data_assess
+                    final_results = allocate_deciles(data_assess)
+
+                    regional_results = regional_results + final_results
 
         folder = os.path.join(BASE_PATH, '..', 'results')
-        write_results(regional_results, folder)
+        write_results(regional_results, folder, decision_option)
 
         print('Completed model run')
