@@ -6,6 +6,7 @@ Written by Ed Oughton.
 Winter 2020
 
 """
+import math
 from itertools import tee
 from operator import itemgetter
 
@@ -50,7 +51,9 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         region['site_density'] = find_site_density(region, option,
             country_parameters, lookup, ci)
 
-        total_sites_required = (region['site_density'] * region['area_km2']) // 5 + (21 % 5 > 0) #last part always rounds up
+        total_sites_required = math.ceil(region['site_density'] * region['area_km2'])
+        # print('existing site density {}'.format(region['site_density']))
+        # print('total sites required {}'.format(total_sites_required))
 
         region = estimate_site_upgrades(
             region,
@@ -85,7 +88,6 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     For a given region, provide an optmized network.
 
     """
-    networks = country_parameters['networks']
     demand = region['demand_mbps_km2']
     geotype = region['geotype'].split(' ')[0]
     ant_type = 'macro'
@@ -252,7 +254,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
         (country_parameters['proportion_of_sites'] / 100)
     )
 
-    existing_4G_sites = (
+    existing_4G_sites = math.ceil(
         region['sites_4G'] *
         (country_parameters['proportion_of_sites'] / 100)
     )
@@ -277,7 +279,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
             region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
             region['upgraded_sites'] = total_sites_required
-
+    # print(total_sites_required, existing_sites, existing_4G_sites, region['upgraded_sites'], region['new_sites'])
     return region
 
 
