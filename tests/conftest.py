@@ -202,6 +202,9 @@ def setup_costs():
         'regional_node_nsa': 150000,
         'regional_node_sa': 200000,
         'regional_edge': 10,
+        'regional_node_lower_epc': 10000,
+        'regional_node_lower_nsa': 10000,
+        'regional_node_lower_sa': 10000,
     }
 
 

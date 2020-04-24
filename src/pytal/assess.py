@@ -41,7 +41,8 @@ def assess(country, regions, option, global_parameters, country_parameters):
     for region in regions:
 
         # npv spectrum cost
-        region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'], global_parameters, country_parameters)
+        region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'],
+            global_parameters, country_parameters)
 
         #tax on investment
         region['tax'] = calculate_tax(region, strategy, country_parameters)
@@ -56,7 +57,11 @@ def assess(country, regions, option, global_parameters, country_parameters):
             region['profit_margin']
         )
 
-        region['cost_per_sp_user'] = region['total_cost'] / region['smartphones_on_network']
+        #avoid zero division
+        if region['total_cost'] > 0 and region['smartphones_on_network'] > 0:
+            region['cost_per_sp_user'] = region['total_cost'] / region['smartphones_on_network']
+        else:
+            region['cost_per_sp_user'] = 0
 
         #revenue cost ratio = expenses / revenue
         region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
@@ -116,12 +121,12 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
 
     if spectrum_cost == 'low':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.5
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.5
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.01
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.01
 
     if spectrum_cost == 'high':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 1.5
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 1.5
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 2
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 2
 
     all_costs = []
 
