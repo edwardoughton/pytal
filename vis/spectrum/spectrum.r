@@ -6,7 +6,7 @@ library(ggpubr)
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-data <- read.csv(file.path(folder, 'data_inputs', 'spectrum_costs.csv'))
+data <- read.csv(file.path(folder, 'data_inputs', 'spectrum_costs_old.csv'))
 
 data$income = factor(data$income, levels=c("High", "Upper Middle", "Lower Middle", "Unknown"))
 
@@ -76,6 +76,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data <- read.csv(file.path(folder, 'data_inputs', 'spectrum_by_cluster_country.csv'))
 
 data$income[data$Country == 'Uganda'] <- 'Lower'
+data$income[data$Country == 'Malawi'] <- 'Lower'
 data$income[data$Country == 'Kenya'] <- 'Lower Middle'
 data$income[data$Country == 'Senegal'] <- 'Lower Middle'
 data$income[data$Country == 'Pakistan'] <- 'Lower Middle'

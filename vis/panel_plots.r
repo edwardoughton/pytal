@@ -13,7 +13,7 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 #select desired columns
 data <- select(data, country, scenario, strategy, confidence, decile, area_km2, population, total_cost, total_revenue)
 
-data <- data[(data$confidence == 50),]
+# data <- data[(data$confidence == 50),]
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
@@ -137,7 +137,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_technology_options_wrap.png')
-ggsave(path, units="in", width=10, height=13, dpi=300)
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
 
@@ -265,7 +265,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_business_model_options_wrap.png')
-ggsave(path, units="in", width=10, height=13, dpi=300)
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
 
@@ -396,7 +396,7 @@ panel <- ggplot(data, aes(x=decile, y=(value/1e9), group=metric, fill=metric)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_cost_composition_wrap.png')
-ggsave(path, units="in", width=10, height=13, dpi=300)
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
 
@@ -537,7 +537,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_spectrum_costs_wrap.png')
-ggsave(path, units="in", width=10, height=13, dpi=300)
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
 
@@ -672,6 +672,6 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_tax_rate_wrap.png')
-ggsave(path, units="in", width=10, height=13, dpi=300)
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
