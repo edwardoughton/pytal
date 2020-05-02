@@ -242,11 +242,12 @@ def load_core_lut(path):
     with open(path, 'r') as source:
         reader = csv.DictReader(source)
         for row in reader:
-            interim.append({
-                'GID_id': row['GID_id'],
-                'asset': row['asset'],
-                'value': int(round(float(row['value']))),
-            })
+            if row['source'] == 'new':
+                interim.append({
+                    'GID_id': row['GID_id'],
+                    'asset': row['asset'],
+                    'value': int(round(float(row['value']))),
+                })
 
     asset_types = [
         'core_edge',
@@ -454,7 +455,7 @@ if __name__ == '__main__':
         'core_edge': 10,
         'regional_node_epc': 25000,
         'regional_node_nsa': 25000,
-        'regional_node_sa': 100000,
+        'regional_node_sa': 25000,
         'regional_edge': 5,
         'regional_node_lower_epc': 5000,
         'regional_node_lower_nsa': 5000,
@@ -462,7 +463,7 @@ if __name__ == '__main__':
     }
 
     GLOBAL_PARAMETERS = {
-        'overbooking_factor': 100,
+        'overbooking_factor': 50,
         'return_period': 10,
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
