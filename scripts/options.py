@@ -262,9 +262,9 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 10,
-            'low': 5,
+            'high': 10,
+            'medium': 8,
+            'low': 4,
         },
         'networks': 3,
         'proportion_of_sites': 50,
