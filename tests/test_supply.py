@@ -160,7 +160,6 @@ def test_estimate_supply(
     setup_global_parameters,
     setup_country_parameters,
     setup_costs,
-    setup_backhaul_lut,
     setup_core_lut,
     setup_ci
     ):
@@ -180,7 +179,6 @@ def test_estimate_supply(
         setup_global_parameters,
         setup_country_parameters,
         setup_costs,
-        setup_backhaul_lut,
         setup_core_lut,
         setup_ci
     )
