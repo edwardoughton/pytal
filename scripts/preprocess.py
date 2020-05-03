@@ -1732,7 +1732,6 @@ def generate_core_lut(country):
         {'geometry': core_edges['geometry'], 'source': core_edges['source']})
 
     existing_edges = core_edges.loc[core_edges['source'] == 'existing']
-    # existing_edges = existing_edges['geometry'].unary_union
     existing_edges = gpd.clip(regions, existing_edges)
     existing_edges = existing_edges.to_crs('epsg:3857')
     existing_edges['length'] = existing_edges['geometry'].length
@@ -1758,8 +1757,6 @@ def generate_core_lut(country):
             'source': 'new',
         })
 
-    # output = pd.DataFrame(output)
-    # output.to_csv(output_path, index=False)
 
     path = os.path.join(DATA_INTERMEDIATE, iso3, 'network', 'regional_edges.shp')
     if os.path.exists(path):
@@ -1780,7 +1777,7 @@ def generate_core_lut(country):
     path = os.path.join(DATA_INTERMEDIATE, iso3, 'network', 'core_nodes.shp')
     nodes = gpd.read_file(path, crs='epsg:4326')
 
-    existing_nodes = nodes.loc[nodes['source'] == 'new']
+    existing_nodes = nodes.loc[nodes['source'] == 'existing']
     f = lambda x:np.sum(existing_nodes.intersects(x))
     regions['nodes'] = regions['geometry'].apply(f)
 
@@ -1807,7 +1804,7 @@ def generate_core_lut(country):
     path = os.path.join(DATA_INTERMEDIATE, iso3, 'network', 'regional_nodes.shp')
     regional_nodes = gpd.read_file(path, crs='epsg:4326')
 
-    existing_nodes = regional_nodes.loc[regional_nodes['source'] == 'new']
+    existing_nodes = regional_nodes.loc[regional_nodes['source'] == 'existing']
     f = lambda x:np.sum(existing_nodes.intersects(x))
     regions['regional_nodes'] = regions['geometry'].apply(f)
 
@@ -1832,6 +1829,7 @@ def generate_core_lut(country):
         })
 
     output = pd.DataFrame(output)
+    output = output.drop_duplicates()
     output.to_csv(output_path, index=False)
 
     return print('Completed core lut')
