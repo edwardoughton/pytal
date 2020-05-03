@@ -14,7 +14,7 @@ from pytal.costs import find_single_network_cost
 
 
 def estimate_supply(country, regions, lookup, option, global_parameters,
-    country_parameters, costs, backhaul_lut, core_lut, ci):
+    country_parameters, costs, core_lut, ci):
     """
     For each region, optimize the network design and estimate
     the financial cost.
@@ -36,8 +36,6 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
         All country specific parameters.
     costs : dict
         All equipment costs.
-    backhaul_lut : dict
-        Backhaul distance by region.
     core_lut : ???
         ???
     ci : int
@@ -70,7 +68,6 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             costs,
             global_parameters,
             country_parameters,
-            backhaul_lut,
             core_lut,
         )
 
