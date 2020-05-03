@@ -245,6 +245,7 @@ def load_core_lut(path):
             interim.append({
                 'GID_id': row['GID_id'],
                 'asset': row['asset'],
+                'source': row['source'],
                 'value': int(round(float(row['value']))),
             })
 
@@ -261,60 +262,21 @@ def load_core_lut(path):
         asset_dict = {}
         for row in interim:
             if asset_type == row['asset']:
-                asset_dict[row['GID_id']] = row['value']
+                combined_key = '{}_{}'.format(row['GID_id'], row['source'])
+                asset_dict[combined_key] = row['value']
                 output[asset_type] = asset_dict
-
-    return output
-
-
-def load_backhaul_lut(path):
-    """
-    Simulations show that for every 10x increase in node density,
-    there is a 3.2x decrease in backhaul length.
-
-    node_density_km2, average_distance_km, increase_in_density, decrease_in_distance
-    0.000001, 606.0, 10, 3.2
-    0.00001, 189.0, 10, 3.8
-    0.0001, 50.0, 10, 3.1
-    0.001, 16.0, 10, 3.2
-    0.01, 5.0, 10, 3.2
-    0.1, 1.6, 10, 3.2
-    1.0, 0.5,
-
-    """
-    # output = []
-
-    # with open(path, 'r') as source:
-    #     reader = csv.DictReader(source)
-    #     for row in reader:
-    #         output.append({
-    #             'node_density_km2': float(row['node_density_km2']),
-    #             'average_distance_km': int(round(float(row['average_distance_km']))),
-    #         })
-
-    output = [
-        {'node_density_km2': 0.00000001, 'average_distance_m': 5242880},
-        {'node_density_km2': 0.0000001, 'average_distance_m': 1638400},
-        {'node_density_km2': 0.000001, 'average_distance_m': 512000},
-        {'node_density_km2': 0.00001, 'average_distance_m': 160000},
-        {'node_density_km2': 0.0001, 'average_distance_m': 50000},
-        {'node_density_km2': 0.001, 'average_distance_m': 16000},
-        {'node_density_km2': 0.01, 'average_distance_m': 5000},
-        {'node_density_km2': 0.1, 'average_distance_m': 1500},
-        {'node_density_km2': 1.0,	'average_distance_m': 500},
-    ]
 
     return output
 
 
 def define_deciles(regions):
 
-    regions = regions.sort_values(by='population_km2', ascending=True)
+    regions = regions.sort_values(by='cost_per_sp_user', ascending=True)
 
     regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply( #cost_per_sp_user
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).cost_per_sp_user.apply( #cost_per_sp_user
             pd.qcut, q=11, precision=0,
-            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop') # [0,10,20,30,40,50,60,70,80,90,100]
+            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') # [100,90,80,70,60,50,40,30,20,10,0]
 
     return regions
 
@@ -328,7 +290,7 @@ def write_results(regional_results, folder, metric):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'population_km2', 'phones_on_network',
+        'population_km2', 'phones_on_network', 'cost_per_sp_user',
         'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
 
@@ -345,7 +307,7 @@ def write_results(regional_results, folder, metric):
     decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
-        'phones_on_network',
+        'phones_on_network', 'cost_per_sp_user',
         'area_km2', 'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
     ]]
     decile_results = decile_results.groupby([
@@ -361,7 +323,7 @@ def write_results(regional_results, folder, metric):
     decile_cost_results = define_deciles(decile_cost_results)
     decile_cost_results = decile_cost_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
-        'phones_on_network',
+        'phones_on_network', 'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
         'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
@@ -382,7 +344,7 @@ def write_results(regional_results, folder, metric):
     regional_results = regional_results[[
         'GID_0', 'scenario', 'strategy', 'decile',
         'confidence', 'population', 'area_km2',
-        'population_km2', 'phones_on_network',
+        'population_km2', 'phones_on_network', 'cost_per_sp_user',
         'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
     regional_results['cost_per_network_user'] = (
@@ -398,6 +360,8 @@ def allocate_deciles(data):
 
     """
     data = pd.DataFrame(data)
+
+    # data['cost_per_user'] = data['total_cost'] / data['smartphones_on_network']
 
     data = define_deciles(data)
 
@@ -425,15 +389,11 @@ if __name__ == '__main__':
         'distributed_power_supply_converter': 250,
         'power_generator_battery_system': 5000,
         'bbu_cabinet': 500,
-        'fiber_fronthaul_urban_m': 10,
-        'fiber_fronthaul_suburban_m': 5,
-        'fiber_fronthaul_rural_m': 2,
         'cots_processing': 500,
         'io_n2_n3': 1500,
         'low_latency_switch': 500,
         'rack': 500,
         'cloud_power_supply_converter': 1000,
-        'software': 50,
         'tower': 10000,
         'civil_materials': 5000,
         'transportation': 5000,
@@ -442,19 +402,19 @@ if __name__ == '__main__':
         'site_rental_suburban': 4000,
         'site_rental_rural': 2000,
         'router': 2000,
-        'microwave_backhaul_small': 5000,
-        'microwave_backhaul_medium': 10000,
-        'microwave_backhaul_large': 15000,
-        'fiber_backhaul_urban_m': 25,
-        'fiber_backhaul_suburban_m': 15,
-        'fiber_backhaul_rural_m': 10,
+        'microwave_small': 5000,
+        'microwave_medium': 10000,
+        'microwave_large': 15000,
+        'fiber_urban_m': 25,
+        'fiber_suburban_m': 15,
+        'fiber_rural_m': 10,
         'core_node_epc': 50000,
         'core_node_nsa': 50000,
-        'core_node_sa': 50000,
+        'core_node_sa': 75000,
         'core_edge': 10,
         'regional_node_epc': 25000,
         'regional_node_nsa': 25000,
-        'regional_node_sa': 100000,
+        'regional_node_sa': 50000,
         'regional_edge': 5,
         'regional_node_lower_epc': 5000,
         'regional_node_lower_nsa': 5000,
@@ -462,13 +422,14 @@ if __name__ == '__main__':
     }
 
     GLOBAL_PARAMETERS = {
-        'overbooking_factor': 100,
+        'overbooking_factor': 50,
         'return_period': 10,
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
         'confidence': [50], #[5, 50, 95],
         'networks': 3,
+        'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
         'cots_processing_split_urban': 2,
         'cots_processing_split_suburban': 4,
@@ -477,7 +438,6 @@ if __name__ == '__main__':
         'low_latency_switch_split': 7,
         'rack_split': 7,
         'cloud_power_supply_converter_split': 7,
-        'software_split': 7,
         'cloud_backhaul_split': 7,
         }
 
@@ -532,10 +492,6 @@ if __name__ == '__main__':
             filename = 'core_lut.csv'
             core_lut = load_core_lut(os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE)
-            filename = 'backhaul_lut.csv'
-            backhaul_lut = load_backhaul_lut(os.path.join(folder, filename))
-
             print('-----')
             print('Working on {} in {}'.format(decision_option, iso3))
             print(' ')
@@ -573,7 +529,6 @@ if __name__ == '__main__':
                         GLOBAL_PARAMETERS,
                         country_parameters,
                         COSTS,
-                        backhaul_lut,
                         core_lut,
                         ci
                     )
