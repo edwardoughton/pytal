@@ -94,25 +94,21 @@ def setup_country_parameters():
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
-                },
-                {
-                    'frequency': 26000,
-                    'bandwidth': 500,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -121,12 +117,8 @@ def setup_country_parameters():
             'subsidy_low': 10,
             'subsidy_baseline': 25,
             'subsidy_high': 40,
-            'spectrum_coverage_low_usd_mhz_pop': 0.25,
-            'spectrum_capacity_low_usd_mhz_pop': 0.05,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.5,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_coverage_high_usd_mhz_pop': 1,
-            'spectrum_capacity_high_usd_mhz_pop': 0.2,
+            'spectrum_coverage_baseline_usd_mhz_pop': 1,
+            'spectrum_capacity_baseline_usd_mhz_pop': 1,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
