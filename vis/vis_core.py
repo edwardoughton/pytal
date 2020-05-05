@@ -63,7 +63,18 @@ for country in countries:
     regional_nodes.plot(edgecolor='green', markersize=40, marker='.', ax=axs[x, y])
 
     axs[x, y].set_title(plot_title)
+    centroid = region['geometry'].values[0].representative_point().buffer(10).envelope
+
+    xmin = min([coord[0] for coord in centroid.exterior.coords])
+    xmax = max([coord[0] for coord in centroid.exterior.coords])
+
+    ymin = min([coord[1] for coord in centroid.exterior.coords])
+    ymax = max([coord[1] for coord in centroid.exterior.coords])
+
+    axs[x, y].set_xlim([xmin, xmax])
+    axs[x, y].set_ylim([ymin, ymax])
     ctx.add_basemap(axs[x, y], crs=region.crs)
 
 fig.tight_layout()
+
 plt.savefig(os.path.join(BASE_PATH, '..', 'vis', 'figures', 'test.png'))
