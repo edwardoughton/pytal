@@ -121,8 +121,8 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
 
     if spectrum_cost == 'low':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.01
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.01
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.5#0.01
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.5#0.01
 
     if spectrum_cost == 'high':
         coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 2
@@ -131,17 +131,20 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     all_costs = []
 
     for frequency in frequencies:
+
+        channel_number = int(frequency['bandwidth'].split('x')[0])
+        channel_bandwidth = int(frequency['bandwidth'].split('x')[1])
+        bandwidth_total = channel_number * channel_bandwidth
+
         if frequency['frequency'] < 1000:
             cost = (
-                coverage_cost_usd_mhz_pop * frequency['bandwidth'] *
-                (population / global_parameters['networks'])
-            )
+                coverage_cost_usd_mhz_pop * bandwidth_total *
+                population)
             all_costs.append(cost)
         else:
             cost = (
-                capacity_cost_usd_mhz_pop * frequency['bandwidth'] *
-                (population / global_parameters['networks'])
-            )
+                capacity_cost_usd_mhz_pop * bandwidth_total *
+                population)
             all_costs.append(cost)
 
     return sum(all_costs)
