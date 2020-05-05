@@ -104,7 +104,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
     for item in frequencies:
 
         frequency = str(item['frequency'])
-        bandwidth = float(item['bandwidth'])
+        bandwidth = str(item['bandwidth'].split('x')[1])
 
         density_capacities = lookup_capacity(
             lookup,
@@ -126,7 +126,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
         for item in frequencies:
 
             frequency = str(item['frequency'])
-            bandwidth = float(item['bandwidth'])
+            bandwidth = float(item['bandwidth'].split('x')[1])
 
             density_capacities = lookup_capacity(
                 lookup,
