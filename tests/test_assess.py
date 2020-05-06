@@ -8,20 +8,20 @@ def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters,
     setup_region[0]['new_sites'] = 1
 
     # 10000 people
-    # 50000 = 0.5 * 10 * 10000 (cost = cost_mhz_pop * bw * pop )
-    # 10000 = 0.1 * 10 * 10000 (cost = cost_mhz_pop * bw * pop )
+    # 200000 = 1 * 20 * 10000 (cost = cost_mhz_pop * bw * pop )
+    # 200000 = 1 * 20 * 10000 (cost = cost_mhz_pop * bw * pop )
     assert get_spectrum_costs(setup_region[0], setup_option['strategy'],
-        setup_global_parameters, setup_country_parameters) == 30000
+        setup_global_parameters, setup_country_parameters) == 400000
 
     setup_region[0]['new_sites'] = 1
 
     # test high spectrum costs which are 50% higher
     assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_high_baseline',
-        setup_global_parameters, setup_country_parameters) == 30000 * 2
+        setup_global_parameters, setup_country_parameters) == 400000 * 2
 
-    # test low spectrum costs which are 50% low
+    # test low spectrum costs which are 50% lower
     assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_low_baseline',
-        setup_global_parameters, setup_country_parameters) == 30000 / 100
+        setup_global_parameters, setup_country_parameters) == 400000 / 2
 
 
 def test_calculate_tax(setup_region, setup_option, setup_country_parameters):
@@ -153,6 +153,9 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters)
             'smartphones_on_network': 250
         },
     ]
+
+    setup_country_parameters['financials']['spectrum_coverage_baseline_usd_mhz_pop'] = 0.125
+    setup_country_parameters['financials']['spectrum_capacity_baseline_usd_mhz_pop'] = 0.025
 
     answer = assess('MWI', regions, setup_option, setup_global_parameters,
         setup_country_parameters)

@@ -182,21 +182,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -204,8 +204,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 5,
             'subsidy_high': 20,
-            'spectrum_coverage_baseline_usd_mhz_pop': 2,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.5,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0267,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0109,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -227,21 +227,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -249,8 +249,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0051,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0049,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -271,22 +271,30 @@ COUNTRY_PARAMETERS = {
         'frequencies': {
             '4G': [
                 {
-                    'frequency': 800,
-                    'bandwidth': 10,
+                    'frequency': 700,
+                    'bandwidth': '2x20',
                 },
                 {
-                    'frequency': 1800,
-                    'bandwidth': 10,
+                    'frequency': 850,
+                    'bandwidth': '2x10',
+                },
+                {
+                    'frequency': 1700,
+                    'bandwidth': '2x20',
+                },
+                {
+                    'frequency': 1900,
+                    'bandwidth': '2x20',
                 },
             ],
             '5G': [
                 {
-                    'frequency': 700,
-                    'bandwidth': 10,
+                    'frequency': 2500,
+                    'bandwidth': '2x20',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -294,8 +302,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.3,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0225,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0026,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -309,7 +317,7 @@ COUNTRY_PARAMETERS = {
         'arpu': {
             'high': 10,
             'medium': 3,
-            'low': 2,
+            'low': 1,
         },
         # Access Comm, Airtel, TNM
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
@@ -320,21 +328,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -342,8 +350,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.3,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0007,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0022,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -355,7 +363,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 5,
+            'high': 10,
             'medium': 2,
             'low': 1,
         },
@@ -371,21 +379,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -393,8 +401,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.03,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0016,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0003,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -416,17 +424,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 30,
+                    'bandwidth': '2x30',
                 },
                 {
                     'frequency': 2600,
-                    'bandwidth': 20,
+                    'bandwidth': '2x20',
                 },
             ],
             '5G': [
                 {
+                    'frequency': 700,
+                    'bandwidth': '2x15',
+                },
+                {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -434,8 +446,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.3,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0164,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0041,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -458,21 +470,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 1800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -480,8 +492,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.3,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0051,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0049,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
@@ -503,21 +515,21 @@ COUNTRY_PARAMETERS = {
             '4G': [
                 {
                     'frequency': 800,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
-                    'frequency': 2600,
-                    'bandwidth': 10,
+                    'frequency': 1800,
+                    'bandwidth': '2x10',
                 },
             ],
             '5G': [
                 {
                     'frequency': 700,
-                    'bandwidth': 10,
+                    'bandwidth': '2x10',
                 },
                 {
                     'frequency': 3500,
-                    'bandwidth': 50,
+                    'bandwidth': '1x50',
                 },
             ]
         },
@@ -525,8 +537,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.3,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.0007,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.0022,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
