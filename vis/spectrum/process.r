@@ -34,28 +34,28 @@ data$country[data$country == 'Russia'] <- 'Russian Federation (the)'
 data <- merge(data, iso3, x.by='country', y.by='country', all=FALSE)
 
 data <- data[(data$Block.Paired == '2x5' |
-              data$Block.Paired == '2x10'|
-              data$Block.Paired == '2x15'|
-              data$Block.Paired == '2x20'|
-              data$Block.Paired == '2x25'|
-              data$Block.Paired == '2x30'|
-              data$Block.Paired == '1x100'|
-              data$Block.Paired == '1x50'|
-              data$Block.Paired == '1x60'|
-              data$Block.Paired == '1x90'|
-              data$Block.Paired == '2x0.6'|
-              data$Block.Paired == '2x0.8'|               
-              data$Block.Paired == '2x1'|            
-              data$Block.Paired == '2x1.2'|              
-              data$Block.Paired == '2x1.8'|  
-              data$Block.Paired == '2x12.5'|  
-              data$Block.Paired == '2x14'|  
-              data$Block.Paired == '2x15'|  
+                data$Block.Paired == '2x10'|
+                data$Block.Paired == '2x15'|
+                data$Block.Paired == '2x20'|
+                data$Block.Paired == '2x25'|
+                data$Block.Paired == '2x30'|
+                data$Block.Paired == '1x100'|
+                data$Block.Paired == '1x50'|
+                data$Block.Paired == '1x60'|
+                data$Block.Paired == '1x90'|
+                data$Block.Paired == '2x0.6'|
+                data$Block.Paired == '2x0.8'|               
+                data$Block.Paired == '2x1'|            
+                data$Block.Paired == '2x1.2'|              
+                data$Block.Paired == '2x1.8'|  
+                data$Block.Paired == '2x12.5'|  
+                data$Block.Paired == '2x14'|  
+                data$Block.Paired == '2x15'|  
                 
-              data$Block.Paired == '10'  |
-              data$Block.Paired == '20'  |
-              data$Block.Paired == '30'
-              ),]
+                data$Block.Paired == '10'  |
+                data$Block.Paired == '20'  |
+                data$Block.Paired == '30'
+),]
 
 names(data)[names(data) == 'Block.Paired'] <- 'bandwidth'
 
