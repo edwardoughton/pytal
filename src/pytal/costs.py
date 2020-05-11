@@ -195,7 +195,7 @@ def greenfield_4g(region, strategy, costs, global_parameters,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -241,7 +241,7 @@ def upgrade_to_4g(region, strategy, costs, global_parameters,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -292,7 +292,7 @@ def greenfield_5g_nsa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -339,7 +339,7 @@ def upgrade_to_5g_nsa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -391,7 +391,7 @@ def greenfield_5g_sa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -438,7 +438,7 @@ def upgrade_to_5g_sa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / global_parameters['networks']
+            value = value / country_parameters['networks']
             cost_structure[key] = value
 
     return cost_structure
@@ -481,10 +481,10 @@ def get_backhaul_costs(region, backhaul, costs, core_lut):
         distance_m = math.sqrt(region['area_km2']) * 1000
 
     if backhaul_tech == 'microwave':
-        if distance_m < 2e4:
+        if distance_m < 15000:
             tech = '{}_{}'.format(backhaul_tech, 'small')
             cost = costs[tech]
-        elif 2e4 < distance_m < 4e4:
+        elif 15000 < distance_m < 30000:
             tech = '{}_{}'.format(backhaul_tech, 'medium')
             cost = costs[tech]
         else:
@@ -628,7 +628,7 @@ def core_costs(region, asset_type, costs, core_lut, core, country_parameters):
             if existing_sites == 0:
                 return 0
 
-            cost_per_site = sum(total_cost) / existing_sites #* 0.05
+            cost_per_site = sum(total_cost) / existing_sites
 
             return cost_per_site
 
@@ -865,7 +865,62 @@ INFRA_SHARING_ASSETS = {
         'power_generator_battery_system',
         'backhaul',
         'cloud_backhaul',
-    ]
+    ],
+    'mocn': [
+        'single_sector_antenna',  ##these items need renaming
+        'single_remote_radio_unit',
+        'io_fronthaul',
+        'processing',
+        'io_s1_x2',
+        'control_unit',
+        'cooling_fans',
+        'distributed_power_supply_converter',
+        'bbu_cabinet',
+        'fronthaul',
+        'cots_processing',
+        'io_n2_n3',
+        'low_latency_switch',
+        'rack',
+        'cloud_power_supply_converter',
+        'tower',
+        'civil_materials',
+        'transportation',
+        'installation',
+        'site_rental',
+        'power_generator_battery_system',
+        'backhaul',
+        'cloud_backhaul',
+    ],
+    'shared': [
+        'single_sector_antenna',  ##these items need renaming
+        'single_remote_radio_unit',
+        'io_fronthaul',
+        'processing',
+        'io_s1_x2',
+        'control_unit',
+        'cooling_fans',
+        'distributed_power_supply_converter',
+        'bbu_cabinet',
+        'fronthaul',
+        'cots_processing',
+        'io_n2_n3',
+        'low_latency_switch',
+        'rack',
+        'cloud_power_supply_converter',
+        'tower',
+        'civil_materials',
+        'transportation',
+        'installation',
+        'site_rental',
+        'power_generator_battery_system',
+        'backhaul',
+        'cloud_backhaul',
+        'local_node',
+        'regional_edge',
+        'regional_node',
+        'core_edge',
+        'core_node',
+    ],
 }
 
 
@@ -894,6 +949,7 @@ COST_TYPE = {
     'power_generator_battery_system': 'capex_and_opex',
     'backhaul': 'capex_and_opex',
     'cloud_backhaul': 'capex_and_opex',
+    'local_node': 'capex_and_opex',
     'regional_node': 'capex_and_opex',
     'regional_edge': 'capex_and_opex',
     'core_node': 'capex_and_opex',

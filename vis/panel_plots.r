@@ -220,15 +220,18 @@ data <- rbind(data1, data2)
 remove(data1, data2)
 
 data <- data[!(data$value == "NA"),]
+data <- data[(data$confidence == 50),]
 
 data$strategy = factor(data$strategy, levels=c("Revenue",
                                               "5G_nsa_microwave_baseline_baseline_baseline_baseline",
                                                "5G_nsa_microwave_passive_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_active_baseline_baseline_baseline"),
+                                               "5G_nsa_microwave_active_baseline_baseline_baseline",
+                                               "5G_nsa_microwave_shared_baseline_baseline_baseline"),
                                       labels=c("Revenue",
                                               "Baseline (No sharing)",
                                               "Passive (Site Sharing)",
-                                              "Active (RAN and Site Sharing)"))
+                                              "Active (RAN and Site Sharing)",
+                                              "Single Wholesale Network"))
 
 data <- data[order(data$combined, data$country, data$scenario, data$strategy, data$decile),]
 
@@ -261,7 +264,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
        x = "Population Covered (%)", y = "Cumulative Cost (Billions $USD)") + 
   scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
   scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
-  guides(colour=guide_legend(ncol=4)) +
+  guides(colour=guide_legend(ncol=5)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
 path = file.path(folder, 'figures', 'results_business_model_options_wrap.png')

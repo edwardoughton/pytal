@@ -43,8 +43,8 @@ def test_greenfield_4g(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['tower'] == 10000 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['tower'] == 10000 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = greenfield_4g(setup_region[0],
@@ -52,10 +52,19 @@ def test_greenfield_4g(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
-    assert cost_structure['bbu_cabinet'] == 500 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+    assert cost_structure['bbu_cabinet'] == 500 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '4G_epc_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_epc'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_epc'] * 4) / setup_country_parameters['networks']
 
 
 def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
@@ -83,7 +92,7 @@ def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['site_rental'] == 9600 / setup_global_parameters['networks']
+    assert cost_structure['site_rental'] == 9600 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = upgrade_to_4g(setup_region[0],
@@ -91,8 +100,17 @@ def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '4G_epc_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_epc'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_epc'] * 4) / setup_country_parameters['networks']
 
 
 def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
@@ -124,8 +142,8 @@ def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['tower'] == 10000 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['tower'] == 10000 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = greenfield_5g_nsa(setup_region[0],
@@ -133,9 +151,18 @@ def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_nsa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_nsa'] * 4) / setup_country_parameters['networks']
 
 
 def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
@@ -163,7 +190,7 @@ def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['site_rental'] == 9600 / setup_global_parameters['networks']
+    assert cost_structure['site_rental'] == 9600 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = upgrade_to_5g_nsa(setup_region[0],
@@ -171,8 +198,18 @@ def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_nsa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_nsa'] * 4) / setup_country_parameters['networks']
 
 
 def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
@@ -204,8 +241,8 @@ def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['tower'] == 10000 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['tower'] == 10000 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = greenfield_5g_sa(setup_region[0],
@@ -213,10 +250,19 @@ def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
-    assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_global_parameters['networks']
-    assert cost_structure['civil_materials'] == 5000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+    assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_country_parameters['networks']
+    assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '5G_sa_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_sa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_sa'] * 4) / setup_country_parameters['networks']
 
 
 def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
@@ -246,7 +292,7 @@ def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['site_rental'] == 9600 / setup_global_parameters['networks']
+    assert cost_structure['site_rental'] == 9600 / setup_country_parameters['networks']
 
     #test active infra sharing
     cost_structure = upgrade_to_5g_sa(setup_region[0],
@@ -254,9 +300,18 @@ def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['single_sector_antenna'] == 1500 / setup_global_parameters['networks']
-    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_global_parameters['networks']
-    assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_global_parameters['networks']
+    assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
+    assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
+    assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_country_parameters['networks']
+
+    #test shared wholesale core network
+    cost_structure = greenfield_4g(setup_region[0],
+        '5G_sa_microwave_shared_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (setup_costs['core_node_sa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (setup_costs['regional_node_sa'] * 4) / setup_country_parameters['networks']
 
 
 def test_get_fronthaul_costs(setup_region, setup_costs):
