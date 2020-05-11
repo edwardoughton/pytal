@@ -99,6 +99,18 @@ OPTIONS = {
             'scenario': 'S3_400_100_50',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
+        {
+            'scenario': 'S1_25_10_5',
+            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        },
+        {
+            'scenario': 'S2_200_50_25',
+            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        },
+        {
+            'scenario': 'S3_400_100_50',
+            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        },
     ],
     'policy_options': [
         {
