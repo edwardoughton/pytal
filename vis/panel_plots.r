@@ -13,14 +13,14 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 #select desired columns
 data <- select(data, country, scenario, strategy, confidence, decile, area_km2, population, total_cost, total_revenue)
 
-# data <- data[(data$confidence == 50),]
+data <- data[(data$confidence == 50),]
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
 
-data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
-                                               "S2_200_50_25",
-                                               "S3_400_100_50"),
+data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
+                                               "S2_200_50_5",
+                                               "S3_400_100_10"),
                        labels=c("S1 (25 Mbps)",
                                 "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
@@ -43,30 +43,30 @@ data$country = factor(data$country, levels=c("UGA",
                                "Mexico"))
 
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
-                                               "UGA_S2_200_50_25",
-                                               "UGA_S3_400_100_50",
-                                               'MWI_S1_25_10_5',
-                                               'MWI_S2_200_50_25',
-                                               'MWI_S3_400_100_50',
-                                               "KEN_S1_25_10_5",
-                                               "KEN_S2_200_50_25",
-                                               "KEN_S3_400_100_50",
-                                               "SEN_S1_25_10_5",
-                                               "SEN_S2_200_50_25",
-                                               "SEN_S3_400_100_50",
-                                               "PAK_S1_25_10_5",
-                                               "PAK_S2_200_50_25",
-                                               "PAK_S3_400_100_50",
-                                               "ALB_S1_25_10_5",
-                                               "ALB_S2_200_50_25",
-                                               "ALB_S3_400_100_50",
-                                               "PER_S1_25_10_5",
-                                               "PER_S2_200_50_25",
-                                               "PER_S3_400_100_50",
-                                               "MEX_S1_25_10_5",
-                                               "MEX_S2_200_50_25",
-                                               "MEX_S3_400_100_50"),
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
                        labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
                                 "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
                                 "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
@@ -148,13 +148,15 @@ data <- read.csv(file.path(folder, '..', 'results', 'decile_results_business_mod
 
 data <- data[!(data$total_cost == "NA"),]
 
+data <- data[(data$confidence == 50),]
+
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
-                                               "S2_200_50_25",
-                                               "S3_400_100_50"),
+data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
+                                               "S2_200_50_5",
+                                               "S3_400_100_10"),
                        labels=c("S1 (25 Mbps)",
                                 "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
@@ -177,30 +179,30 @@ data$country = factor(data$country, levels=c("UGA",
                                "Mexico"))
 
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
-                                               "UGA_S2_200_50_25",
-                                               "UGA_S3_400_100_50",
-                                               'MWI_S1_25_10_5',
-                                               'MWI_S2_200_50_25',
-                                               'MWI_S3_400_100_50',
-                                               "KEN_S1_25_10_5",
-                                               "KEN_S2_200_50_25",
-                                               "KEN_S3_400_100_50",
-                                               "SEN_S1_25_10_5",
-                                               "SEN_S2_200_50_25",
-                                               "SEN_S3_400_100_50",
-                                               "PAK_S1_25_10_5",
-                                               "PAK_S2_200_50_25",
-                                               "PAK_S3_400_100_50",
-                                               "ALB_S1_25_10_5",
-                                               "ALB_S2_200_50_25",
-                                               "ALB_S3_400_100_50",
-                                               "PER_S1_25_10_5",
-                                               "PER_S2_200_50_25",
-                                               "PER_S3_400_100_50",
-                                               "MEX_S1_25_10_5",
-                                               "MEX_S2_200_50_25",
-                                               "MEX_S3_400_100_50"),
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
                        labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
                                 "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
                                 "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
@@ -209,6 +211,7 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
                                 "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
                                 "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
                                 "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+
 
 data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
 data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
@@ -220,7 +223,6 @@ data <- rbind(data1, data2)
 remove(data1, data2)
 
 data <- data[!(data$value == "NA"),]
-data <- data[(data$confidence == 50),]
 
 data$strategy = factor(data$strategy, levels=c("Revenue",
                                               "5G_nsa_microwave_baseline_baseline_baseline_baseline",
@@ -280,6 +282,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data <- read.csv(file.path(folder, '..', 'results', 'decile_cost_results_policy_options.csv'))
 
 data <- data[!(data$total_cost == "NA"),]
+data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
@@ -291,30 +294,30 @@ data <- select(data, combined, decile, ran, backhaul_fronthaul,
                civils, core_network, spectrum_cost, tax, profit_margin, 
                used_cross_subsidy, required_state_subsidy, cost_per_sp_user)
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
-                                               "UGA_S2_200_50_25",
-                                               "UGA_S3_400_100_50",
-                                               'MWI_S1_25_10_5',
-                                               'MWI_S2_200_50_25',
-                                               'MWI_S3_400_100_50',
-                                               "KEN_S1_25_10_5",
-                                               "KEN_S2_200_50_25",
-                                               "KEN_S3_400_100_50",
-                                               "SEN_S1_25_10_5",
-                                               "SEN_S2_200_50_25",
-                                               "SEN_S3_400_100_50",
-                                               "PAK_S1_25_10_5",
-                                               "PAK_S2_200_50_25",
-                                               "PAK_S3_400_100_50",
-                                               "ALB_S1_25_10_5",
-                                               "ALB_S2_200_50_25",
-                                               "ALB_S3_400_100_50",
-                                               "PER_S1_25_10_5",
-                                               "PER_S2_200_50_25",
-                                               "PER_S3_400_100_50",
-                                               "MEX_S1_25_10_5",
-                                               "MEX_S2_200_50_25",
-                                               "MEX_S3_400_100_50"),
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
                        labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
                                 "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
                                 "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
@@ -323,6 +326,7 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
                                 "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
                                 "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
                                 "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
 
@@ -372,6 +376,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data <- read.csv(file.path(folder, '..', 'results', 'decile_results_policy_options.csv'))
 
 data <- data[!(data$total_cost == "NA"),]
+data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
@@ -396,9 +401,9 @@ data <- select(data, combined, country, scenario, strategy, decile, value)
 
 data <- data[!(data$value == "NA"),]
 
-data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
-                                               "S2_200_50_25",
-                                               "S3_400_100_50"),
+data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
+                                               "S2_200_50_5",
+                                               "S3_400_100_10"),
                        labels=c("S1 (25 Mbps)",
                                 "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
@@ -420,30 +425,30 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
-                                               "UGA_S2_200_50_25",
-                                               "UGA_S3_400_100_50",
-                                               'MWI_S1_25_10_5',
-                                               'MWI_S2_200_50_25',
-                                               'MWI_S3_400_100_50',
-                                               "KEN_S1_25_10_5",
-                                               "KEN_S2_200_50_25",
-                                               "KEN_S3_400_100_50",
-                                               "SEN_S1_25_10_5",
-                                               "SEN_S2_200_50_25",
-                                               "SEN_S3_400_100_50",
-                                               "PAK_S1_25_10_5",
-                                               "PAK_S2_200_50_25",
-                                               "PAK_S3_400_100_50",
-                                               "ALB_S1_25_10_5",
-                                               "ALB_S2_200_50_25",
-                                               "ALB_S3_400_100_50",
-                                               "PER_S1_25_10_5",
-                                               "PER_S2_200_50_25",
-                                               "PER_S3_400_100_50",
-                                               "MEX_S1_25_10_5",
-                                               "MEX_S2_200_50_25",
-                                               "MEX_S3_400_100_50"),
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
                        labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
                                 "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
                                 "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
@@ -512,6 +517,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data <- read.csv(file.path(folder, '..', 'results', 'decile_results_policy_options.csv'))
 
 data <- data[!(data$total_cost == "NA"),]
+data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
@@ -534,9 +540,9 @@ data <- data[(data$strategy == 'Revenue' |
 
 data <- data[!(data$value == "NA"),]
 
-data$scenario = factor(data$scenario, levels=c("S1_25_10_5",
-                                               "S2_200_50_25",
-                                               "S3_400_100_50"),
+data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
+                                               "S2_200_50_5",
+                                               "S3_400_100_10"),
                        labels=c("S1 (25 Mbps)",
                                 "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
@@ -558,30 +564,30 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_5",
-                                               "UGA_S2_200_50_25",
-                                               "UGA_S3_400_100_50",
-                                               'MWI_S1_25_10_5',
-                                               'MWI_S2_200_50_25',
-                                               'MWI_S3_400_100_50',
-                                               "KEN_S1_25_10_5",
-                                               "KEN_S2_200_50_25",
-                                               "KEN_S3_400_100_50",
-                                               "SEN_S1_25_10_5",
-                                               "SEN_S2_200_50_25",
-                                               "SEN_S3_400_100_50",
-                                               "PAK_S1_25_10_5",
-                                               "PAK_S2_200_50_25",
-                                               "PAK_S3_400_100_50",
-                                               "ALB_S1_25_10_5",
-                                               "ALB_S2_200_50_25",
-                                               "ALB_S3_400_100_50",
-                                               "PER_S1_25_10_5",
-                                               "PER_S2_200_50_25",
-                                               "PER_S3_400_100_50",
-                                               "MEX_S1_25_10_5",
-                                               "MEX_S2_200_50_25",
-                                               "MEX_S3_400_100_50"),
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
                        labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
                                 "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
                                 "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
@@ -656,12 +662,12 @@ results$gdp_percentage <- (results$total_cost / 5) / results$gdp * 100
 
 results$combined <- paste(results$iso3, results$scenario, sep="_")
 
-results$scenario = factor(results$scenario, levels=c("S1_25_10_5",
-                                                     "S2_200_50_25",
-                                                     "S3_400_100_50"),
-                          labels=c("S1 (25 Mbps)",
-                                   "S2 (200 Mbps)",
-                                   "S3 (400 Mbps)"))
+results$scenario = factor(results$scenario, levels=c("S1_25_10_2",
+                                               "S2_200_50_5",
+                                               "S3_400_100_10"),
+                       labels=c("S1 (25 Mbps)",
+                                "S2 (200 Mbps)",
+                                "S3 (400 Mbps)"))
 
 results$country = factor(results$iso3, levels=c("UGA",
                                                 'MWI',
@@ -716,3 +722,99 @@ ggsave(path, units="in", width=8, height=10)
 print(gdp_percentage_ci)
 dev.off()
 
+##################
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+
+#load data
+data <- read.csv(file.path(folder, '..', 'results', 'decile_cost_results_mixed_options.csv'))
+
+data <- data[!(data$total_cost == "NA"),]
+# data <- data[(data$confidence == 50
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+data <- data[(data$strategy == '5G_nsa_microwave_shared_baseline_low_low'),]
+
+data$combined <- paste(data$country, data$scenario, sep="_")
+
+data <- select(data, combined, decile, ran, backhaul_fronthaul, 
+               civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin, 
+               used_cross_subsidy, required_state_subsidy, cost_per_sp_user)
+
+data <- gather(data, metric, value, ran:required_state_subsidy)
+
+data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
+                                               'MWI_S1_25_10_2',
+                                               'MWI_S2_200_50_5',
+                                               'MWI_S3_400_100_10',
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
+                                               "SEN_S1_25_10_2",
+                                               "SEN_S2_200_50_5",
+                                               "SEN_S3_400_100_10",
+                                               "PAK_S1_25_10_2",
+                                               "PAK_S2_200_50_5",
+                                               "PAK_S3_400_100_10",
+                                               "ALB_S1_25_10_2",
+                                               "ALB_S2_200_50_5",
+                                               "ALB_S3_400_100_10",
+                                               "PER_S1_25_10_2",
+                                               "PER_S2_200_50_5",
+                                               "PER_S3_400_100_10",
+                                               "MEX_S1_25_10_2",
+                                               "MEX_S2_200_50_5",
+                                               "MEX_S3_400_100_10"),
+                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
+                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
+                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
+                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
+                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
+                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
+                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
+                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+
+data$decile = factor(data$decile, levels=c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))
+
+
+data$metric = factor(data$metric, levels=c("required_state_subsidy",
+                                           "used_cross_subsidy",
+                                           "profit_margin",
+                                           "tax",
+                                           "spectrum_cost",
+                                           "ops_and_acquisition",
+                                           "ran",
+                                           'backhaul_fronthaul',
+                                           'civils',
+                                           'core_network'
+),
+labels=c("Required Subsidy",
+         "Cross-Subsidy",
+         "Profit",
+         "Tax",
+         "Spectrum",
+         "Operations",
+         "RAN",
+         "Front/Backhaul",
+         "Site/Civils",
+         'Core'
+))
+
+panel <- ggplot(data, aes(x=decile, y=(value/1e9), group=metric, fill=metric)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Spectral", name = NULL, direction=1) +
+  theme(legend.position = "bottom") + 
+  labs(title = "Cost Composition by Scenario, Decile and Country", colour=NULL,
+       subtitle = "Cumulative cost reported by percentage of population covered for 5G NSA (Microwave)", 
+       x = "Population Covered (%)", y = "Cumulative Cost (Billions $USD)") +
+  scale_y_continuous(expand = c(0, 0)) +  theme(panel.spacing = unit(0.6, "lines")) +
+  guides(fill=guide_legend(ncol =10)) +
+  facet_wrap(~combined, scales = "free", ncol=3) 
+
+path = file.path(folder, 'figures', 'results_mixed_policies_wrap.png')
+ggsave(path, units="in", width=10, height=14.5, dpi=300)
+print(panel)
+dev.off()
