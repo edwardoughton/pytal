@@ -7,7 +7,7 @@ Winter 2020
 
 """
 
-def assess(country, regions, option, global_parameters, country_parameters):
+def assess(country, regions, option, global_parameters, country_parameters, costs):
     """
     For each region, assess the viability level.
 
@@ -40,6 +40,10 @@ def assess(country, regions, option, global_parameters, country_parameters):
 
     for region in regions:
 
+        # add customer acquition cost
+        region = get_subscriber_aquisition_cost(region,
+            country_parameters)
+
         # npv spectrum cost
         region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'],
             global_parameters, country_parameters)
@@ -52,6 +56,7 @@ def assess(country, regions, option, global_parameters, country_parameters):
 
         region['total_cost'] = (
             region['network_cost'] +
+            region['ops_and_acquisition'] +
             region['spectrum_cost'] +
             region['tax'] +
             region['profit_margin']
@@ -83,6 +88,19 @@ def assess(country, regions, option, global_parameters, country_parameters):
         output.append(region)
 
     return output
+
+
+def get_subscriber_aquisition_cost(region, country_parameters):
+    """
+    There is an acquistion cost to obtaining and retaining subscribers
+    which includes marketing and retail sales.
+
+    """
+    region['ops_and_acquisition'] = (
+        region['phones_on_network'] *
+        country_parameters['financials']['ops_and_acquisition_per_subscriber'])
+
+    return region
 
 
 def allocate_available_excess(region):
@@ -155,14 +173,19 @@ def calculate_tax(region, strategy, country_parameters):
     Calculate tax.
 
     """
-    tax_rate = strategy.split('_')[6]
-    tax_rate = 'tax_{}'.format(tax_rate)
+    if region['total_revenue'] > (region['network_cost'] + region['spectrum_cost']):
 
-    tax_rate = country_parameters['financials'][tax_rate]
+        tax_rate = strategy.split('_')[6]
+        tax_rate = 'tax_{}'.format(tax_rate)
 
-    investment = region['network_cost']
+        tax_rate = country_parameters['financials'][tax_rate]
 
-    tax = investment * (tax_rate / 100)
+        investment = region['network_cost']
+
+        tax = investment * (tax_rate / 100)
+
+    else:
+        tax = 0
 
     return tax
 

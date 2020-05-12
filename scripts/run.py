@@ -271,10 +271,10 @@ def load_core_lut(path):
 
 def define_deciles(regions):
 
-    regions = regions.sort_values(by='cost_per_sp_user', ascending=True)
+    regions = regions.sort_values(by='total_cost', ascending=True)
 
     regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).cost_per_sp_user.apply( #cost_per_sp_user
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).total_cost.apply( #cost_per_sp_user
             pd.qcut, q=11, precision=0,
             labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') # [100,90,80,70,60,50,40,30,20,10,0]
 
@@ -325,6 +325,7 @@ def write_results(regional_results, folder, metric):
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
         'phones_on_network', 'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
+        'ops_and_acquisition',
         'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
         'required_state_subsidy',
@@ -427,7 +428,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [5, 50, 95],
+        'confidence': [50],#[5, 50, 95],
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
@@ -460,7 +461,8 @@ if __name__ == '__main__':
     decision_options = [
         'technology_options',
         'business_model_options',
-        'policy_options'
+        'policy_options',
+        'mixed_options',
     ]
 
     for decision_option in decision_options:#[:1]:
@@ -539,6 +541,7 @@ if __name__ == '__main__':
                         option,
                         GLOBAL_PARAMETERS,
                         country_parameters,
+                        COSTS
                     )
 
                     final_results = allocate_deciles(data_assess)
