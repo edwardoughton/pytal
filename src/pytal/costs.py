@@ -59,7 +59,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -72,7 +72,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -85,7 +85,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -98,7 +98,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -111,7 +111,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -124,7 +124,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -231,8 +231,6 @@ def upgrade_to_4g(region, strategy, costs, global_parameters,
         'backhaul': get_backhaul_costs(region, backhaul, costs, core_lut),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, core, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, core, country_parameters),
-        'core_edge': core_costs(region, 'core_edge', costs, core_lut, core, country_parameters),
-        'core_node': core_costs(region, 'core_node', costs, core_lut, core, country_parameters),
     }
 
     cost_structure = {}
@@ -517,8 +515,7 @@ def local_net_costs(region, costs, core, country_parameters, global_parameters):
 
     local_node_cost = int(local_nodes_proportion * cost_each)
 
-    existing_sites = (region['sites_estimated_total'] *
-        (country_parameters['proportion_of_sites'] / 100))
+    existing_sites = (region['sites_estimated_total'] / country_parameters['networks'])
 
     if existing_sites == 0:
         return 0
@@ -543,13 +540,15 @@ def regional_net_costs(region, asset_type, costs, core_lut, core, country_parame
                 cost_m = costs['regional_edge']
                 cost = int(distance_m * cost_m)
 
-                existing_sites = (region['sites_estimated_total'] *
-                    (country_parameters['proportion_of_sites'] / 100))
+                existing_sites = (region['sites_estimated_total'] /
+                    (country_parameters['networks']))
 
                 if existing_sites == 0:
                     return 0
-
-                return (cost / existing_sites)
+                elif existing_sites <= 1:
+                    return cost * existing_sites
+                else:
+                    return cost / existing_sites
 
             elif asset_type == 'regional_node':
 
@@ -559,11 +558,16 @@ def regional_net_costs(region, asset_type, costs, core_lut, core, country_parame
 
                 regional_node_cost = int(regional_nodes * cost_each)
 
-                existing_sites = (region['sites_estimated_total'] *
-                    (country_parameters['proportion_of_sites'] / 100))
+                existing_sites = (region['sites_estimated_total'] /
+                    (country_parameters['networks']))
 
                 if existing_sites == 0:
                     return 0
+                elif existing_sites <= 1:
+                    return regional_node_cost * existing_sites
+                else:
+                    return regional_node_cost / existing_sites
+
 
                 return (regional_node_cost / existing_sites)
 
@@ -595,16 +599,15 @@ def core_costs(region, asset_type, costs, core_lut, core, country_parameters):
                 cost = int(distance_m * costs['core_edge'])
                 total_cost.append(cost)
 
-                existing_sites = (region['sites_estimated_total'] *
-                    (country_parameters['proportion_of_sites'] / 100))
+                existing_sites = (region['sites_estimated_total'] /
+                    (country_parameters['networks']))
 
                 if existing_sites == 0:
                     return 0
-                elif existing_sites > 1:
-                    cost_per_site = sum(total_cost) / existing_sites
-                    return cost_per_site
-                else:
+                elif existing_sites < 1:
                     return sum(total_cost) * existing_sites
+                else:
+                    return sum(total_cost) / existing_sites
         else:
             return 0
 
@@ -622,15 +625,15 @@ def core_costs(region, asset_type, costs, core_lut, core, country_parameters):
             cost = int(nodes * costs['core_node_{}'.format(core)])
             total_cost.append(cost)
 
-            existing_sites = (region['sites_estimated_total'] *
-                (country_parameters['proportion_of_sites'] / 100))
+            existing_sites = (region['sites_estimated_total'] /
+                (country_parameters['networks']))
 
             if existing_sites == 0:
                 return 0
-
-            cost_per_site = sum(total_cost) / existing_sites
-
-            return cost_per_site
+            elif existing_sites <= 1:
+                return sum(total_cost) * existing_sites
+            else:
+                return sum(total_cost) / existing_sites
 
         else:
             return 0
@@ -641,7 +644,7 @@ def core_costs(region, asset_type, costs, core_lut, core, country_parameters):
     return 0
 
 
-def discount_capex_and_opex(capex, global_parameters):
+def discount_capex_and_opex(capex, global_parameters, country_parameters):
     """
     Discount costs based on return period.
 
@@ -660,6 +663,7 @@ def discount_capex_and_opex(capex, global_parameters):
     """
     return_period = global_parameters['return_period']
     discount_rate = global_parameters['discount_rate'] / 100
+    wacc = country_parameters['financials']['wacc']
 
     costs_over_time_period = []
 
@@ -697,7 +701,7 @@ def discount_opex(opex, global_parameters):
     return discounted_cost
 
 
-def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_parameters):
+def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_parameters, country_parameters):
     """
 
     """
@@ -722,7 +726,7 @@ def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_param
 
                 if type_of_cost == 'capex_and_opex':
 
-                    cost = discount_capex_and_opex(cost, global_parameters)
+                    cost = discount_capex_and_opex(cost, global_parameters, country_parameters)
 
                     if asset_name1 == 'single_sector_antenna':
                         cost = cost * global_parameters['sectorization']
@@ -825,7 +829,7 @@ def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_param
         'ran': ran_cost,
         'backhaul_fronthaul': backhaul_fronthaul_cost,
         'civils': civils_cost,
-        'core_network': core_cost + ran_cost * 0.1,
+        'core_network': core_cost,
     }
 
     return total_cost, cost_by_asset
