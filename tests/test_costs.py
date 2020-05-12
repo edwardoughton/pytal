@@ -57,14 +57,25 @@ def test_greenfield_4g(setup_region, setup_option, setup_costs,
     assert cost_structure['bbu_cabinet'] == 500 / setup_country_parameters['networks']
     assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
+
     #test shared wholesale core network
     cost_structure = greenfield_4g(setup_region[0],
         '4G_epc_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_epc'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_epc'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_epc'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        ) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_epc'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
@@ -103,14 +114,21 @@ def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
     assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
     assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
+
     #test shared wholesale core network
-    cost_structure = greenfield_4g(setup_region[0],
+    cost_structure = upgrade_to_4g(setup_region[0],
         '4G_epc_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_epc'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_epc'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_epc'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
@@ -155,14 +173,25 @@ def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
     assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
     assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
+
     #test shared wholesale core network
-    cost_structure = greenfield_4g(setup_region[0],
+    cost_structure = greenfield_5g_nsa(setup_region[0],
         '5G_nsa_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_nsa'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_nsa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_nsa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        ) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_nsa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
@@ -201,15 +230,25 @@ def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
     assert cost_structure['single_sector_antenna'] == 1500 / setup_country_parameters['networks']
     assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
 
     #test shared wholesale core network
-    cost_structure = greenfield_4g(setup_region[0],
+    cost_structure = upgrade_to_5g_nsa(setup_region[0],
         '5G_nsa_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_nsa'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_nsa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_nsa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        ) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_nsa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
@@ -255,14 +294,25 @@ def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
     assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_country_parameters['networks']
     assert cost_structure['civil_materials'] == 5000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
+
     #test shared wholesale core network
-    cost_structure = greenfield_4g(setup_region[0],
+    cost_structure = greenfield_5g_sa(setup_region[0],
         '5G_sa_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_sa'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_sa'] * 4) / setup_country_parameters['networks']
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_sa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        ) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_sa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
@@ -304,14 +354,26 @@ def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
     assert cost_structure['single_remote_radio_unit'] == 4000 / setup_country_parameters['networks']
     assert cost_structure['cloud_power_supply_converter'] == 1000 / setup_country_parameters['networks']
 
+    setup_region[0]['sites_estimated_total'] = 6
+    setup_region[0]['upgraded_sites'] = 3
+    setup_region[0]['sites_3G'] = 3
+    setup_region[0]['site_density'] = 2
+
     #test shared wholesale core network
-    cost_structure = greenfield_4g(setup_region[0],
+    cost_structure = upgrade_to_5g_sa(setup_region[0],
         '5G_sa_microwave_shared_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
-    assert cost_structure['core_node'] == (setup_costs['core_node_sa'] * 4) / setup_country_parameters['networks']
-    assert cost_structure['regional_node'] == (setup_costs['regional_node_sa'] * 4) / setup_country_parameters['networks']
+
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_sa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        ) / setup_country_parameters['networks']
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_sa'] * 2) /
+        (setup_region[0]['sites_estimated_total'] / setup_country_parameters['networks'])
+        / setup_country_parameters['networks'])
 
 
 def test_get_fronthaul_costs(setup_region, setup_costs):
@@ -365,40 +427,40 @@ def test_local_net_costs(setup_region, setup_costs,
     assert local_net_costs(setup_region[0], setup_costs, 'epc',
         setup_country_parameters, setup_global_parameters) == (
             (setup_costs['regional_node_lower_epc']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites'])/100))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     assert local_net_costs(setup_region[0], setup_costs, 'epc',
         setup_country_parameters, setup_global_parameters) == (
             (setup_costs['regional_node_lower_epc']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites'])/100))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
 
 def test_regional_net_costs(setup_region, setup_costs, setup_core_lut,
     setup_country_parameters):
 
-    setup_region[0]['sites_estimated_total'] = 2
+    setup_region[0]['sites_estimated_total'] = 6
 
     assert regional_net_costs(setup_region[0], 'regional_edge', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (
             (setup_costs['regional_edge'] * setup_core_lut['regional_edge']['MWI.1.1.1_1_new']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites'])/100))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     assert regional_net_costs(setup_region[0], 'regional_node', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (
             (setup_costs['regional_node_epc'] * setup_core_lut['regional_node']['MWI.1.1.1_1_new']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites']/100)))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     setup_region[0]['sites_estimated_total'] = 10
 
     assert regional_net_costs(setup_region[0], 'regional_node', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (
             (setup_costs['regional_node_epc'] * setup_core_lut['regional_node']['MWI.1.1.1_1_new']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites']/100)))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     setup_core_lut['regional_node']['MWI.1.1.1_1'] = 10
     setup_region[0]['area_km2'] = 100
@@ -406,8 +468,8 @@ def test_regional_net_costs(setup_region, setup_costs, setup_core_lut,
     assert regional_net_costs(setup_region[0], 'regional_node', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (
             (setup_costs['regional_node_epc'] * setup_core_lut['regional_node']['MWI.1.1.1_1_new']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites']/100)))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     assert regional_net_costs(setup_region[0], 'incorrrect_asset_name', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == 'Asset name not in lut'
@@ -426,6 +488,7 @@ def test_regional_net_costs(setup_region, setup_costs, setup_core_lut,
 def test_core_costs(setup_region, setup_costs, setup_core_lut, setup_country_parameters):
 
     setup_region[0]['sites_estimated_total'] = 2
+    setup_country_parameters['networks'] = 2
 
     assert core_costs(setup_region[0], 'core_edge', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (setup_costs['core_edge'] * 1000)
@@ -441,41 +504,41 @@ def test_core_costs(setup_region, setup_costs, setup_core_lut, setup_country_par
     assert core_costs(setup_region[0], 'core_edge', setup_costs,
         setup_core_lut, 'epc', setup_country_parameters) == (
             (setup_costs['core_edge'] * setup_core_lut['core_edge']['MWI.1.1.1_1_new']) /
-            (setup_region[0]['sites_estimated_total'] *
-            (setup_country_parameters['proportion_of_sites'])/100))
+            (setup_region[0]['sites_estimated_total'] /
+            (setup_country_parameters['networks'])))
 
     setup_core_lut['regional_node']['MWI.1.1.1_1'] = 3
 
 
-def test_discount_capex_and_opex(setup_global_parameters):
+def test_discount_capex_and_opex(setup_global_parameters, setup_country_parameters):
 
-    assert discount_capex_and_opex(1000, setup_global_parameters) == 1195
+    assert discount_capex_and_opex(1000, setup_global_parameters, setup_country_parameters) == 1195
 
 
-def test_discount_opex(setup_global_parameters):
+def test_discount_opex(setup_global_parameters, setup_country_parameters):
 
     assert discount_opex(1000, setup_global_parameters) == 1952
 
 
-def test_calc_costs(setup_region, setup_global_parameters):
+def test_calc_costs(setup_region, setup_global_parameters, setup_country_parameters):
 
     setup_region[0]['sites_4G'] = 0
     setup_region[0]['upgraded_sites'] = 1
     setup_region[0]['new_sites'] = 1
 
-    answer, structure = calc_costs(setup_region[0], {'single_sector_antenna': 1500}, 1, 'fiber', setup_global_parameters)
+    answer, structure = calc_costs(setup_region[0], {'single_sector_antenna': 1500}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 5379
 
-    answer, structure = calc_costs(setup_region[0], {'single_baseband_unit': 4000}, 1, 'fiber', setup_global_parameters)
+    answer, structure = calc_costs(setup_region[0], {'single_baseband_unit': 4000}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 4781
 
-    answer, structure = calc_costs(setup_region[0], {'tower': 10000}, 1, 'fiber', setup_global_parameters)
+    answer, structure = calc_costs(setup_region[0], {'tower': 10000}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 10000
 
-    answer, structure = calc_costs(setup_region[0], {'site_rental': 9600}, 1, 'fiber', setup_global_parameters)
+    answer, structure = calc_costs(setup_region[0], {'site_rental': 9600}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 18743 #two years' of rent
 
@@ -484,12 +547,12 @@ def test_calc_costs(setup_region, setup_global_parameters):
         'single_baseband_unit': 4000,
         'tower': 10000,
         'site_rental': 9600
-        }, 6, 'fiber', setup_global_parameters)
+        }, 6, 'fiber', setup_global_parameters, setup_country_parameters)
 
     #answer = sum of antenna, bbu, tower, site_rental (5379 + 4781 + 10000 + 18743)
     assert answer == 38903
 
-    answer, structure = calc_costs(setup_region[0], {'incorrect_name': 9600}, 1, 'fiber', setup_global_parameters)
+    answer, structure = calc_costs(setup_region[0], {'incorrect_name': 9600}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 0 #two years' of rent
 
@@ -499,7 +562,7 @@ def test_calc_costs(setup_region, setup_global_parameters):
         'low_latency_switch': 6,
         'rack': 6,
         'cloud_power_supply_converter': 6,
-        }, 1, 'fiber', setup_global_parameters)
+        }, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == sum([
         8, #cots_processing = capex + opex
@@ -511,13 +574,13 @@ def test_calc_costs(setup_region, setup_global_parameters):
 
     answer, structure = calc_costs(setup_region[0], {
         'backhaul': 100,
-        }, 1, 'fiber', setup_global_parameters)
+    }, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 120
 
     answer, structure = calc_costs(setup_region[0], {
         'backhaul': 100,
-        }, 0, 'fiber', setup_global_parameters)
+        }, 0, 'fiber', setup_global_parameters, setup_country_parameters)
 
     assert answer == 0
 
