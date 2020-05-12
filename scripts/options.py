@@ -14,164 +14,178 @@ January 2020
 OPTIONS = {
     'technology_options': [
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
         },
     ],
     'business_model_options': [
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
         },
     ],
     'policy_options': [
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
         },
         {
-            'scenario': 'S1_25_10_5',
+            'scenario': 'S1_25_10_2',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
         },
         {
-            'scenario': 'S2_200_50_25',
+            'scenario': 'S2_200_50_5',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
         },
         {
-            'scenario': 'S3_400_100_50',
+            'scenario': 'S3_400_100_10',
             'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
+        },
+    ],
+    'mixed_options': [  #generation_core_backhaul_sharing_subsidy_spectrum_tax
+        {
+            'scenario': 'S1_25_10_2',
+            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
+        },
+        {
+            'scenario': 'S2_200_50_5',
+            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
+        },
+        {
+            'scenario': 'S3_400_100_10',
+            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
         },
     ]
 }
@@ -184,12 +198,12 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
-            'medium': 7,
-            'low': 5,
+            'high': 7,
+            'medium': 5,
+            'low': 3,
         },
         'networks': 3,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -213,6 +227,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 10,
             'profit_margin': 10,
             'subsidy_low': 5,
             'subsidy_high': 20,
@@ -221,6 +236,7 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'ops_and_acquisition_per_subscriber': 5,
             },
         },
     'KEN': {
@@ -229,12 +245,12 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 12,
-            'medium': 9,
-            'low': 5,
+            'high': 9,
+            'medium': 7,
+            'low': 2,
         },
         'networks': 3,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -258,6 +274,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 15,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -266,6 +283,7 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'ops_and_acquisition_per_subscriber': 5,
             },
         },
     'MEX': {
@@ -274,12 +292,12 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
+            'high': 12,
             'medium': 8,
             'low': 4,
         },
         'networks': 3,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -311,6 +329,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 10,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -319,6 +338,8 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'acquisition_cost_per_subscriber': 10,
+            'ops_and_acquisition_per_subscriber': 10,
             },
         },
     'MWI': {
@@ -327,7 +348,7 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
+            'high': 5,
             'medium': 3,
             'low': 1,
         },
@@ -335,7 +356,7 @@ COUNTRY_PARAMETERS = {
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': 2,
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -359,6 +380,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 15,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -367,6 +389,8 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'acquisition_cost_per_subscriber': 2,
+            'ops_and_acquisition_per_subscriber': 2,
             },
         },
     'PAK': {
@@ -375,9 +399,9 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
-            'medium': 2,
-            'low': 1,
+            'high': 4,
+            'medium': 1.5,
+            'low': 0.5,
         },
         # also GSMA, 2019 (same report as above)
         # smartphone pen was 10% in 2017, so assume 15% in 2020
@@ -386,7 +410,7 @@ COUNTRY_PARAMETERS = {
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': 3,
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -410,6 +434,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 15,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -418,6 +443,7 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'ops_and_acquisition_per_subscriber': 5,
             },
         },
     'PER': {
@@ -426,12 +452,12 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 15,
-            'medium': 12,
-            'low': 5,
+            'high': 12,
+            'medium': 7,
+            'low': 4,
         },
         'networks': 3,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -455,6 +481,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 10,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -463,6 +490,8 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'acquisition_cost_per_subscriber': 10,
+            'ops_and_acquisition_per_subscriber': 10,
             },
         },
     'SEN': {
@@ -471,13 +500,13 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
-            'medium': 8,
-            'low': 5,
+            'high': 9,
+            'medium': 7,
+            'low': 2,
         },
         'smartphone_pen': 0.5,
         'networks': 3,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -501,6 +530,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 15,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -509,6 +539,8 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'acquisition_cost_per_subscriber': 2,
+            'ops_and_acquisition_per_subscriber': 2,
             },
         },
     'UGA': {
@@ -517,12 +549,12 @@ COUNTRY_PARAMETERS = {
             'medium': 1,
         },
         'arpu': {
-            'high': 10,
+            'high': 5,
             'medium': 3,
-            'low': 2,
+            'low': 1,
         },
         'networks': 2,
-        'proportion_of_sites': 50,
+        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -530,7 +562,7 @@ COUNTRY_PARAMETERS = {
                     'bandwidth': '2x10',
                 },
                 {
-                    'frequency': 1800,
+                    'frequency': 2600,
                     'bandwidth': '2x10',
                 },
             ],
@@ -546,6 +578,7 @@ COUNTRY_PARAMETERS = {
             ]
         },
         'financials': {
+            'wacc': 15,
             'profit_margin': 10,
             'subsidy_low': 10,
             'subsidy_high': 40,
@@ -554,6 +587,8 @@ COUNTRY_PARAMETERS = {
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
+            'acquisition_cost_per_subscriber': 2,
+            'ops_and_acquisition_per_subscriber': 2,
             },
         },
     }
