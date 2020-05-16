@@ -46,10 +46,10 @@ results$gdp_percentage <- (results$total_cost / 5) / results$gdp * 100
 
 results$confidence = factor(results$confidence, levels=c('5','50', '95'),
                             labels=c("lower", 'mean', "upper"))
-
-results$scenario = factor(results$scenario, levels=c("S1_25_10_5",
-                                                     "S2_200_50_25",
-                                                     "S3_400_100_50"),
+unique(results$scenario)
+results$scenario = factor(results$scenario, levels=c("S1_25_10_2",
+                                                     "S2_200_50_5",
+                                                     "S3_400_100_10"),
                           labels=c("S1 (25 Mbps)",
                                    "S2 (200 Mbps)",
                                    "S3 (400 Mbps)"))

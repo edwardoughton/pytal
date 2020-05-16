@@ -32,22 +32,24 @@ data$country = factor(data$country, levels=c("UGA",
                                              "Peru\n(Cluster 5)",
                                              "Mexico\n(Cluster 6)"))
 
-subscriptions <- ggplot(data, aes(x=year, y=penetration, colour=country, group=country)) + 
-  scale_colour_manual(values = c("#F0E442", "#F0E442","#E69F00", "#E69F00","#D55E00", "#0072B2", "#56B4E9","#009E73")) + 
-  geom_point() +   geom_line() +
+subscriptions <- ggplot(data, aes(x=year, y=penetration, group=country)) +
+  geom_point(aes(shape=country, color=country), size=2.5) +
+  geom_line(aes(color=country)) +
+  scale_shape_manual(values=c(0, 1, 2, 3, 4, 5, 6, 7, 8)) +
+  scale_color_manual(values=c("#F0E442", "#F0E442","#E69F00", "#E69F00","#D55E00", "#0072B2", "#56B4E9","#009E73"))+
   geom_vline(xintercept=2020, linetype="dashed", color = "grey", size=.5) +
   annotate("text", x = 2020, y = 25, label = "Historical", vjust=-1, angle = 90) +
   annotate("text", x = 2021, y = 25, label = "Forecast", vjust=-1, angle = 90) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom") +
-  labs(title = "Mobile Market Penetration", colour=NULL,
-       subtitle = "Historical: 2010-2020. Forecast: 2020-2030 ",
-       x = NULL, y = "Unique Mobile Subscribers (%)") + 
   scale_x_continuous(expand = c(0, 0), limits = c(2010,2030), breaks = seq(2010,2030,1)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0,95)) +
-  theme(panel.spacing = unit(0.6, "lines")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        legend.position = "bottom", legend.title=element_blank()) +
+  labs(title = "Mobile Market Penetration", 
+       subtitle = "Historical: 2010-2020. Forecast: 2020-2030 ",
+       x = NULL, y = "Unique Mobile Subscribers (%)") +
   guides(colour=guide_legend(ncol=4)) 
- 
+
+
 path = file.path(folder, 'figures', 'cell_subscriptions.png')
 ggsave(path, units="in", width=7, height=7, dpi=300)
 print(subscriptions)

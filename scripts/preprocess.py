@@ -1594,7 +1594,6 @@ def prepare_edge_fitting(country):
     """
 
     """
-
     folder = os.path.join(DATA_INTERMEDIATE, country['iso3'])
     core_edges_path = os.path.join(folder, 'network_existing', 'core_edges_existing.shp')
 
