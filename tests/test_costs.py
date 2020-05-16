@@ -402,7 +402,7 @@ def test_get_backhaul_costs(setup_region, setup_costs, setup_core_lut):
     setup_region[0]['area_km2'] = 5000
 
     assert get_backhaul_costs(setup_region[0], 'microwave',
-        setup_costs, setup_core_lut) == (setup_costs['microwave_medium'])
+        setup_costs, setup_core_lut) == (setup_costs['microwave_small'])
 
     setup_region[0]['area_km2'] = 100000
 
@@ -412,7 +412,7 @@ def test_get_backhaul_costs(setup_region, setup_costs, setup_core_lut):
     setup_region[0]['area_km2'] = 2
 
     assert get_backhaul_costs(setup_region[0], 'fiber',
-        setup_costs, setup_core_lut) == (setup_costs['fiber_urban_m'] * 500)
+        setup_costs, setup_core_lut) == (setup_costs['fiber_urban_m'] * 250)
 
     assert get_backhaul_costs(setup_region[0], 'incorrect_backhaul_tech_name',
         setup_costs, setup_core_lut) == 0
@@ -512,12 +512,14 @@ def test_core_costs(setup_region, setup_costs, setup_core_lut, setup_country_par
 
 def test_discount_capex_and_opex(setup_global_parameters, setup_country_parameters):
 
-    assert discount_capex_and_opex(1000, setup_global_parameters, setup_country_parameters) == 1195
+    assert discount_capex_and_opex(1000, setup_global_parameters, setup_country_parameters) == (
+        1195 * (1 + (setup_country_parameters['financials']['wacc'] / 100)))
 
 
 def test_discount_opex(setup_global_parameters, setup_country_parameters):
 
-    assert discount_opex(1000, setup_global_parameters) == 1952
+    assert discount_opex(1000, setup_global_parameters, setup_country_parameters) == (
+        1952 * (1 + (setup_country_parameters['financials']['wacc'] / 100)))
 
 
 def test_calc_costs(setup_region, setup_global_parameters, setup_country_parameters):
@@ -528,19 +530,19 @@ def test_calc_costs(setup_region, setup_global_parameters, setup_country_paramet
 
     answer, structure = calc_costs(setup_region[0], {'single_sector_antenna': 1500}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == 5379
+    assert answer == 5917
 
     answer, structure = calc_costs(setup_region[0], {'single_baseband_unit': 4000}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == 4781
+    assert answer == 5259
 
     answer, structure = calc_costs(setup_region[0], {'tower': 10000}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == 10000
+    assert answer == 11000
 
     answer, structure = calc_costs(setup_region[0], {'site_rental': 9600}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == 18743 #two years' of rent
+    assert answer == 20617 #two years' of rent
 
     answer, structure = calc_costs(setup_region[0], {
         'single_sector_antenna': 1500,
@@ -550,7 +552,7 @@ def test_calc_costs(setup_region, setup_global_parameters, setup_country_paramet
         }, 6, 'fiber', setup_global_parameters, setup_country_parameters)
 
     #answer = sum of antenna, bbu, tower, site_rental (5379 + 4781 + 10000 + 18743)
-    assert answer == 38903
+    assert answer == 42793
 
     answer, structure = calc_costs(setup_region[0], {'incorrect_name': 9600}, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
@@ -564,19 +566,19 @@ def test_calc_costs(setup_region, setup_global_parameters, setup_country_paramet
         'cloud_power_supply_converter': 6,
         }, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == sum([
-        8, #cots_processing = capex + opex
-        8, #io_n2_n3 = capex + opex
-        8, #low_latency_switch = capex + opex
-        6, #rack = capex
-        8, #cloud_power_supply_converter = capex + opex
-    ])
+    assert answer == round(sum([
+        8.8, #cots_processing = capex + opex
+        8.8, #io_n2_n3 = capex + opex
+        8.8, #low_latency_switch = capex + opex
+        6.6, #rack = capex
+        8.8, #cloud_power_supply_converter = capex + opex
+    ]))
 
     answer, structure = calc_costs(setup_region[0], {
         'backhaul': 100,
     }, 1, 'fiber', setup_global_parameters, setup_country_parameters)
 
-    assert answer == 120
+    assert answer == 132
 
     answer, structure = calc_costs(setup_region[0], {
         'backhaul': 100,
@@ -602,142 +604,139 @@ def test_calc_costs(setup_region, setup_global_parameters, setup_country_paramet
 #         setup_costs,
 #         setup_global_parameters,
 #         setup_country_parameters,
-#         setup_backhaul_lut,
 #         setup_core_lut
 #     )
 
-    # assert answer['network_cost'] == 202454.0
+#     assert answer['network_cost'] == 454427.60000000003
 
-# #     setup_region[0]['sites_4G'] = 0
-# #     setup_region[0]['new_sites'] = 1
-# #     setup_region[0]['upgraded_sites'] = 1
-# #     setup_region[0]['sites_estimated_total'] = 1
-# #     setup_region[0]['site_density'] = 0.5
-# #     setup_region[0]['backhaul_new'] = 10
+#     setup_region[0]['sites_4G'] = 0
+#     setup_region[0]['new_sites'] = 1
+#     setup_region[0]['upgraded_sites'] = 1
+#     setup_region[0]['sites_estimated_total'] = 1
+#     setup_region[0]['site_density'] = 0.5
+#     setup_region[0]['backhaul_new'] = 10
 
-# #     answer = find_single_network_cost(
-# #         setup_region[0],
-# #         {'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'},
-# #         setup_costs,
-# #         setup_global_parameters,
-# #         setup_country_parameters,
-# #         setup_backhaul_lut,
-# #         setup_core_lut
-# #     )
+#     answer = find_single_network_cost(
+#         setup_region[0],
+#         {'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'},
+#         setup_costs,
+#         setup_global_parameters,
+#         setup_country_parameters,
+#         setup_core_lut
+#     )
 
-# #     assert answer['network_cost'] == 202454.0
+#     assert answer['network_cost'] == 454427.60000000003
 
-# #     setup_region[0]['sites_4G'] = 0
-# #     setup_region[0]['new_sites'] = 1
-# #     setup_region[0]['upgraded_sites'] = 1
-# #     setup_region[0]['site_density'] = 0.5
-# #     setup_region[0]['backhaul_new'] = 2
+#     setup_region[0]['sites_4G'] = 0
+#     setup_region[0]['new_sites'] = 1
+#     setup_region[0]['upgraded_sites'] = 1
+#     setup_region[0]['site_density'] = 0.5
+#     setup_region[0]['backhaul_new'] = 2
 
-# #     answer = find_single_network_cost(
-# #         setup_region[0],
-# #         {'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'},
-# #         setup_costs,
-# #         setup_global_parameters,
-# #         setup_country_parameters,
-# #         setup_backhaul_lut,
-# #         setup_core_lut
-# #     )
+#     answer = find_single_network_cost(
+#         setup_region[0],
+#         {'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'},
+#         setup_costs,
+#         setup_global_parameters,
+#         setup_country_parameters,
+#         setup_core_lut
+#     )
 
-# #     assert answer['network_cost'] == 202454.0
+#     assert answer['network_cost'] == 454427.60000000003
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_microwave_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_microwave_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == (110322 + 11952 + 11952 + 1027906)
+    # assert answer['network_cost'] == (110322 + 11952 + 11952 + 1027906)
 
-# #     # setup_region[0]['new_sites'] = 0
-# #     # setup_region[0]['upgraded_sites'] = 1
-# #     # setup_region[0]['site_density'] = 0.5
-# #     # setup_region[0]['backhaul_new'] = 0
+    # setup_region[0]['new_sites'] = 0
+    # setup_region[0]['upgraded_sites'] = 1
+    # setup_region[0]['site_density'] = 0.5
+    # setup_region[0]['backhaul_new'] = 0
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == 63357.0 + 1027906
+    # assert answer['network_cost'] == 63357.0 + 1027906
 
-# #     # setup_region[0]['new_sites'] = 0
-# #     # setup_region[0]['upgraded_sites'] = 1
-# #     # setup_region[0]['site_density'] = 0.5
-# #     # setup_region[0]['backhaul_new'] = 1
+    # setup_region[0]['new_sites'] = 0
+    # setup_region[0]['upgraded_sites'] = 1
+    # setup_region[0]['site_density'] = 0.5
+    # setup_region[0]['backhaul_new'] = 1
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == 63357 + 1027906
+    # assert answer['network_cost'] == 63357 + 1027906
 
-# #     # setup_region[0]['new_sites'] = 1
-# #     # setup_region[0]['upgraded_sites'] = 1
-# #     # setup_region[0]['site_density'] = 0.5
-# #     # setup_region[0]['backhaul_new'] = 2
+    # setup_region[0]['new_sites'] = 1
+    # setup_region[0]['upgraded_sites'] = 1
+    # setup_region[0]['site_density'] = 0.5
+    # setup_region[0]['backhaul_new'] = 2
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == 152690 + 1027906
+    # assert answer['network_cost'] == 152690 + 1027906
 
-# #     # setup_region[0]['new_sites'] = 1
-# #     # setup_region[0]['upgraded_sites'] = 0
-# #     # setup_region[0]['site_density'] = 0.001
-# #     # setup_region[0]['backhaul_new'] = 1
+    # setup_region[0]['new_sites'] = 1
+    # setup_region[0]['upgraded_sites'] = 0
+    # setup_region[0]['site_density'] = 0.001
+    # setup_region[0]['backhaul_new'] = 1
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == 450398.0 + 1027906
+    # assert answer['network_cost'] == 450398.0 + 1027906
 
-# #     # setup_region[0]['new_sites'] = 10
-# #     # setup_region[0]['upgraded_sites'] = 10
-# #     # setup_region[0]['site_density'] = 1
-# #     # setup_region[0]['backhaul_new'] = 20
+    # setup_region[0]['new_sites'] = 10
+    # setup_region[0]['upgraded_sites'] = 10
+    # setup_region[0]['site_density'] = 1
+    # setup_region[0]['backhaul_new'] = 20
 
-# #     # answer = find_single_network_cost(
-# #     #     setup_region[0],
-# #     #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
-# #     #     setup_costs,
-# #     #     setup_global_parameters,
-# #     #     setup_country_parameters,
-# #     #     setup_backhaul_lut,
-# #     #     setup_core_lut
-# #     # )
+    # answer = find_single_network_cost(
+    #     setup_region[0],
+    #     {'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline'},
+    #     setup_costs,
+    #     setup_global_parameters,
+    #     setup_country_parameters,
+    #     setup_backhaul_lut,
+    #     setup_core_lut
+    # )
 
-# #     # assert answer['network_cost'] == 1451800.0 + 1027906
+    # assert answer['network_cost'] == 1451800.0 + 1027906
