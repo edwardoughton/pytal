@@ -59,7 +59,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -72,7 +73,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -85,7 +87,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -98,7 +101,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -111,7 +115,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -124,7 +129,8 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
             backhaul_quant = backhaul_quantity(i, new_backhaul)
 
-            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul, backhaul_quant, global_parameters, country_parameters)
+            total_cost, cost_by_asset = calc_costs(region, cost_structure, backhaul,
+                backhaul_quant, global_parameters, country_parameters)
 
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
@@ -474,15 +480,15 @@ def get_backhaul_costs(region, backhaul, costs, core_lut):
             nodes += core_lut[asset_type][combined_key]
     node_density_km2 = nodes / region['area_km2']
     if node_density_km2 > 0:
-        distance_m = math.sqrt(1/node_density_km2) * 1000
+        ave_distance_to_a_node_m = (math.sqrt(1/node_density_km2) / 2) * 1000
     else:
-        distance_m = math.sqrt(region['area_km2']) * 1000
+        ave_distance_to_a_node_m = math.sqrt(region['area_km2']) * 1000
 
     if backhaul_tech == 'microwave':
-        if distance_m < 15000:
+        if ave_distance_to_a_node_m < 15000:
             tech = '{}_{}'.format(backhaul_tech, 'small')
             cost = costs[tech]
-        elif 15000 < distance_m < 30000:
+        elif 15000 < ave_distance_to_a_node_m < 30000:
             tech = '{}_{}'.format(backhaul_tech, 'medium')
             cost = costs[tech]
         else:
@@ -492,7 +498,7 @@ def get_backhaul_costs(region, backhaul, costs, core_lut):
     elif backhaul_tech == 'fiber':
         tech = '{}_{}_m'.format(backhaul_tech, geotype)
         cost_per_meter = costs[tech]
-        cost = cost_per_meter * distance_m
+        cost = cost_per_meter * ave_distance_to_a_node_m
 
     else:
         print('Did not recognise the backhaul technology {}'.format(backhaul_tech))
@@ -678,16 +684,20 @@ def discount_capex_and_opex(capex, global_parameters, country_parameters):
 
     discounted_cost = round(sum(costs_over_time_period))
 
+    #add wacc
+    discounted_cost = discounted_cost * (1 + (wacc/100))
+
     return discounted_cost
 
 
-def discount_opex(opex, global_parameters):
+def discount_opex(opex, global_parameters, country_parameters):
     """
     Discount opex based on return period.
 
     """
     return_period = global_parameters['return_period']
     discount_rate = global_parameters['discount_rate'] / 100
+    wacc = country_parameters['financials']['wacc']
 
     costs_over_time_period = []
 
@@ -697,6 +707,9 @@ def discount_opex(opex, global_parameters):
         )
 
     discounted_cost = round(sum(costs_over_time_period))
+
+    #add wacc
+    discounted_cost = discounted_cost * (1 + (wacc/100))
 
     return discounted_cost
 
@@ -754,10 +767,10 @@ def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_param
                         cost = (cost * quantity) / all_sites
 
                 elif type_of_cost == 'capex':
-                    cost = cost
+                    cost = cost * (1 + (country_parameters['financials']['wacc'] / 100))
 
                 elif type_of_cost == 'opex':
-                    cost = discount_opex(cost, global_parameters)
+                    cost = discount_opex(cost, global_parameters, country_parameters)
 
                 else:
                     return 'Did not recognize cost type'
@@ -832,7 +845,7 @@ def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_param
         'core_network': core_cost,
     }
 
-    return total_cost, cost_by_asset
+    return round(total_cost), cost_by_asset
 
 
 INFRA_SHARING_ASSETS = {
