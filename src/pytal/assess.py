@@ -139,8 +139,8 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
 
     if spectrum_cost == 'low':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.5#0.01
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.5#0.01
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.2
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.2
 
     if spectrum_cost == 'high':
         coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 2
@@ -173,19 +173,19 @@ def calculate_tax(region, strategy, country_parameters):
     Calculate tax.
 
     """
-    if region['total_revenue'] > (region['network_cost'] + region['spectrum_cost']):
+    # if region['total_revenue'] > (region['network_cost'] + region['spectrum_cost']):
 
-        tax_rate = strategy.split('_')[6]
-        tax_rate = 'tax_{}'.format(tax_rate)
+    tax_rate = strategy.split('_')[6]
+    tax_rate = 'tax_{}'.format(tax_rate)
 
-        tax_rate = country_parameters['financials'][tax_rate]
+    tax_rate = country_parameters['financials'][tax_rate]
 
-        investment = region['network_cost']
+    investment = region['network_cost']
 
-        tax = investment * (tax_rate / 100)
+    tax = investment * (tax_rate / 100)
 
-    else:
-        tax = 0
+    # else:
+    #     tax = 0
 
     return tax
 
