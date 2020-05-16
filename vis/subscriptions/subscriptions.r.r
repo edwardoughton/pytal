@@ -49,9 +49,7 @@ subscriptions <- ggplot(data, aes(x=year, y=penetration, group=country)) +
        x = NULL, y = "Unique Mobile Subscribers (%)") +
   guides(colour=guide_legend(ncol=4)) 
 
-
 path = file.path(folder, 'figures', 'cell_subscriptions.png')
 ggsave(path, units="in", width=7, height=7, dpi=300)
 print(subscriptions)
 dev.off()
-
