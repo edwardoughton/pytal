@@ -113,7 +113,7 @@ def setup_country_parameters():
             ]
         },
         'financials': {
-            'wacc': 15,
+            'wacc': 10,
             'profit_margin': 20,
             'subsidy_low': 10,
             'subsidy_baseline': 25,

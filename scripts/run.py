@@ -271,12 +271,12 @@ def load_core_lut(path):
 
 def define_deciles(regions):
 
-    regions = regions.sort_values(by='total_cost', ascending=True)
+    regions = regions.sort_values(by='total_cost', ascending=False)
 
     regions['decile'] = regions.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).total_cost.apply( #cost_per_sp_user
             pd.qcut, q=11, precision=0,
-            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') # [100,90,80,70,60,50,40,30,20,10,0]
+            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') #  [100,90,80,70,60,50,40,30,20,10,0]
 
     return regions
 
@@ -301,6 +301,26 @@ def write_results(regional_results, folder, metric):
 
     path = os.path.join(folder,'national_results_{}.csv'.format(metric))
     national_results.to_csv(path, index=True)
+
+    print('Writing national cost composition results')
+    national_cost_results = pd.DataFrame(regional_results)
+    national_cost_results = national_cost_results[[
+        'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'population_km2',
+        'phones_on_network', 'cost_per_sp_user',
+        'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
+        'ops_and_acquisition',
+        'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
+        'required_state_subsidy',
+    ]]
+
+    national_cost_results = national_cost_results.groupby([
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
+    national_cost_results['cost_per_network_user'] = (
+        national_cost_results['total_cost'] / national_cost_results['phones_on_network'])
+
+    path = os.path.join(folder,'national_cost_results_{}.csv'.format(metric))
+    national_cost_results.to_csv(path, index=True)
 
     print('Writing general decile results')
     decile_results = pd.DataFrame(regional_results)
@@ -362,8 +382,6 @@ def allocate_deciles(data):
     """
     data = pd.DataFrame(data)
 
-    # data['cost_per_user'] = data['total_cost'] / data['smartphones_on_network']
-
     data = define_deciles(data)
 
     data = data.to_dict('records')
@@ -395,31 +413,31 @@ if __name__ == '__main__':
         'low_latency_switch': 500,
         'rack': 500,
         'cloud_power_supply_converter': 1000,
-        'tower': 10000,
+        'tower': 5000,
         'civil_materials': 5000,
         'transportation': 5000,
         'installation': 5000,
         'site_rental_urban': 9600,
         'site_rental_suburban': 4000,
-        'site_rental_rural': 2000,
+        'site_rental_rural': 1000,
         'router': 2000,
         'microwave_small': 20000,
         'microwave_medium': 30000,
         'microwave_large': 40000,
-        'fiber_urban_m': 25,
-        'fiber_suburban_m': 15,
-        'fiber_rural_m': 10,
-        'core_node_epc': 50000,
-        'core_node_nsa': 50000,
-        'core_node_sa': 75000,
-        'core_edge': 10,
-        'regional_node_epc': 25000,
-        'regional_node_nsa': 25000,
-        'regional_node_sa': 50000,
-        'regional_edge': 5,
-        'regional_node_lower_epc': 5000,
-        'regional_node_lower_nsa': 5000,
-        'regional_node_lower_sa': 10000,
+        'fiber_urban_m': 20,
+        'fiber_suburban_m': 10,
+        'fiber_rural_m': 2,
+        'core_node_epc': 75000,
+        'core_node_nsa': 75000,
+        'core_node_sa': 250000,
+        'core_edge': 4,
+        'regional_node_epc': 40000,
+        'regional_node_nsa': 40000,
+        'regional_node_sa': 100000,
+        'regional_edge': 2,
+        'regional_node_lower_epc': 20000,
+        'regional_node_lower_nsa': 20000,
+        'regional_node_lower_sa': 100000,
     }
 
     GLOBAL_PARAMETERS = {
@@ -428,7 +446,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [50],#[5, 50, 95],
+        'confidence': [5, 50, 95],
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,

@@ -75,12 +75,12 @@ cost_by_strategy <- ggplot(wide, aes(x=wide$cluster, y=wide$mean/1e9, colour=wid
   guides(fill=FALSE, colour=FALSE) + 
   facet_grid(scenario~strategy)
 
-# #export to folder
-# path = file.path(folder, 'figures', 'cost_by_strategy.png')
-# ggsave(path, units="in", width=7, height=5)
-# print(cost_by_strategy)
-# dev.off()
-# 
+#export to folder
+path = file.path(folder, 'figures', 'cost_by_strategy.png')
+ggsave(path, units="in", width=7, height=5)
+print(cost_by_strategy)
+dev.off()
+
 
 if (!require(rgeos)) {
   install.packages("rgeos", repos = "http://cran.us.r-project.org")
