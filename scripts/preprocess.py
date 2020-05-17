@@ -536,6 +536,15 @@ def get_regional_data(country):
         if luminosity_summation == None:
             luminosity_summation = 0
 
+        if area_km2 > 0:
+            mean_luminosity_km2 = (
+                luminosity_summation / area_km2 if luminosity_summation else 0)
+            population_km2 = (
+                population_summation / area_km2 if population_summation else 0)
+        else:
+            mean_luminosity_km2 = 0
+            population_km2 = 0
+
         if 'GSM' in [c for c in coverage.keys()]:
             if region[gid_level] in coverage['GSM']:
                 coverage_GSM_km2 = coverage['GSM'][region[gid_level]]
@@ -564,10 +573,10 @@ def get_regional_data(country):
             'GID_0': region['GID_0'],
             'GID_id': region[gid_level],
             'GID_level': gid_level,
-            'mean_luminosity_km2': luminosity_summation / area_km2 if luminosity_summation else 0,
+            'mean_luminosity_km2': mean_luminosity_km2,
             'population': population_summation,
             'area_km2': area_km2,
-            'population_km2': population_summation / area_km2 if population_summation else 0,
+            'population_km2': population_km2,
             'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100 if coverage_GSM_km2 else 0, 1),
             'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100 if coverage_3G_km2 else 0, 1),
             'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100 if coverage_4G_km2 else 0, 1),
@@ -637,7 +646,10 @@ def estimate_sites(data, iso3, backhaul_lut):
         #first try to use actual data
         if len(existing_site_data) > 0:
             sites_estimated_total = existing_site_data[region['GID_id']]
-            sites_estimated_km2 = sites_estimated_total / region['area_km2']
+            if region['area_km2'] > 0:
+                sites_estimated_km2 = sites_estimated_total / region['area_km2']
+            else:
+                sites_estimated_km2 = 0
 
         #or if we don't have data estimate sites per area
         else:
@@ -1411,7 +1423,7 @@ def find_regional_nodes(country):
     regions = gpd.read_file(input_path, crs="epsg:4326")
     unique_regions = regions[GID_level].unique()
 
-    if not os.path.exists(output_path):
+    if os.path.exists(output_path):
         return print('Regional nodes layer already generated')
 
     folder = os.path.dirname(output_path)
@@ -2052,30 +2064,30 @@ if __name__ == '__main__':
     # countries = find_country_list(['Africa'])
 
     countries = [
-        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 3,
-            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 3.5,
-        },
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2,
-        },
+        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, #'regional_nodes_level': 3,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 20000, 'subs_growth': 3.5,
+        # },
+        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2,
+        # },
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'SSA', 'pop_density_km2': 200, 'settlement_size': 1000, 'subs_growth': 1.5,
         },
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
             'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
         },
-        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-            'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2.5,
-        },
+        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
+        #     'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2.5,
+        # },
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'Europe', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 0.3,
         },
-        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 0.5,
-        },
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.2,
-        },
+        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 0.5,
+        # },
+        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
+        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.2,
+        # },
     ]
 
     for country in countries:
