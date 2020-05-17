@@ -315,6 +315,7 @@ def load_2G_kenya(path, regions, folder):
     df_2G = gpd.GeoDataFrame(
         df_2G, geometry=gpd.points_from_xy(df_2G.LON, df_2G.LAT))
     df_2G = df_2G.dropna()
+    df_2G = df_2G.drop_duplicates(['SITE ID'])
 
     print('Writing 2G shapes')
     df_2G.to_file(os.path.join(folder, '2G.shp'), crs='epsg:4326')
@@ -336,6 +337,7 @@ def load_3G_kenya(path, regions, folder):
     df_3G = gpd.GeoDataFrame(
         df_3G, geometry=gpd.points_from_xy(df_3G.LON, df_3G.LAT))
     df_3G = df_3G.dropna()
+    df_3G = df_3G.drop_duplicates(['SITE ID'])
 
     print('Writing 3G shapes')
     df_3G.to_file(os.path.join(folder, '3G.shp'), crs='epsg:4326')
@@ -358,6 +360,8 @@ def load_4G_kenya(path, regions, folder):
 
     df_4G = gpd.GeoDataFrame(
         df_4G, geometry=gpd.points_from_xy(df_4G.LON, df_4G.LAT))
+
+    df_4G = df_4G.drop_duplicates(['SITE ID'])
 
     print('Writing 4G shapes')
     df_4G.to_file(os.path.join(folder, '4G.shp'), crs='epsg:4326')
@@ -412,6 +416,8 @@ def load_senegal(path, regions, folder):
         sites, geometry=gpd.points_from_xy(sites.LONGITUDE, sites.LATITUDE))
     sites = sites.dropna()
 
+    sites = sites.drop_duplicates(['Site_Name'])
+
     sites.crs = 'epsg:31028'
     sites = sites.to_crs('epsg:4326')
 
@@ -453,6 +459,8 @@ def load_albania(path, regions, folder):
     print('Reading Albania data')
     sites = pd.read_csv(path, encoding = "ISO-8859-1")
     sites = sites[['LATITUDE', 'LONGITUDE']]
+
+    #get sites not cells
     sites = sites.drop_duplicates()
     sites = gpd.GeoDataFrame(
         sites, geometry=gpd.points_from_xy(sites.LONGITUDE, sites.LATITUDE))
@@ -492,8 +500,8 @@ def process_albania():
 if __name__ == "__main__":
 
     countries = [
-        # {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2},
-        # {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2},
+        {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2},
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2},
     ]
 
@@ -508,11 +516,11 @@ if __name__ == "__main__":
         print('Processing coverage shapes')
         process_coverage_shapes(country)
 
-        # if country['iso3'] == 'KEN':
-        #     process_kenya()
+        if country['iso3'] == 'KEN':
+            process_kenya()
 
-        # if country['iso3'] == 'SEN':
-        #     process_senegal()
+        if country['iso3'] == 'SEN':
+            process_senegal()
 
         if country['iso3'] == 'ALB':
             process_albania()

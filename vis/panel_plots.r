@@ -3,6 +3,112 @@
 library(tidyverse)
 library(ggpubr)
 
+####################SUPPLY-DEMAND METRICS
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+
+data <- read.csv(file.path(folder, '..', 'results', 'decile_results_technology_options.csv'))
+
+data <- data[!(data$total_cost == "NA"),]
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+#select desired columns
+data <- select(data, country, scenario, strategy, confidence, decile, #population, area_km2, 
+               population_km2, sites_estimated_total, existing_network_sites,
+               sites_estimated_total_km2, existing_network_sites_km2,
+               phone_density_on_network_km2, sp_density_on_network_km2, 
+               total_revenue, total_cost, cost_per_network_user, 
+               # cost_per_sp_user
+               )
+
+data <- data[(data$confidence == 50),]
+
+data$combined <- paste(data$country, data$scenario, sep="_")
+
+data$country = factor(data$country, levels=c('MWI',
+                                             "UGA",
+                                             "SEN",
+                                             "KEN",
+                                             "PAK",
+                                             "ALB",
+                                             "PER",
+                                             "MEX"),
+                      labels=c("Malawi","Uganda",
+                               "Senegal","Kenya",
+                               "Pakistan",
+                               "Albania",
+                               "Peru",
+                               "Mexico"))
+
+demand = data[(
+  data$scenario == 'S1_25_10_2' &
+  data$strategy == '4G_epc_fiber_baseline_baseline_baseline_baseline'
+    ),]
+
+demand <- select(demand, country, decile, population_km2, 
+                 phone_density_on_network_km2, sp_density_on_network_km2)
+
+demand <- gather(demand, metric, value, population_km2:sp_density_on_network_km2)
+
+demand$metric = factor(demand$metric, 
+                     levels=c("population_km2",
+                             "phone_density_on_network_km2",
+                             "sp_density_on_network_km2"),
+                       labels=c("Population Density",
+                                "Phone Density",
+                                "Smartphone Density"))
+
+demand_densities <- ggplot(demand, aes(x=decile, y=value, colour=metric, group=metric)) + 
+  geom_line() +
+  scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
+  theme( legend.position = "bottom") + #axis.text.x = element_text(angle = 45, hjust = 1), 
+  labs(colour=NULL,
+       title = "Demand-Side Density Metrics by Population Decile",
+       # subtitle = "Population and user densities",
+       x = "Population Decile", y = "Density (per km^2)") + 
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
+  scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
+  theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  guides(colour=guide_legend(ncol=3)) +
+  facet_wrap(~country, scales = "free", ncol=4) 
+
+supply = data[(
+  data$scenario == 'S1_25_10_2' &
+    data$strategy == '4G_epc_fiber_baseline_baseline_baseline_baseline'
+),]
+
+supply <- select(supply, country, decile, sites_estimated_total_km2, existing_network_sites_km2)
+
+supply <- gather(supply, metric, value, sites_estimated_total_km2:existing_network_sites_km2)
+
+supply$metric = factor(supply$metric, 
+                       levels=c("sites_estimated_total_km2",
+                                "existing_network_sites_km2"),
+                       labels=c("Total Site Density",
+                                "Modeled Network Site Density"))
+
+supply_densities <- ggplot(supply, aes(x=decile, y=value, colour=metric, group=metric)) + 
+  geom_line() +
+  scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
+  theme( legend.position = "bottom") + #axis.text.x = element_text(angle = 45, hjust = 1), 
+  labs(colour=NULL,
+       title = "Supply-Side Density Metrics by Population Decile",
+       # subtitle = "Cumulative cost reported by percentage of population covered",
+       x = "Population decile", y = "Density (per km^2)") + 
+  scale_x_continuous(expand = c(0, 0), breaks = seq(0,100,20)) + 
+  scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
+  theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  guides(colour=guide_legend(ncol=3)) +
+  facet_wrap(~country, scales = "free", ncol=4) 
+
+demand_supply <- ggarrange(demand_densities, supply_densities, ncol = 1, nrow = 2, align = c("hv"))
+
+#export to folder
+path = file.path(folder, 'figures', 'a_demand_supply_panel.png')
+ggsave(path,  units="in", width=8, height=9, dpi=300)
+print(demand_supply)
+dev.off()
+
 ####################TECHNOLOGIES BY DECILE
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -13,7 +119,8 @@ data <- data[!(data$total_cost == "NA"),]
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 #select desired columns
-data <- select(data, country, scenario, strategy, confidence, decile, area_km2, population, total_cost, total_revenue)
+data <- select(data, country, scenario, strategy, confidence, decile, area_km2, population, 
+               total_cost, total_revenue)
 
 data <- data[(data$confidence == 50),]
 
@@ -26,36 +133,34 @@ data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
                                 "S2 (200 Mbps)",
                                 "S3 (400 Mbps)"))
 
-data$country = factor(data$country, levels=c("UGA",
-                                             'MWI',
-                                             "KEN",
+data$country = factor(data$country, levels=c('MWI',
+                                             "UGA",
                                              "SEN",
+                                             "KEN",
                                              "PAK",
                                              "ALB",
                                              "PER",
                                              "MEX"),
-                      labels=c("Uganda",
-                               "Malawi",
-                               "Kenya",
-                               "Senegal",
+                      labels=c("Malawi","Uganda",
+                               "Senegal","Kenya",
                                "Pakistan",
                                "Albania",
                                "Peru",
                                "Mexico"))
 
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -68,14 +173,14 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+         "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+         "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+          "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+          "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+          "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+          "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+          "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
 data <- data[order(data$country, data$scenario, data$strategy, data$decile),]
 
@@ -119,7 +224,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   guides(colour=guide_legend(ncol=5)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
-path = file.path(folder, 'figures', 'a_results_technology_options_wrap.png')
+path = file.path(folder, 'figures', 'b_results_technology_options_wrap.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -161,18 +266,18 @@ data$country = factor(data$country, levels=c("UGA",
                                "Mexico"))
 
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -185,15 +290,14 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
-
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
 data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
 data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
@@ -235,7 +339,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   guides(colour=guide_legend(ncol=5)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
-path = file.path(folder, 'figures', 'b_results_business_model_options_wrap.png')
+path = file.path(folder, 'figures', 'c_results_business_model_options_wrap.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -297,18 +401,18 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -321,14 +425,14 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
 
 data$strategy = factor(data$strategy, levels=c(
@@ -360,7 +464,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   guides(fill=guide_legend(ncol =6)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
-path = file.path(folder, 'figures', 'c_results_spectrum_costs_wrap.png')
+path = file.path(folder, 'figures', 'd_results_spectrum_costs_wrap.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -420,18 +524,18 @@ data$country = factor(data$country, levels=c("UGA",
                                "Peru (C5)",
                                "Mexico (C6)"))
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -444,14 +548,15 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
+
 
 data$strategy = factor(data$strategy, levels=c('Revenue',
                                                "5G_nsa_microwave_baseline_baseline_baseline_low",
@@ -480,7 +585,7 @@ panel <- ggplot(data, aes(x=decile, y=cumulative_value_bn, colour=strategy, grou
   guides(fill=guide_legend(ncol =6)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
-path = file.path(folder, 'figures', 'd_results_tax_rate_wrap.png')
+path = file.path(folder, 'figures', 'e_results_tax_rate_wrap.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -502,18 +607,18 @@ data <- select(data, strategy, combined, ran, backhaul_fronthaul,
                civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin,
                used_cross_subsidy, required_state_subsidy)
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -526,14 +631,15 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
+
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
 
@@ -582,7 +688,7 @@ panel <- ggplot(data, aes(x=strategy, y=(value/1e9), group=metric, fill=metric))
   guides(fill=guide_legend(ncol =10, reverse = TRUE)) +
   facet_wrap(~combined, scales = "free", ncol=3)
 
-path = file.path(folder, 'figures', 'e_cost_composition_baseline_national.png')
+path = file.path(folder, 'figures', 'f_cost_composition_baseline_national.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -626,18 +732,18 @@ data <- gather(data, metric, value, ran:required_state_subsidy)
 # 
 # rm(lower_data, mean_data, upper_data)
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -650,14 +756,15 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
+
 
 
 data$metric = factor(data$metric, levels=c("required_state_subsidy",
@@ -705,7 +812,7 @@ panel <- ggplot(data, aes(x=strategy, y=(value/1e9), group=metric, fill=metric))
   guides(fill=guide_legend(ncol =10, reverse = TRUE)) +
   facet_wrap(~combined, scales = "free", ncol=3)
 
-path = file.path(folder, 'figures', 'f_cost_composition_mixed_national.png')
+path = file.path(folder, 'figures', 'g_cost_composition_mixed_national.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -733,18 +840,18 @@ data <- select(data, combined, decile, ran, backhaul_fronthaul,
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
 
-data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
-                                               "UGA_S2_200_50_5",
-                                               "UGA_S3_400_100_10",
-                                               'MWI_S1_25_10_2',
+data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
                                                'MWI_S3_400_100_10',
-                                               "KEN_S1_25_10_2",
-                                               "KEN_S2_200_50_5",
-                                               "KEN_S3_400_100_10",
+                                               "UGA_S1_25_10_2",
+                                               "UGA_S2_200_50_5",
+                                               "UGA_S3_400_100_10",
                                                "SEN_S1_25_10_2",
                                                "SEN_S2_200_50_5",
                                                "SEN_S3_400_100_10",
+                                               "KEN_S1_25_10_2",
+                                               "KEN_S2_200_50_5",
+                                               "KEN_S3_400_100_10",
                                                "PAK_S1_25_10_2",
                                                "PAK_S2_200_50_5",
                                                "PAK_S3_400_100_10",
@@ -757,14 +864,15 @@ data$combined = factor(data$combined, levels=c("UGA_S1_25_10_2",
                                                "MEX_S1_25_10_2",
                                                "MEX_S2_200_50_5",
                                                "MEX_S3_400_100_10"),
-                       labels=c("Uganda (C1) 25 Mbps", "Uganda (C1) 200 Mbps", "Uganda (C1) 400 Mbps",
-                                "Malawi (C1) 25 Mbps", "Malawi (C1) 200 Mbps", "Malawi (C1) 400 Mbps",
-                                "Kenya (C2) 25 Mbps", "Kenya (C2) 200 Mbps", "Kenya (C2) 400 Mbps",
-                                "Senegal (C2) 25 Mbps", "Senegal (C2) 200 Mbps", "Senegal (C2) 400 Mbps",
-                                "Pakistan (C3) 25 Mbps", "Pakistan (C3) 200 Mbps", "Pakistan (C3) 400 Mbps",
-                                "Albania (C4) 25 Mbps", "Albania (C4) 200 Mbps", "Albania (C4) 400 Mbps",
-                                "Peru (C5) 25 Mbps", "Peru (C5) 200 Mbps", "Peru (C5) 400 Mbps",
-                                "Mexico (C6) 25 Mbps", "Mexico (C6) 200 Mbps", "Mexico (C6) 400 Mbps" ))
+                       labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1) (S3: 400 Mbps)",
+                                "Uganda (C1) (S1: 25 Mbps)", "Uganda (C1) (S2: 200 Mbps)", "Uganda (C1) (S3: 400 Mbps)",
+                                "Senegal (C2) (S1: 25 Mbps)", "Senegal (C2) (S2: 200 Mbps)", "Senegal (C2) (S3: 400 Mbps)",
+                                "Kenya (C2) (S1: 25 Mbps)", "Kenya (C2) (S2: 200 Mbps)", "Kenya (C2) (S3: 400 Mbps)",
+                                "Pakistan (C3) (S1: 25 Mbps)", "Pakistan (C3) (S2: 200 Mbps)", "Pakistan (C3) (S3: 400 Mbps)",
+                                "Albania (C4) (S1: 25 Mbps)", "Albania (C4) (S2: 200 Mbps)", "Albania (C4) (S3: 400 Mbps)",
+                                "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
+                                "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
+
 
 data$decile = factor(data$decile, levels=c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))
 
@@ -802,7 +910,7 @@ panel <- ggplot(data, aes(x=decile, y=(value/1e9), group=metric, fill=metric)) +
   guides(fill=guide_legend(ncol =10, reverse = TRUE)) +
   facet_wrap(~combined, scales = "free", ncol=3) 
 
-path = file.path(folder, 'figures', 'g_cost_composition_mixed_decile.png')
+path = file.path(folder, 'figures', 'h_cost_composition_mixed_decile.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
@@ -831,23 +939,20 @@ results$scenario = factor(results$scenario, levels=c("S1_25_10_2",
                                    "S2 (200 Mbps)",
                                    "S3 (400 Mbps)"))
 
-results$country = factor(results$iso3, levels=c("UGA",
-                                                'MWI',
-                                                "KEN",
-                                                "SEN",
-                                                "PAK",
-                                                "ALB",
-                                                "PER",
-                                                "MEX"),
-                         labels=c("Uganda (C1)",
-                                  "Malawi (C1)",
-                                  "Kenya (C2)",
-                                  "Senegal (C2)",
-                                  "Pakistan (C3)",
-                                  "Albania (C4)",
-                                  "Peru (C5)",
-                                  "Mexico (C6)"))
-
+results$country = factor(results$iso3, levels=c('MWI',
+                                             "UGA",
+                                             "SEN",
+                                             "KEN",
+                                             "PAK",
+                                             "ALB",
+                                             "PER",
+                                             "MEX"),
+                      labels=c("Malawi","Uganda",
+                               "Senegal","Kenya",
+                               "Pakistan",
+                               "Albania",
+                               "Peru",
+                               "Mexico"))
 
 results$strategy = factor(results$strategy, levels=c("Revenue",
                                                      "4G_epc_microwave_baseline_baseline_baseline_baseline",
@@ -879,7 +984,7 @@ gdp_percentage_ci <- ggplot(wide, aes(x=strategy, y=mean, fill=strategy)) +
   guides(fill=FALSE) +
   facet_grid(country~scenario)
 
-path = file.path(folder, 'figures', 'h_country_costs_by_gpd.png')
+path = file.path(folder, 'figures', 'i_country_costs_by_gpd.png')
 ggsave(path, units="in", width=8, height=10)
 print(gdp_percentage_ci)
 dev.off()
@@ -992,7 +1097,7 @@ gdp_perc_by_strategy <- ggplot(gdp_num, aes(x=gdp_num$cluster, y=gdp_num$mean, c
 panel <- ggarrange(cost_by_strategy, gdp_perc_by_strategy, ncol = 1, nrow = 2, align = c("hv"))
 
 #export to folder
-path = file.path(folder, 'figures', 'i_cluster_costs_by_strategy.png')
+path = file.path(folder, 'figures', 'j_cluster_costs_by_strategy.png')
 ggsave(path, units="cm", width=22, height=33)
 print(panel)
 dev.off()
@@ -1025,7 +1130,7 @@ global_cost <- ggplot(raw_total_summary_stats, aes(x=strategy, y=mean/1e3, fill=
   facet_grid(~scenario)
 
 #export to folder
-path = file.path(folder, 'figures', 'j_global_costs_by_strategy.png')
+path = file.path(folder, 'figures', 'k_global_costs_by_strategy.png')
 ggsave(path, units="cm", width=18, height=8)
 print(global_cost)
 dev.off()

@@ -75,10 +75,20 @@ def estimate_demand(regions, option, global_parameters,
                 region['population_with_phones'] /
                 country_parameters['networks'])
 
+            #get phone density
+            region['phone_density_on_network_km2'] = (
+                region['phones_on_network'] / region['area_km2']
+            )
+
             #phones : int
             #Total number of smartphones on the network being modeled.
             region['smartphones_on_network'] = (
                 region['phones_on_network'] * smartphones['smartphone'])
+
+            #get smartphone density
+            region['sp_density_on_network_km2'] = (
+                region['smartphones_on_network'] / region['area_km2']
+            )
 
             # demand_mbps_km2 : float
             # Total demand in mbps / km^2.
