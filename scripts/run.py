@@ -271,12 +271,19 @@ def load_core_lut(path):
 
 def define_deciles(regions):
 
-    regions = regions.sort_values(by='total_cost', ascending=False)
+    regions = regions.sort_values(by='population_km2', ascending=True)
 
     regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).total_cost.apply( #cost_per_sp_user
+        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply( #cost_per_sp_user
             pd.qcut, q=11, precision=0,
-            labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') #  [100,90,80,70,60,50,40,30,20,10,0]
+            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop') #   [0,10,20,30,40,50,60,70,80,90,100]
+
+    # regions = regions.sort_values(by='total_cost', ascending=False)
+
+    # regions['decile'] = regions.groupby([
+    #     'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).total_cost.apply( #cost_per_sp_user
+    #         pd.qcut, q=11, precision=0,
+    #         labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') #  [100,90,80,70,60,50,40,30,20,10,0]
 
     return regions
 
@@ -290,8 +297,9 @@ def write_results(regional_results, folder, metric):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'population_km2', 'phones_on_network', 'cost_per_sp_user',
-        'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
+        'population_km2', 'phones_on_network', 'smartphones_on_network',
+        'sites_estimated_total', 'existing_network_sites', 'upgraded_sites', 'new_sites',
+        'total_revenue', 'total_cost', 'cost_per_sp_user',
     ]]
 
     national_results = national_results.groupby([
@@ -326,14 +334,30 @@ def write_results(regional_results, folder, metric):
     decile_results = pd.DataFrame(regional_results)
     decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
-        'phones_on_network', 'cost_per_sp_user',
-        'area_km2', 'upgraded_sites', 'new_sites', 'total_revenue', 'total_cost',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
+        'population', 'area_km2', #'population_km2',
+        'phones_on_network', #'phone_density_on_network_km2',
+        'smartphones_on_network', #'sp_density_on_network_km2',
+        'sites_estimated_total', 'existing_network_sites', 'upgraded_sites', 'new_sites',
+        'total_revenue', 'total_cost', #'cost_per_sp_user',
     ]]
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
+
+    decile_results['population_km2'] = (
+        decile_results['population'] / decile_results['area_km2'])
+    decile_results['phone_density_on_network_km2'] = (
+        decile_results['phones_on_network'] / decile_results['area_km2'])
+    decile_results['sp_density_on_network_km2'] = (
+        decile_results['smartphones_on_network'] / decile_results['area_km2'])
+    decile_results['sites_estimated_total_km2'] = (
+        decile_results['sites_estimated_total'] / decile_results['area_km2'])
+    decile_results['existing_network_sites_km2'] = (
+        decile_results['existing_network_sites'] / decile_results['area_km2'])
     decile_results['cost_per_network_user'] = (
         decile_results['total_cost'] / decile_results['phones_on_network'])
+    decile_results['cost_per_sp_user'] = (
+        decile_results['total_cost'] / decile_results['smartphones_on_network'])
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(metric))
     decile_results.to_csv(path, index=True)
@@ -342,11 +366,11 @@ def write_results(regional_results, folder, metric):
     decile_cost_results = pd.DataFrame(regional_results)
     decile_cost_results = define_deciles(decile_cost_results)
     decile_cost_results = decile_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence', 'population', 'population_km2',
-        'phones_on_network', 'cost_per_sp_user',
+        'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
+        'population', 'area_km2', #'population_km2',
+        'phones_on_network', #'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'ops_and_acquisition',
-        'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'ops_and_acquisition', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
         'required_state_subsidy',
     ]]
@@ -364,8 +388,8 @@ def write_results(regional_results, folder, metric):
     regional_results = define_deciles(regional_results)
     regional_results = regional_results[[
         'GID_0', 'GID_id', 'scenario', 'strategy', 'decile',
-        'confidence', 'population', 'area_km2',
-        'population_km2', 'phones_on_network', 'cost_per_sp_user',
+        'confidence', 'population', 'area_km2', #'population_km2',
+        'phones_on_network', 'cost_per_sp_user',
         'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
     regional_results['cost_per_network_user'] = (
@@ -466,10 +490,10 @@ if __name__ == '__main__':
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
-        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
         {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 2},
-        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2},
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2},
+        {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1},
@@ -478,9 +502,9 @@ if __name__ == '__main__':
 
     decision_options = [
         'technology_options',
-        'business_model_options',
-        'policy_options',
-        'mixed_options',
+        # 'business_model_options',
+        # 'policy_options',
+        # 'mixed_options',
     ]
 
     for decision_option in decision_options:#[:1]:
