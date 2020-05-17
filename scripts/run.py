@@ -278,13 +278,6 @@ def define_deciles(regions):
             pd.qcut, q=11, precision=0,
             labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop') #   [0,10,20,30,40,50,60,70,80,90,100]
 
-    # regions = regions.sort_values(by='total_cost', ascending=False)
-
-    # regions['decile'] = regions.groupby([
-    #     'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).total_cost.apply( #cost_per_sp_user
-    #         pd.qcut, q=11, precision=0,
-    #         labels=[0,10,20,30,40,50,60,70,80,90,100], duplicates='drop') #  [100,90,80,70,60,50,40,30,20,10,0]
-
     return regions
 
 
