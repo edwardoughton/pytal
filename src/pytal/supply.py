@@ -246,7 +246,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
     """
     generation = strategy.split('_')[0]
 
-    existing_sites = (
+    region['existing_network_sites'] = (
         region['sites_estimated_total'] *
         (country_parameters['proportion_of_sites'] / 100)
     )
@@ -256,15 +256,17 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
         (country_parameters['proportion_of_sites'] / 100)
     )
 
-    if total_sites_required > existing_sites:
+    if total_sites_required > region['existing_network_sites']:
 
-        region['new_sites'] = int(round(total_sites_required - existing_sites))
+        region['new_sites'] = int(
+            round(total_sites_required - region['existing_network_sites']))
 
-        if existing_sites > 0:
+        if region['existing_network_sites'] > 0:
             if generation == '4G' and existing_4G_sites > 0 :
-                region['upgraded_sites'] = existing_sites - existing_4G_sites
+                region['upgraded_sites'] = (
+                    region['existing_network_sites'] - existing_4G_sites)
             else:
-                region['upgraded_sites'] = existing_sites
+                region['upgraded_sites'] = region['existing_network_sites']
         else:
             region['upgraded_sites'] = 0
 
@@ -276,7 +278,7 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
             region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
             region['upgraded_sites'] = total_sites_required
-    # print(total_sites_required, existing_sites, existing_4G_sites, region['upgraded_sites'], region['new_sites'])
+
     return region
 
 
