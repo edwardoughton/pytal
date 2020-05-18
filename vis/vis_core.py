@@ -22,10 +22,10 @@ DATA_PROCESSED = os.path.join(BASE_PATH, 'processed')
 fig, axs = plt.subplots(4, 2, figsize=(20, 20))
 
 countries = [
-    ('UGA', 0, 0, 'Uganda (C1)', 3),
-    ('MWI', 0, 1, 'Malawi (C1)', 3.8),
-    ('KEN', 1, 0, 'Kenya (C2)', 5),
-    ('SEN', 1, 1, 'Senegal (C2)', 3),
+    ('MWI', 0, 0, 'Malawi (C1)', 3.8),
+    ('UGA', 0, 1, 'Uganda (C1)', 3),
+    ('SEN', 1, 0, 'Senegal (C2)', 3),
+    ('KEN', 1, 1, 'Kenya (C2)', 5),
     ('PAK', 2, 0, 'Pakistan (C3)', 7.5),
     ('ALB', 2, 1, 'Albania (C4)', 2),
     ('PER', 3, 0, 'Peru (C5)', 9),

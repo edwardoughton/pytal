@@ -640,6 +640,19 @@ data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                 "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
                                 "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
+data$strategy = factor(data$strategy, levels=c(
+  "4G_epc_microwave_baseline_baseline_baseline_baseline",
+  "4G_epc_fiber_baseline_baseline_baseline_baseline",
+  "5G_nsa_microwave_baseline_baseline_baseline_baseline",
+  "5G_sa_fiber_baseline_baseline_baseline_baseline"),
+  labels=c("4G (MW)",
+           "4G (FB)",
+           "5G NSA (MW)",
+           "5G SA (FB)"))
+
+required_subsidy <- select(data, combined, strategy, (used_cross_subsidy/1e9), (required_state_subsidy/1e9))
+path = file.path(folder, '..','results', 'required_subsidy.csv')
+write.csv(required_subsidy, path)
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
 
@@ -665,16 +678,6 @@ labels=c("Required Subsidy",
          "Sites",
          'Core/Regional Fiber'
 ))
-
-data$strategy = factor(data$strategy, levels=c(
-  "4G_epc_microwave_baseline_baseline_baseline_baseline",
-  "4G_epc_fiber_baseline_baseline_baseline_baseline",
-  "5G_nsa_microwave_baseline_baseline_baseline_baseline",
-  "5G_sa_fiber_baseline_baseline_baseline_baseline"),
-  labels=c("4G (MW)",
-           "4G (FB)",
-           "5G NSA (MW)",
-           "5G SA (FB)"))
 
 panel <- ggplot(data, aes(x=strategy, y=(value/1e9), group=metric, fill=metric)) +
   geom_bar(stat = "identity") +
@@ -836,7 +839,7 @@ data$combined <- paste(data$country, data$scenario, sep="_")
 
 data <- select(data, combined, decile, ran, backhaul_fronthaul, 
                civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin, 
-               used_cross_subsidy, required_state_subsidy, cost_per_sp_user)
+               used_cross_subsidy, required_state_subsidy)
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
 

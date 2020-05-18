@@ -440,7 +440,7 @@ if __name__ == '__main__':
         'router': 2000,
         'microwave_small': 20000,
         'microwave_medium': 30000,
-        'microwave_large': 40000,
+        'microwave_large': 60000,
         'fiber_urban_m': 20,
         'fiber_suburban_m': 10,
         'fiber_rural_m': 2,
@@ -495,9 +495,9 @@ if __name__ == '__main__':
 
     decision_options = [
         'technology_options',
-        # 'business_model_options',
-        # 'policy_options',
-        # 'mixed_options',
+        'business_model_options',
+        'policy_options',
+        'mixed_options',
     ]
 
     for decision_option in decision_options:#[:1]:
