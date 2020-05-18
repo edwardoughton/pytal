@@ -2065,7 +2065,7 @@ if __name__ == '__main__':
 
     countries = [
         # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, #'regional_nodes_level': 3,
-        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 20000, 'subs_growth': 3.5,
+        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 3.5,
         # },
         # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
         #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2,
