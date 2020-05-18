@@ -228,51 +228,6 @@ OPTIONS = {
 
 
 COUNTRY_PARAMETERS = {
-    'UGA': {
-        'luminosity': {
-            'high': 3,
-            'medium': 1,
-        },
-        'arpu': {
-            'high': 6,
-            'medium': 3,
-            'low': 2,
-        },
-        'networks': 2,
-        'proportion_of_sites': 30,
-        'frequencies': {
-            '4G': [
-                {
-                    'frequency': 800,
-                    'bandwidth': '2x10',
-                },
-                {
-                    'frequency': 2600,
-                    'bandwidth': '2x10',
-                },
-            ],
-            '5G': [
-                {
-                    'frequency': 700,
-                    'bandwidth': '2x10',
-                },
-                {
-                    'frequency': 3500,
-                    'bandwidth': '1x50',
-                },
-            ]
-        },
-        'financials': {
-            'wacc': 15,
-            'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.02,#0.0007,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,#0.0022,
-            'tax_low': 10,
-            'tax_baseline': 30,
-            'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 1,
-            },
-        },
     'MWI': {
         'luminosity': {
             'high': 3,
@@ -313,25 +268,25 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.02,#0.0007,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,#0.0022,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 1,
+            'ops_and_acquisition_per_subscriber': 2,
             },
         },
-    'KEN': {
+    'UGA': {
         'luminosity': {
             'high': 3,
             'medium': 1,
         },
         'arpu': {
-            'high': 9,
-            'medium': 7,
+            'high': 6,
+            'medium': 3,
             'low': 2,
         },
-        'networks': 3,
+        'networks': 2,
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -340,7 +295,7 @@ COUNTRY_PARAMETERS = {
                     'bandwidth': '2x10',
                 },
                 {
-                    'frequency': 1800,
+                    'frequency': 2600,
                     'bandwidth': '2x10',
                 },
             ],
@@ -358,8 +313,8 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,#0.0051,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,#0.0049,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -404,12 +359,57 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.05,#0.0051,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.05,#0.0049,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 2,
+            'ops_and_acquisition_per_subscriber': 4,
+            },
+        },
+    'KEN': {
+        'luminosity': {
+            'high': 3,
+            'medium': 1,
+        },
+        'arpu': {
+            'high': 9,
+            'medium': 7,
+            'low': 2,
+        },
+        'networks': 3,
+        'proportion_of_sites': 30,
+        'frequencies': {
+            '4G': [
+                {
+                    'frequency': 800,
+                    'bandwidth': '2x10',
+                },
+                {
+                    'frequency': 1800,
+                    'bandwidth': '2x10',
+                },
+            ],
+            '5G': [
+                {
+                    'frequency': 700,
+                    'bandwidth': '2x10',
+                },
+                {
+                    'frequency': 3500,
+                    'bandwidth': '1x50',
+                },
+            ]
+        },
+        'financials': {
+            'wacc': 15,
+            'profit_margin': 10,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
+            'tax_low': 10,
+            'tax_baseline': 30,
+            'tax_high': 40,
+            'ops_and_acquisition_per_subscriber': 4,
             },
         },
     'PAK': {
@@ -459,12 +459,12 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.05,#0.0016,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.05,#0.0003,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.05,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.025,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 4,
+            'ops_and_acquisition_per_subscriber': 5,
             },
         },
     'ALB': {
@@ -504,12 +504,12 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,#0.0267,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,#0.0109,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.4,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 4,
+            'ops_and_acquisition_per_subscriber': 6,
             },
         },
     'PER': {
@@ -549,12 +549,12 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,#0.0164,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,#0.0041,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'ops_and_acquisition_per_subscriber': 4,
+            'ops_and_acquisition_per_subscriber': 6,
             },
         },
     'MEX': {
@@ -602,8 +602,8 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.12,#0.0225,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.12,#0.0026,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
