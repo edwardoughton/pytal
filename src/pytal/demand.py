@@ -38,15 +38,25 @@ def estimate_demand(regions, option, global_parameters,
     """
     output = []
 
+    # generation_core_backhaul_sharing_networks_spectrum_tax
+    network_strategy = option['strategy'].split('_')[4]
+
     for region in regions:
 
         if not region['area_km2'] > 0:
             continue
 
         geotype = region['geotype'].split(' ')[0]
+
+        net_handle = network_strategy + '_' + geotype
+        networks = country_parameters['networks'][net_handle]
+
         if geotype == 'suburban':
-            geotype = 'urban'
-        smartphones = smartphone_lut[geotype]
+            #smartphone lut only has urban-rural split, hence no suburban
+            geotype_sps = 'urban'
+        else:
+            geotype_sps = geotype
+        smartphones = smartphone_lut[geotype_sps]
 
         revenue = []
         demand_mbps_km2 = []
@@ -73,7 +83,7 @@ def estimate_demand(regions, option, global_parameters,
             #Total number of phones on the network being modeled.
             region['phones_on_network'] = (
                 region['population_with_phones'] /
-                country_parameters['networks'])
+                networks)
 
             #get phone density
             region['phone_density_on_network_km2'] = (
@@ -98,7 +108,10 @@ def estimate_demand(regions, option, global_parameters,
                 global_parameters['overbooking_factor'] /
                 region['area_km2']
                 ))
-
+            print(region['smartphones_on_network'],
+                scenario_per_user_capacity, #User demand in Mbps
+                global_parameters['overbooking_factor'],
+                region['area_km2'])
             revenue.append(region['arpu'] * region['phones_on_network'])
 
         region['total_revenue'] = round(sum(revenue))# * subsidy_factor)
