@@ -139,12 +139,12 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
 
     if spectrum_cost == 'low':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 0.5
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 0.5
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_low'] /100)
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_low'] /100)
 
     if spectrum_cost == 'high':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 1.5
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 1.5
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_high'] / 100)
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_high'] / 100)
 
     all_costs = []
 
