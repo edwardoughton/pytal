@@ -31,11 +31,13 @@ def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters,
 
     # test high spectrum costs which are 50% higher
     assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_high_baseline',
-        setup_global_parameters, setup_country_parameters) == 400000 * 2
+        setup_global_parameters, setup_country_parameters) == (
+            400000 * (setup_country_parameters['financials']['spectrum_cost_high'] / 100))
 
     # test low spectrum costs which are 50% lower
     assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_low_baseline',
-        setup_global_parameters, setup_country_parameters) == 400000 * 0.2
+        setup_global_parameters, setup_country_parameters) == (
+            400000 * (setup_country_parameters['financials']['spectrum_cost_low'] / 100))
 
 
 def test_calculate_tax(setup_region, setup_option, setup_country_parameters):

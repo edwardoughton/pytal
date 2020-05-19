@@ -33,17 +33,17 @@ def setup_region_rural():
 
 @fixture(scope='function')
 def setup_option():
-    return {
-        'scenario': 'S1_50_5_1',
+    return { #generation_core_backhaul_sharing_networks_spectrum_tax
+        'scenario': 'S1_50_50_50',
         'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline'
     }
 
 
 @fixture(scope='function')
 def setup_option_high():
-    return {
+    return { #generation_core_backhaul_sharing_networks_spectrum_tax
         'scenario': 'S1_50_5_1',
-        'strategy': '4G_epc_microwave_baseline_high_high_high'
+        'strategy': '4G_epc_microwave_baseline_baseline_high_high_high'
     }
 
 
@@ -87,7 +87,14 @@ def setup_country_parameters():
         'smartphone_pen': 0.5,
         # Access Comm, Airtel, TNM
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'proportion_of_sites': 50,
         'frequencies': {
@@ -115,11 +122,10 @@ def setup_country_parameters():
         'financials': {
             'wacc': 10,
             'profit_margin': 20,
-            'subsidy_low': 10,
-            'subsidy_baseline': 25,
-            'subsidy_high': 40,
             'spectrum_coverage_baseline_usd_mhz_pop': 1,
             'spectrum_capacity_baseline_usd_mhz_pop': 1,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
