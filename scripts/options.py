@@ -8,7 +8,15 @@ Written by Ed Oughton
 
 January 2020
 
-#strategy is defined based on generation_core_backhaul_sharing_subsidy_spectrum_tax
+#strategy is defined based on generation_core_backhaul_sharing_networks_spectrum_tax
+
+generation: technology generation, so 3G or 4G
+core: type of core data transport network, eg. evolved packet core (4G)
+backhaul: type of backhaul, so fiber or microwave
+sharing: the type of infrastructure sharing, active, passive etc..
+network: relates to the number of networks, as defined in country parameters
+spectrum: type of spectrum strategy, so baseline, high or low
+tax: type of taxation strategy, so baseline, high or low
 
 """
 OPTIONS = {
@@ -240,7 +248,14 @@ COUNTRY_PARAMETERS = {
         },
         # Access Comm, Airtel, TNM
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'networks': 2,
+        'networks': {
+            'baseline_urban': 2,
+            'baseline_suburban': 2,
+            'baseline_rural': 2,
+            'shared_urban': 2,
+            'shared_suburban': 2,
+            'shared_rural': 1,
+        },
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'proportion_of_sites': 30,
         'frequencies': {
@@ -270,6 +285,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -286,7 +303,14 @@ COUNTRY_PARAMETERS = {
             'medium': 3,
             'low': 2,
         },
-        'networks': 2,
+        'networks': {
+            'baseline_urban': 2,
+            'baseline_suburban': 2,
+            'baseline_rural': 2,
+            'shared_urban': 2,
+            'shared_suburban': 2,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -315,6 +339,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -332,7 +358,14 @@ COUNTRY_PARAMETERS = {
             'low': 2,
         },
         'smartphone_pen': 0.5,
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -361,6 +394,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -377,7 +412,14 @@ COUNTRY_PARAMETERS = {
             'medium': 7,
             'low': 2,
         },
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -406,6 +448,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -427,7 +471,14 @@ COUNTRY_PARAMETERS = {
         'smartphone_pen': 0.5,
         # Access Comm, Airtel, TNM
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'proportion_of_sites': 30,
         'frequencies': {
@@ -461,6 +512,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.05,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.025,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -477,7 +530,14 @@ COUNTRY_PARAMETERS = {
             'medium': 7,
             'low': 5,
         },
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -506,6 +566,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.4,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -522,7 +584,14 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 7,
         },
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -551,6 +620,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -567,7 +638,14 @@ COUNTRY_PARAMETERS = {
             'medium': 10,
             'low': 7,
         },
-        'networks': 3,
+        'networks': {
+            'baseline_urban': 3,
+            'baseline_suburban': 3,
+            'baseline_rural': 3,
+            'shared_urban': 3,
+            'shared_suburban': 3,
+            'shared_rural': 1,
+        },
         'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
@@ -604,6 +682,8 @@ COUNTRY_PARAMETERS = {
             'profit_margin': 10,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
+            'spectrum_cost_low': 50,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
