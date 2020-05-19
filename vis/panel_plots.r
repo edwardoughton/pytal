@@ -650,10 +650,6 @@ data$strategy = factor(data$strategy, levels=c(
            "5G NSA (MW)",
            "5G SA (FB)"))
 
-required_subsidy <- select(data, combined, strategy, (used_cross_subsidy/1e9), (required_state_subsidy/1e9))
-path = file.path(folder, '..','results', 'required_subsidy.csv')
-write.csv(required_subsidy, path)
-
 data <- gather(data, metric, value, ran:required_state_subsidy)
 
 data$metric = factor(data$metric, levels=c("required_state_subsidy",
@@ -716,6 +712,12 @@ data <- select(data, confidence, strategy, combined, ran, backhaul_fronthaul,
                civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin, 
                used_cross_subsidy, required_state_subsidy)
 
+
+required_subsidy <- select(data, combined, strategy, required_state_subsidy)
+required_subsidy <- spread(required_subsidy, strategy, required_state_subsidy)
+path = file.path(folder, '..','results', 'required_subsidy.csv')
+write.csv(required_subsidy, path)
+
 data <- gather(data, metric, value, ran:required_state_subsidy)
 # 
 # lower_data <- data[(data$confidence == 'lower'),]
@@ -768,8 +770,6 @@ data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                 "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
                                 "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
-
-
 data$metric = factor(data$metric, levels=c("required_state_subsidy",
                                            "used_cross_subsidy",
                                            "profit_margin",
@@ -819,7 +819,6 @@ path = file.path(folder, 'figures', 'g_cost_composition_mixed_national.png')
 ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
-
 
 ##############DECILE COST PROFILE FOR BASELINE OPTIONS
 
