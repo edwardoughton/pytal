@@ -603,8 +603,9 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data <- select(data, strategy, combined, ran, backhaul_fronthaul,
-               civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin,
+data <- select(data, strategy, combined, ran, backhaul_fronthaul, 
+               civils, core_network, administration, 
+               spectrum_cost, tax, profit_margin,
                used_cross_subsidy, required_state_subsidy)
 
 data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
@@ -657,7 +658,7 @@ data$metric = factor(data$metric, levels=c("required_state_subsidy",
                                            "profit_margin",
                                            "tax",
                                            "spectrum_cost",
-                                           "ops_and_acquisition",
+                                           "administration",
                                            "ran",
                                            'backhaul_fronthaul',
                                            'civils',
@@ -668,7 +669,7 @@ labels=c("Required Subsidy",
          "Profit",
          "Tax",
          "Spectrum",
-         "Ops",
+         "Admin",
          "RAN",
          "FH/BH",
          "Sites",
@@ -708,10 +709,10 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data <- select(data, confidence, strategy, combined, ran, backhaul_fronthaul, 
-               civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin, 
+data <- select(data, strategy, combined, ran, backhaul_fronthaul, 
+               civils, core_network, administration, 
+               spectrum_cost, tax, profit_margin,
                used_cross_subsidy, required_state_subsidy)
-
 
 required_subsidy <- select(data, combined, strategy, required_state_subsidy)
 required_subsidy <- spread(required_subsidy, strategy, required_state_subsidy)
@@ -775,7 +776,7 @@ data$metric = factor(data$metric, levels=c("required_state_subsidy",
                                            "profit_margin",
                                            "tax",
                                            "spectrum_cost",
-                                           "ops_and_acquisition",
+                                           "administration",
                                            "ran",
                                            'backhaul_fronthaul',
                                            'civils',
@@ -786,7 +787,7 @@ labels=c("Required Subsidy",
          "Profit",
          "Tax",
          "Spectrum",
-         "Ops",
+         "Admin",
          "RAN",
          "FH/BH",
          "Sites",
@@ -837,7 +838,7 @@ data <- data[(data$strategy == '5G_nsa_microwave_shared_baseline_low_low'),]
 data$combined <- paste(data$country, data$scenario, sep="_")
 
 data <- select(data, combined, decile, ran, backhaul_fronthaul, 
-               civils, core_network, ops_and_acquisition, spectrum_cost, tax, profit_margin, 
+               civils, core_network, administration, spectrum_cost, tax, profit_margin, 
                used_cross_subsidy, required_state_subsidy)
 
 data <- gather(data, metric, value, ran:required_state_subsidy)
@@ -883,7 +884,7 @@ data$metric = factor(data$metric, levels=c("required_state_subsidy",
                                            "profit_margin",
                                            "tax",
                                            "spectrum_cost",
-                                           "ops_and_acquisition",
+                                           "administration",
                                            "ran",
                                            'backhaul_fronthaul',
                                            'civils',
@@ -894,7 +895,7 @@ labels=c("Required Subsidy",
          "Profit",
          "Tax",
          "Spectrum",
-         "Ops",
+         "Admin",
          "RAN",
          "FH/BH",
          "Sites",

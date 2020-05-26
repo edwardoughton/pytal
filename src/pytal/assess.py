@@ -40,9 +40,8 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
 
     for region in regions:
 
-        # add customer acquition cost
-        region = get_subscriber_aquisition_cost(region,
-            country_parameters)
+        # add administration cost
+        region = get_administration_cost(region, country_parameters)
 
         # npv spectrum cost
         region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'],
@@ -56,7 +55,7 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
 
         region['total_cost'] = (
             region['network_cost'] +
-            region['ops_and_acquisition'] +
+            region['administration'] +
             region['spectrum_cost'] +
             region['tax'] +
             region['profit_margin']
@@ -90,32 +89,15 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
     return output
 
 
-def get_subscriber_aquisition_cost(region, country_parameters):
+def get_administration_cost(region, country_parameters):
     """
-    There is an acquistion cost to obtaining and retaining subscribers
-    which includes marketing and retail sales.
-
-    """
-    region['ops_and_acquisition'] = (
-        region['phones_on_network'] *
-        country_parameters['financials']['ops_and_acquisition_per_subscriber'])
-
-    return region
-
-
-def allocate_available_excess(region):
-    """
-    Allocate available excess capital (if any).
+    There is an administration cost to deploying and operating all assets.
 
     """
-    difference = region['total_revenue'] - region['total_cost']
-
-    if difference > 0:
-        region['available_cross_subsidy'] = difference
-        region['deficit'] = 0
-    else:
-        region['available_cross_subsidy'] = 0
-        region['deficit'] = abs(difference)
+    region['administration'] = (
+        region['network_cost'] *
+        (country_parameters['financials']['administration_percentage_of_network_cost'] /
+        100))
 
     return region
 
@@ -143,8 +125,8 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
         capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_low'] /100)
 
     if spectrum_cost == 'high':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_high'] / 100)
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_high'] / 100)
+        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 1 + (country_parameters['financials']['spectrum_cost_high'] / 100)
+        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 1 + (country_parameters['financials']['spectrum_cost_high'] / 100)
 
     all_costs = []
 
@@ -173,8 +155,6 @@ def calculate_tax(region, strategy, country_parameters):
     Calculate tax.
 
     """
-    # if region['total_revenue'] > (region['network_cost'] + region['spectrum_cost']):
-
     tax_rate = strategy.split('_')[6]
     tax_rate = 'tax_{}'.format(tax_rate)
 
@@ -183,9 +163,6 @@ def calculate_tax(region, strategy, country_parameters):
     investment = region['network_cost']
 
     tax = investment * (tax_rate / 100)
-
-    # else:
-    #     tax = 0
 
     return tax
 
@@ -204,6 +181,23 @@ def calculate_profit(region, country_parameters):
     profit = investment * (country_parameters['financials']['profit_margin'] / 100)
 
     return profit
+
+
+def allocate_available_excess(region):
+    """
+    Allocate available excess capital (if any).
+
+    """
+    difference = region['total_revenue'] - region['total_cost']
+
+    if difference > 0:
+        region['available_cross_subsidy'] = difference
+        region['deficit'] = 0
+    else:
+        region['available_cross_subsidy'] = 0
+        region['deficit'] = abs(difference)
+
+    return region
 
 
 def estimate_subsidies(region, available_for_cross_subsidy):

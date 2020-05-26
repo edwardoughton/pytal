@@ -125,11 +125,12 @@ def setup_country_parameters():
             'spectrum_coverage_baseline_usd_mhz_pop': 1,
             'spectrum_capacity_baseline_usd_mhz_pop': 1,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_high': 20,
             'tax_low': 10,
             'tax_baseline': 25,
             'tax_high': 40,
             'ops_and_acquisition_per_subscriber': 1,
+            'administration_percentage_of_network_cost': 20,
             },
         }
 
@@ -186,6 +187,7 @@ def setup_costs():
         'site_rental_suburban': 4000,
         'site_rental_rural': 2000,
         'router': 2000,
+        'power': 600,
         'microwave_small': 20000,
         'microwave_medium': 30000,
         'microwave_large': 40000,

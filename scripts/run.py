@@ -309,8 +309,7 @@ def write_results(regional_results, folder, metric):
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'population_km2',
         'phones_on_network', 'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'ops_and_acquisition',
-        'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
         'required_state_subsidy',
     ]]
@@ -363,7 +362,7 @@ def write_results(regional_results, folder, metric):
         'population', 'area_km2', #'population_km2',
         'phones_on_network', #'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'ops_and_acquisition', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
+        'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
         'required_state_subsidy',
     ]]
@@ -455,6 +454,7 @@ if __name__ == '__main__':
         'regional_node_lower_epc': 20000,
         'regional_node_lower_nsa': 20000,
         'regional_node_lower_sa': 100000,
+        'power': 650,
     }
 
     GLOBAL_PARAMETERS = {
@@ -463,7 +463,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [5, 50, 95],
+        'confidence': [50],#[5, 50, 95],#
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
