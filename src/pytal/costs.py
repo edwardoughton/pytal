@@ -192,6 +192,7 @@ def greenfield_4g(region, strategy, costs, global_parameters,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, core_lut),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, strategy, country_parameters),
@@ -242,6 +243,7 @@ def upgrade_to_4g(region, strategy, costs, global_parameters,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, core_lut),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, strategy, country_parameters),
@@ -295,6 +297,7 @@ def greenfield_5g_nsa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, core_lut),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, strategy, country_parameters),
@@ -344,6 +347,7 @@ def upgrade_to_5g_nsa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'backhaul': get_backhaul_costs(region, backhaul, costs, core_lut),
         'local_node': 0,
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
@@ -401,6 +405,7 @@ def greenfield_5g_sa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'local_node': local_net_costs(region, costs, strategy, country_parameters, global_parameters),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, strategy, country_parameters),
@@ -452,6 +457,7 @@ def upgrade_to_5g_sa(region, strategy, costs,
         'installation': costs['installation'],
         'site_rental': costs['site_rental_{}'.format(geotype)],
         'router': costs['router'],
+        'power': costs['power'],
         'local_node': local_net_costs(region, costs, strategy, country_parameters, global_parameters),
         'regional_edge': regional_net_costs(region, 'regional_edge', costs, core_lut, strategy, country_parameters),
         'regional_node': regional_net_costs(region, 'regional_node', costs, core_lut, strategy, country_parameters),
@@ -539,7 +545,7 @@ def local_net_costs(region, costs, strategy, country_parameters, global_paramete
     core = strategy.split('_')[1]
     # generation_core_backhaul_sharing_networks_spectrum_tax
     network_strategy = strategy.split('_')[4]
-    geotype = region['geotype']
+    geotype = region['geotype'].split(' ')[0]
 
     net_handle = network_strategy + '_' + geotype
     networks = country_parameters['networks'][net_handle]
@@ -568,7 +574,7 @@ def regional_net_costs(region, asset_type, costs, core_lut, strategy, country_pa
     core = strategy.split('_')[1]
     # generation_core_backhaul_sharing_networks_spectrum_tax
     network_strategy = strategy.split('_')[4]
-    geotype = region['geotype']
+    geotype = region['geotype'].split(' ')[0]
 
     net_handle = network_strategy + '_' + geotype
     networks = country_parameters['networks'][net_handle]
@@ -630,7 +636,7 @@ def core_costs(region, asset_type, costs, core_lut, strategy, country_parameters
     core = strategy.split('_')[1]
     # generation_core_backhaul_sharing_networks_spectrum_tax
     network_strategy = strategy.split('_')[4]
-    geotype = region['geotype']
+    geotype = region['geotype'].split(' ')[0]
 
     net_handle = network_strategy + '_' + geotype
     networks = country_parameters['networks'][net_handle]
@@ -842,6 +848,7 @@ def calc_costs(region, cost_structure, backhaul_quantity, backhaul, global_param
         'low_latency_switch',
         'rack',
         'cloud_power_supply_converter',
+        'power',
     ]
 
     backhaul_fronthaul = [
@@ -923,6 +930,7 @@ INFRA_SHARING_ASSETS = {
         'installation',
         'site_rental',
         'power_generator_battery_system',
+        'power',
         'backhaul',
         'cloud_backhaul',
     ],
@@ -948,6 +956,7 @@ INFRA_SHARING_ASSETS = {
         'installation',
         'site_rental',
         'power_generator_battery_system',
+        'power',
         'backhaul',
         'cloud_backhaul',
     ],
@@ -973,6 +982,7 @@ INFRA_SHARING_ASSETS = {
         'installation',
         'site_rental',
         'power_generator_battery_system',
+        'power',
         'backhaul',
         'cloud_backhaul',
         'local_node',
@@ -1006,7 +1016,8 @@ COST_TYPE = {
     'transportation': 'capex',
     'installation': 'capex',
     'site_rental': 'opex',
-    'power_generator_battery_system': 'capex_and_opex',
+    'power_generator_battery_system': 'capex',
+    'power': 'opex',
     'backhaul': 'capex_and_opex',
     'cloud_backhaul': 'capex_and_opex',
     'local_node': 'capex_and_opex',
