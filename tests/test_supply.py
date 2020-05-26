@@ -75,7 +75,7 @@ def test_estimate_site_upgrades(
         setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
         100, #100 sites required for this MNO
-        {'proportion_of_sites': 50}
+        {'networks': {'baseline_urban': 2}},
     )
 
     assert answer['new_sites'] == 50
@@ -90,7 +90,7 @@ def test_estimate_site_upgrades(
     answer = estimate_site_upgrades(setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
         100, #100 sites required for this MNO
-        {'proportion_of_sites': 50}
+        {'networks': {'baseline_urban': 2}},
     )
 
     assert answer['new_sites'] == 0
@@ -104,7 +104,7 @@ def test_estimate_site_upgrades(
     answer = estimate_site_upgrades(setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
         100, #100 sites required for this MNO
-        {'proportion_of_sites': 50}
+        {'networks': {'baseline_urban': 2}},
     )
 
     assert answer['new_sites'] == 100
@@ -118,7 +118,7 @@ def test_estimate_site_upgrades(
     answer = estimate_site_upgrades(setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
         100, #100 sites required for this MNO
-        {'proportion_of_sites': 10}
+        {'networks': {'baseline_urban': 10}},
     )
 
     assert answer['new_sites'] == 90
@@ -132,7 +132,7 @@ def test_estimate_site_upgrades(
     answer = estimate_site_upgrades(setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
         100, #100 sites required for this MNO
-        {'proportion_of_sites': 50}
+        {'networks': {'baseline_urban': 2}},
     )
 
     assert answer['new_sites'] == 50
@@ -146,7 +146,7 @@ def test_estimate_site_upgrades(
     answer = estimate_site_upgrades(setup_region[0],
         '5g_nsa_microwave_baseline_baseline_baseline_baseline',
         50, #100 sites required for this MNO
-        {'proportion_of_sites': 50}
+        {'networks': {'baseline_urban': 2}},
     )
 
     assert answer['new_sites'] == 0

@@ -108,10 +108,7 @@ def estimate_demand(regions, option, global_parameters,
                 global_parameters['overbooking_factor'] /
                 region['area_km2']
                 ))
-            print(region['smartphones_on_network'],
-                scenario_per_user_capacity, #User demand in Mbps
-                global_parameters['overbooking_factor'],
-                region['area_km2'])
+
             revenue.append(region['arpu'] * region['phones_on_network'])
 
         region['total_revenue'] = round(sum(revenue))# * subsidy_factor)
