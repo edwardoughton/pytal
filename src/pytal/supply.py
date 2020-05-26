@@ -245,26 +245,24 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
 
     """
     generation = strategy.split('_')[0]
+    geotype = region['geotype'].split(' ')[0]
 
-    region['existing_network_sites'] = (
-        region['sites_estimated_total'] *
-        (country_parameters['proportion_of_sites'] / 100)
-    )
+    #get the number of networks in the area
+    networks = country_parameters['networks']['baseline' + '_' + geotype]
 
-    existing_4G_sites = math.ceil(
-        region['sites_4G'] *
-        (country_parameters['proportion_of_sites'] / 100)
-    )
+    #get the total number of existing sites that the network has (2G-4G)
+    region['existing_network_sites'] = (region['sites_estimated_total'] / networks)
+
+    #get the number of existing 4G sites
+    existing_4G_sites = math.ceil(region['sites_4G'] / networks )
 
     if total_sites_required > region['existing_network_sites']:
 
-        region['new_sites'] = int(
-            round(total_sites_required - region['existing_network_sites']))
+        region['new_sites'] = int(round(total_sites_required - region['existing_network_sites']))
 
         if region['existing_network_sites'] > 0:
             if generation == '4G' and existing_4G_sites > 0 :
-                region['upgraded_sites'] = (
-                    region['existing_network_sites'] - existing_4G_sites)
+                region['upgraded_sites'] = region['existing_network_sites'] - existing_4G_sites
             else:
                 region['upgraded_sites'] = region['existing_network_sites']
         else:
