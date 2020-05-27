@@ -10,17 +10,21 @@ Winter 2020
 def estimate_demand(regions, option, global_parameters,
     country_parameters, timesteps, penetration_lut, smartphone_lut):
     """
-    Estimate the total revenue based on current demand.
+    Estimate demand metrics including:
+        - Total number of basic phone and smartphone users
+        - Total data demand (in Mbps per square kilometer)
+        - Total revenue (net present value over the assessment period in USD)
 
     Parameters
     ----------
-    regions : dataframe
-        Geopandas dataframe of all regions.
+    regions : list of dicts
+        Data for all regions (one dict per region).
     option : dict
         Contains the scenario and strategy. The strategy string controls
-        the strategy variants being testes in the model and is defined based
-        on the type of technology generation, core and backhaul, and the level
-        of sharing, subsidy, spectrum and tax.
+        the strategy variants being tested in the model and is defined based
+        on the type of technology generation, core and backhaul, and the
+        strategy for infrastructure sharing, the number of networks in each
+        geotype, spectrum and taxation.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict
@@ -28,12 +32,14 @@ def estimate_demand(regions, option, global_parameters,
     timesteps : list
         All years for the assessment period.
     penetration_lut : list of dicts
-        Contains annual penetration values.
+        Contains annual cell phone penetration values.
+    smartphone_lut : list of dicts
+        Contains annual penetration values for smartphones.
 
     Returns
     -------
-    regions : dataframe
-        Geopandas dataframe of all regions.
+    regions : list of dicts
+        Data for all regions (one dict per region).
 
     """
     output = []
@@ -61,7 +67,8 @@ def estimate_demand(regions, option, global_parameters,
         revenue = []
         demand_mbps_km2 = []
 
-        scenario_per_user_capacity = get_per_user_capacity(region['geotype'], option)
+        scenario_per_user_capacity = get_per_user_capacity(
+            region['geotype'], option)
 
         for timestep in timesteps:
 
@@ -111,9 +118,10 @@ def estimate_demand(regions, option, global_parameters,
 
             revenue.append(region['arpu'] * region['phones_on_network'])
 
-        region['total_revenue'] = round(sum(revenue))# * subsidy_factor)
-        region['revenue_km2'] = round(sum(revenue) / region['area_km2']) #* subsidy_factor / region['area_km2'])
-        region['demand_mbps_km2'] = round(sum(demand_mbps_km2) / len(demand_mbps_km2))
+        region['demand_mbps_km2'] = (
+            round(sum(demand_mbps_km2) / len(demand_mbps_km2)))
+        region['total_revenue'] = round(sum(revenue))
+        region['revenue_km2'] = round(sum(revenue) / region['area_km2'])
 
         output.append(region)
 
@@ -122,9 +130,26 @@ def estimate_demand(regions, option, global_parameters,
 
 def get_per_user_capacity(geotype, option):
     """
+    Function to return the target per user capacity by scenario,
+    from the scenario string.
+
+    Parameters
+    ----------
+    geotype : string
+        Settlement patterns, such as urban, suburban or rural.
+    option : dict
+        Contains the scenario and strategy. The strategy string controls
+        the strategy variants being tested in the model and is defined based
+        on the type of technology generation, core and backhaul, and the
+        strategy for infrastructure sharing, the number of networks in each
+        geotype, spectrum and taxation.
+
+    Returns
+    -------
+    per_user_capacity : int
+        The targetted per user capacity in Mbps.
 
     """
-
     if geotype.split(' ')[0] == 'urban':
 
         return int(option['scenario'].split('_')[1])
@@ -144,6 +169,22 @@ def get_per_user_capacity(geotype, option):
 def estimate_arpu(region, timestep, global_parameters, country_parameters):
     """
     Allocate consumption category given a specific luminosity.
+
+    Parameters
+    ----------
+    region : dicts
+        Data for a single region.
+    timestep : int
+        Time period (year) to discount against.
+    global_parameters : dict
+        All global model parameters.
+    country_parameters : dict
+        All country specific parameters.
+
+    Returns
+    -------
+    discounted_arpu : float
+        The discounted Average Revenue Per User (ARPU) over the time period.
 
     """
     timestep = timestep - 2020

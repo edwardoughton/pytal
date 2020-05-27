@@ -15,8 +15,8 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
     ----------
     country : dict
         Country information.
-    regions : dataframe
-        Geopandas dataframe of all regions.
+    regions : list of dicts
+        Data for all regions (one dict per region).
     option : dict
         Contains the scenario and strategy. The strategy string controls
         the strategy variants being testes in the model and is defined based
@@ -26,11 +26,13 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
         All global model parameters.
     country_parameters : dict
         All country specific parameters.
+    costs : dict
+        All equipment costs.
 
     Returns
     -------
     output : list of dicts
-        Contains all output data.
+        Contains all output data (one dict per region).
 
     """
     interim = []
@@ -63,7 +65,8 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
 
         #avoid zero division
         if region['total_cost'] > 0 and region['smartphones_on_network'] > 0:
-            region['cost_per_sp_user'] = region['total_cost'] / region['smartphones_on_network']
+            region['cost_per_sp_user'] = (
+                region['total_cost'] / region['smartphones_on_network'])
         else:
             region['cost_per_sp_user'] = 0
 
@@ -93,6 +96,18 @@ def get_administration_cost(region, country_parameters):
     """
     There is an administration cost to deploying and operating all assets.
 
+    Parameters
+    ----------
+    regions : list of dicts
+        Data for all regions (one dict per region).
+    country_parameters : dict
+        All country specific parameters.
+
+    Returns
+    -------
+    region : dict
+        Contains all regional data.
+
     """
     region['administration'] = (
         region['network_cost'] *
@@ -105,6 +120,25 @@ def get_administration_cost(region, country_parameters):
 def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     """
     Calculate spectrum costs.
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+    strategy : dict
+        Controls the strategy variants being tested in the model and is
+        defined based on the type of technology generation, core and
+        backhaul, and the level of sharing, subsidy, spectrum and tax.
+        of sharing, subsidy, spectrum and tax.
+    global_parameters : dict
+        All global model parameters.
+    country_parameters : dict
+        All country specific parameters.
+
+    Output
+    ------
+    region : dict
+        Contains all regional data.
 
     """
     population = int(round(region['population']))
@@ -121,12 +155,20 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     capacity_cost_usd_mhz_pop = country_parameters['financials'][capacity_spectrum_cost]
 
     if spectrum_cost == 'low':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_low'] /100)
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * (country_parameters['financials']['spectrum_cost_low'] /100)
+        coverage_cost_usd_mhz_pop = (
+            coverage_cost_usd_mhz_pop *
+            (country_parameters['financials']['spectrum_cost_low'] /100))
+        capacity_cost_usd_mhz_pop = (
+            capacity_cost_usd_mhz_pop *
+            (country_parameters['financials']['spectrum_cost_low'] /100))
 
     if spectrum_cost == 'high':
-        coverage_cost_usd_mhz_pop = coverage_cost_usd_mhz_pop * 1 + (country_parameters['financials']['spectrum_cost_high'] / 100)
-        capacity_cost_usd_mhz_pop = capacity_cost_usd_mhz_pop * 1 + (country_parameters['financials']['spectrum_cost_high'] / 100)
+        coverage_cost_usd_mhz_pop = (
+            coverage_cost_usd_mhz_pop *
+            1 + (country_parameters['financials']['spectrum_cost_high'] / 100))
+        capacity_cost_usd_mhz_pop = (
+            capacity_cost_usd_mhz_pop *
+            1 + (country_parameters['financials']['spectrum_cost_high'] / 100))
 
     all_costs = []
 
@@ -152,7 +194,24 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
 
 def calculate_tax(region, strategy, country_parameters):
     """
-    Calculate tax.
+    Estimate the quantity of tax.
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+    strategy : dict
+        Controls the strategy variants being tested in the model and is
+        defined based on the type of technology generation, core and
+        backhaul, and the level of sharing, subsidy, spectrum and tax.
+        of sharing, subsidy, spectrum and tax.
+    country_parameters : dict
+        All country specific parameters.
+
+    Return
+    ------
+    tax : int
+        Quantity of tax.
 
     """
     tax_rate = strategy.split('_')[6]
@@ -164,12 +223,24 @@ def calculate_tax(region, strategy, country_parameters):
 
     tax = investment * (tax_rate / 100)
 
-    return tax
+    return int(tax)
 
 
 def calculate_profit(region, country_parameters):
     """
-    Estimate npv profit.
+    Estimate the quantity of profit.
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+    country_parameters : dict
+        All country specific parameters.
+
+    Return
+    ------
+    profit : int
+        Quantity of profit.
 
     """
     investment = (
@@ -186,6 +257,16 @@ def calculate_profit(region, country_parameters):
 def allocate_available_excess(region):
     """
     Allocate available excess capital (if any).
+
+    Parameters
+    ----------
+    region : dict
+        Contains all regional data.
+
+    Output
+    ------
+    region : dict
+        Contains all regional data.
 
     """
     difference = region['total_revenue'] - region['total_cost']
@@ -207,15 +288,15 @@ def estimate_subsidies(region, available_for_cross_subsidy):
 
     Parameters
     ----------
-    region : Dict
-        Contains all variable for a single region.
+    region : dict
+        Contains all regional data.
     available_for_cross_subsidy : int
         The amount of capital available for cross-subsidization.
 
-    Returns
-    -------
-    region : Dict
-        Contains all variable for a single region.
+    Output
+    ------
+    region : dict
+        Contains all regional data.
     available_for_cross_subsidy : int
         The amount of capital available for cross-subsidization.
 
@@ -243,22 +324,3 @@ def estimate_subsidies(region, available_for_cross_subsidy):
         region['required_state_subsidy'] = 0
 
     return region, available_for_cross_subsidy
-
-
-def calculate_benefit_cost_ratio(region, country_parameters):
-    """
-    Calculate the benefit cost ratio.
-
-    """
-    cost = (
-        region['network_cost'] +
-        region['spectrum_cost'] +
-        region['tax'] +
-        region['profit_margin']
-    )
-
-    revenue = region['total_revenue']
-
-    bcr = revenue / cost
-
-    return bcr
