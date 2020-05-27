@@ -1,6 +1,6 @@
 import pytest
 from pytal.assess import (get_administration_cost,
-    get_spectrum_costs, calculate_tax, calculate_profit, calculate_benefit_cost_ratio,
+    get_spectrum_costs, calculate_tax, calculate_profit,
     assess, estimate_subsidies, allocate_available_excess)
 
 
@@ -170,14 +170,12 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
 
     assert answer[0]['total_revenue'] == 20000
     assert answer[0]['network_cost'] == 5000
-    # assert answer[0]['subs_acquisition'] == 500
     assert answer[0]['spectrum_cost'] == 3000
     assert answer[0]['tax'] == 1250
     assert answer[0]['profit_margin'] == 1850
     assert answer[0]['total_cost'] == 12100.0
     assert answer[0]['available_cross_subsidy'] == 7900.0
     assert answer[0]['used_cross_subsidy'] == 0
-    assert answer[0]['bcr'] == 1.8018018018018018
     assert answer[0]['required_state_subsidy'] == 0
 
     assert answer[1]['total_revenue'] == 12000
@@ -188,7 +186,6 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     assert answer[1]['total_cost'] == 15400
     assert answer[1]['available_cross_subsidy'] == 0
     assert answer[1]['used_cross_subsidy'] == 3400.0
-    assert answer[1]['bcr'] == 0.8695652173913043
     assert answer[1]['required_state_subsidy'] == 0
 
     regions = [

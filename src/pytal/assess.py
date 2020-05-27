@@ -70,9 +70,7 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
         else:
             region['cost_per_sp_user'] = 0
 
-        #revenue cost ratio = expenses / revenue
-        region['bcr'] = calculate_benefit_cost_ratio(region, country_parameters)
-
+        #apply cross subsidy
         region = allocate_available_excess(region)
         available_for_cross_subsidy += region['available_cross_subsidy']
 
