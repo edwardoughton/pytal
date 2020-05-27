@@ -183,7 +183,7 @@ def test_estimate_supply(
         setup_ci
     )
 
-    assert round(answer[0]['site_density'], 1) == 0.9
+    assert round(answer[0]['network_site_density'], 1) == 0.9
 
 
 def test_estimate_backhaul_upgrades(
