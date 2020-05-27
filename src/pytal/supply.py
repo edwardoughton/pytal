@@ -13,45 +13,52 @@ from operator import itemgetter
 from pytal.costs import find_single_network_cost
 
 
-def estimate_supply(country, regions, lookup, option, global_parameters,
+def estimate_supply(country, regions, capacity_lut, option, global_parameters,
     country_parameters, costs, core_lut, ci):
     """
-    For each region, optimize the network design and estimate
-    the financial cost.
+    For each region, find the least-cost design and estimate
+    the required investment for for the single network being modeled.
 
     Parameters
     ----------
-    regions : dataframe
-        Geopandas dataframe of all regions.
-    lookup : dict
+    country : dict
+        Country information.
+    regions : list of dicts
+        Data for all regions (one dict per region).
+    capacity_lut : dict
         A dictionary containing the lookup capacities.
     option : dict
         Contains the scenario and strategy. The strategy string controls
-        the strategy variants being testes in the model and is defined based
-        on the type of technology generation, core and backhaul, and the level
-        of sharing, subsidy, spectrum and tax.
+        the strategy variants being tested in the model and is defined based
+        on the type of technology generation, core and backhaul, and the
+        strategy for infrastructure sharing, the number of networks in each
+        geotype, spectrum and taxation.
     global_parameters : dict
         All global model parameters.
     country_parameters : dict
         All country specific parameters.
     costs : dict
         All equipment costs.
-    core_lut : ???
-        ???
+    core_lut : dict
+        Contains the number of existing and required, core and regional assets.
     ci : int
         Confidence interval.
+
+    Returns
+    -------
+    regions : list of dicts
+        Data for all regions (one dict per region).
 
     """
     output_regions = []
 
     for region in regions:
 
-        region['site_density'] = find_site_density(region, option,
-            country_parameters, lookup, ci)
+        region['network_site_density'] = find_site_density(region, option,
+            country_parameters, capacity_lut, ci)
 
-        total_sites_required = math.ceil(region['site_density'] * region['area_km2'])
-        # print('existing site density {}'.format(region['site_density']))
-        # print('total sites required {}'.format(total_sites_required))
+        total_sites_required = math.ceil(region['network_site_density'] *
+            region['area_km2'])
 
         region = estimate_site_upgrades(
             region,
@@ -60,7 +67,7 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
             country_parameters
         )
 
-        region = estimate_backhaul_upgrades(region, option['strategy'])
+        region = estimate_backhaul_upgrades(region, option['strategy'], country_parameters)
 
         region = find_single_network_cost(
             region,
@@ -80,23 +87,40 @@ def estimate_supply(country, regions, lookup, option, global_parameters,
     return output_regions
 
 
-def find_site_density(region, option, country_parameters, lookup, ci):
+def find_site_density(region, option, country_parameters, capacity_lut, ci):
     """
-    For a given region, provide an optmized network.
+    For a given region, estimate the number of needed sites.
+
+    Parameters
+    ----------
+    region : dicts
+        Data for a single region.
+    option : dict
+        Contains the scenario and strategy. The strategy string controls
+        the strategy variants being tested in the model and is defined based
+        on the type of technology generation, core and backhaul, and the
+        strategy for infrastructure sharing, the number of networks in each
+        geotype, spectrum and taxation.
+    country_parameters : dict
+        All country specific parameters.
+    capacity_lut : dict
+        A dictionary containing the lookup capacities.
+    ci : int
+        Confidence interval.
+
+    Return
+    ------
+    site_density : float
+        Estimated site density.
 
     """
     demand = region['demand_mbps_km2']
     geotype = region['geotype'].split(' ')[0]
     ant_type = 'macro'
-
     generation = option['strategy'].split('_')[0]
-
     frequencies = country_parameters['frequencies']
-
     frequencies = frequencies[generation]
-
     ci = str(ci)
-
     unique_densities = set()
 
     capacity = 0
@@ -107,7 +131,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
         bandwidth = str(item['bandwidth'].split('x')[1])
 
         density_capacities = lookup_capacity(
-            lookup,
+            capacity_lut,
             geotype,
             ant_type,
             frequency,
@@ -129,7 +153,7 @@ def find_site_density(region, option, country_parameters, lookup, ci):
             bandwidth = float(item['bandwidth'].split('x')[1])
 
             density_capacities = lookup_capacity(
-                lookup,
+                capacity_lut,
                 geotype,
                 ant_type,
                 frequency,
@@ -180,20 +204,40 @@ def find_site_density(region, option, country_parameters, lookup, ci):
                 return site_density
 
 
-def lookup_capacity(lookup, environment, ant_type, frequency,
+def lookup_capacity(capacity_lut, env, ant_type, frequency,
     generation, ci):
     """
     Use lookup table to find the combination of spectrum bands
     which meets capacity by clutter environment geotype, frequency,
     bandwidth, technology generation and site density.
 
-    """
-    if (environment, ant_type, frequency, generation, ci) not in lookup:
-        raise KeyError("Combination %s not found in lookup table",
-                       (environment, ant_type, frequency, generation, ci))
+    Parameters
+    ----------
+    capacity_lut : dict
+        A dictionary containing the lookup capacities.
+    env : string
+        The settlement type e.g. urban, suburban or rural.
+    ant_type : string
+        The antenna type, such as a macro cell or micro cell.
+    frequency : string
+        The frequency band in Megahertz.
+    generation : string
+        The cellular generation such as 4G or 5G.
+    ci : int
+        Confidence interval.
 
-    density_capacities = lookup[
-        (environment, ant_type,  frequency, generation, ci)
+    Returns
+    -------
+    site_densities_to_capacities : list of tuples
+        Returns a list of site density to capacity tuples.
+
+    """
+    if (env, ant_type, frequency, generation, ci) not in capacity_lut:
+        raise KeyError("Combination %s not found in lookup table",
+                       (env, ant_type, frequency, generation, ci))
+
+    density_capacities = capacity_lut[
+        (env, ant_type,  frequency, generation, ci)
     ]
 
     return density_capacities
@@ -212,8 +256,10 @@ def interpolate(x0, y0, x1, y1, x):
 def pairwise(iterable):
     """
     Return iterable of 2-tuples in a sliding window.
+
     >>> list(pairwise([1,2,3,4]))
     [(1,2),(2,3),(3,4)]
+
     """
     a, b = tee(iterable)
     next(b, None)
@@ -221,18 +267,20 @@ def pairwise(iterable):
     return zip(a, b)
 
 
-def estimate_site_upgrades(region, strategy, total_sites_required, country_parameters):
+def estimate_site_upgrades(region, strategy, total_sites_required,
+    country_parameters):
     """
-    Estimate the number of greenfield sites and brownfield upgrades.
+    Estimate the number of greenfield sites and brownfield upgrades for the
+    single network being modeled.
 
     Parameters
     ----------
     region : dict
         Contains all regional data.
     strategy : dict
-        The strategy string controls the strategy variants being tested in the
-        model and is defined based on the type of technology generation, core
-        and backhaul, and the level of sharing, subsidy, spectrum and tax.
+        Controls the strategy variants being tested in the model and is
+        defined based on the type of technology generation, core and
+        backhaul, and the level of sharing, subsidy, spectrum and tax.
     total_sites_required : int
         Number of sites needed to meet demand.
     country_parameters : dict
@@ -251,18 +299,21 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
     networks = country_parameters['networks']['baseline' + '_' + geotype]
 
     #get the total number of existing sites that the network has (2G-4G)
-    region['existing_network_sites'] = (region['sites_estimated_total'] / networks)
+    region['existing_network_sites'] = (
+        region['sites_estimated_total'] / networks)
 
     #get the number of existing 4G sites
     existing_4G_sites = math.ceil(region['sites_4G'] / networks )
 
     if total_sites_required > region['existing_network_sites']:
 
-        region['new_sites'] = int(round(total_sites_required - region['existing_network_sites']))
+        region['new_sites'] = (int(round(total_sites_required -
+            region['existing_network_sites'])))
 
         if region['existing_network_sites'] > 0:
             if generation == '4G' and existing_4G_sites > 0 :
-                region['upgraded_sites'] = region['existing_network_sites'] - existing_4G_sites
+                region['upgraded_sites'] = (region['existing_network_sites'] -
+                    existing_4G_sites)
             else:
                 region['upgraded_sites'] = region['existing_network_sites']
         else:
@@ -280,9 +331,10 @@ def estimate_site_upgrades(region, strategy, total_sites_required, country_param
     return region
 
 
-def estimate_backhaul_upgrades(region, strategy):
+def estimate_backhaul_upgrades(region, strategy, country_parameters):
     """
-    Estimates the number of backhaul links needing to be upgraded.
+    Estimates the number of backhaul links requiring upgrades for the
+    single network being modeled.
 
     Parameters
     ----------
@@ -302,24 +354,26 @@ def estimate_backhaul_upgrades(region, strategy):
 
     """
     backhaul = strategy.split('_')[2]
-
-    all_sites = region['new_sites'] + region['upgraded_sites']
+    geotype = region['geotype'].split(' ')[0]
+    networks = country_parameters['networks']['baseline' + '_' + geotype]
+    all_sites = (region['new_sites'] + region['upgraded_sites']) / networks
 
     if backhaul == 'fiber':
 
-        existing_fiber = region['backhaul_fiber']
+        existing_fiber = region['backhaul_fiber'] / networks
 
         if existing_fiber < all_sites:
-            region['backhaul_new'] = all_sites - existing_fiber
+            region['backhaul_new'] =  math.ceil(all_sites - existing_fiber)
         else:
             region['backhaul_new'] = 0
 
     elif backhaul == 'microwave':
 
-        existing_backhaul = region['backhaul_microwave'] + region['backhaul_fiber']
+        existing_backhaul = (region['backhaul_microwave'] +
+            region['backhaul_fiber']) / networks
 
         if existing_backhaul < all_sites:
-            region['backhaul_new'] = all_sites - existing_backhaul
+            region['backhaul_new'] =  math.ceil(all_sites - existing_backhaul)
         else:
             region['backhaul_new'] = 0
 

@@ -76,22 +76,6 @@ def test_calculate_profit(setup_region, setup_country_parameters):
     assert calculate_profit(setup_region[0], setup_country_parameters) == 265e3
 
 
-def test_calculate_benefit_cost_ratio(setup_region, setup_country_parameters):
-
-    setup_region[0]['network_cost'] = 1e6
-    setup_region[0]['spectrum_cost'] = 6e4
-    setup_region[0]['tax'] = 265e3
-    setup_region[0]['profit_margin'] = 265e3
-    setup_region[0]['total_revenue'] = 159e4
-    setup_region[0]['used_cross_subsidy'] = 0
-
-    assert calculate_benefit_cost_ratio(setup_region[0], setup_country_parameters) == 1
-
-    setup_region[0]['used_cross_subsidy'] = 159e4
-
-    assert calculate_benefit_cost_ratio(setup_region[0], setup_country_parameters) == 1
-
-
 def test_estimate_subsidies():
 
     region = {
