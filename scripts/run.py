@@ -478,7 +478,7 @@ if __name__ == '__main__':
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
-    lookup = read_capacity_lookup(path)
+    capacity_lut = read_capacity_lookup(path)
 
     # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
@@ -561,7 +561,7 @@ if __name__ == '__main__':
                     data_supply = estimate_supply(
                         country,
                         data_demand,
-                        lookup,
+                        capacity_lut,
                         option,
                         GLOBAL_PARAMETERS,
                         country_parameters,

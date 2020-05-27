@@ -187,13 +187,13 @@ def test_estimate_supply(
 
 
 def test_estimate_backhaul_upgrades(
-    setup_region,
+    setup_region, setup_country_parameters
     ):
 
-    setup_region[0]['new_sites'] = 50
-    setup_region[0]['upgraded_sites'] = 50
+    setup_region[0]['new_sites'] = 45
+    setup_region[0]['upgraded_sites'] = 45
 
-    setup_region[0]['backhaul_fiber'] = 20
+    setup_region[0]['backhaul_fiber'] = 10
     setup_region[0]['backhaul_copper'] = 20
     setup_region[0]['backhaul_microwave'] = 50
     setup_region[0]['backhaul_satellite'] = 10
@@ -201,22 +201,25 @@ def test_estimate_backhaul_upgrades(
     answer = estimate_backhaul_upgrades(
         setup_region[0],
         '4G_epc_fiber_baseline_baseline_baseline_baseline',
+        setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 80
+    assert answer['backhaul_new'] == 27
 
     answer = estimate_backhaul_upgrades(
         setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
+        setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 30
+    assert answer['backhaul_new'] == 10
 
     setup_region[0]['backhaul_fiber'] = 100
 
     answer = estimate_backhaul_upgrades(
         setup_region[0],
         '4G_epc_fiber_baseline_baseline_baseline_baseline',
+        setup_country_parameters
     )
 
     assert answer['backhaul_new'] == 0
@@ -227,6 +230,7 @@ def test_estimate_backhaul_upgrades(
     answer = estimate_backhaul_upgrades(
         setup_region[0],
         '4G_epc_microwave_baseline_baseline_baseline_baseline',
+        setup_country_parameters
     )
 
     assert answer['backhaul_new'] == 0
