@@ -37,6 +37,16 @@ def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters,
         setup_global_parameters, setup_country_parameters) == (
             400000 * (setup_country_parameters['financials']['spectrum_cost_low'] / 100))
 
+    # test high spectrum costs which are 20% higher
+    setup_country_parameters['financials']['spectrum_cost_high'] = 20
+    assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_high_baseline',
+        setup_global_parameters, setup_country_parameters) == 400000 * (1 + (20 / 100))
+
+    # test low spectrum costs which are 99% lower
+    setup_country_parameters['financials']['spectrum_cost_low'] = 1
+    assert get_spectrum_costs(setup_region[0], '4G_epc_microwave_baseline_baseline_low_baseline',
+        setup_global_parameters, setup_country_parameters) == 400000 * (1 / 100)
+
 
 def test_calculate_tax(setup_region, setup_option, setup_country_parameters):
 
@@ -73,7 +83,7 @@ def test_calculate_profit(setup_region, setup_country_parameters):
     setup_region[0]['spectrum_cost'] = 6e4
     setup_region[0]['tax'] = 265e3
 
-    assert calculate_profit(setup_region[0], setup_country_parameters) == 265e3
+    assert calculate_profit(setup_region[0], setup_country_parameters) == 200000.0
 
 
 def test_estimate_subsidies():
@@ -172,9 +182,9 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     assert answer[0]['network_cost'] == 5000
     assert answer[0]['spectrum_cost'] == 3000
     assert answer[0]['tax'] == 1250
-    assert answer[0]['profit_margin'] == 1850
-    assert answer[0]['total_cost'] == 12100.0
-    assert answer[0]['available_cross_subsidy'] == 7900.0
+    assert answer[0]['profit_margin'] == 1000
+    assert answer[0]['total_cost'] == 11250.0
+    assert answer[0]['available_cross_subsidy'] == 8750.0
     assert answer[0]['used_cross_subsidy'] == 0
     assert answer[0]['required_state_subsidy'] == 0
 
@@ -182,10 +192,10 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     assert answer[1]['network_cost'] == 8000
     assert answer[1]['spectrum_cost'] == 1500
     assert answer[1]['tax'] == 2000
-    assert answer[1]['profit_margin'] == 2300
-    assert answer[1]['total_cost'] == 15400
+    assert answer[1]['profit_margin'] == 1600.0
+    assert answer[1]['total_cost'] == 14700.0
     assert answer[1]['available_cross_subsidy'] == 0
-    assert answer[1]['used_cross_subsidy'] == 3400.0
+    assert answer[1]['used_cross_subsidy'] == 2700.0
     assert answer[1]['required_state_subsidy'] == 0
 
     regions = [
@@ -212,12 +222,12 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     answer = assess('MWI', regions, setup_option, setup_global_parameters,
         setup_country_parameters, setup_costs)
 
-    assert answer[0]['available_cross_subsidy'] == 7560
+    assert answer[0]['available_cross_subsidy'] == 8420.0
     assert answer[0]['used_cross_subsidy'] == 0
     assert answer[0]['required_state_subsidy'] == 0
     assert answer[1]['available_cross_subsidy'] == 0
-    assert answer[1]['used_cross_subsidy'] == 7560
-    assert answer[1]['required_state_subsidy'] == 2380.0
+    assert answer[1]['used_cross_subsidy'] == 8420.0
+    assert answer[1]['required_state_subsidy'] == 660.0
 
 
 def test_allocate_available_excess():
