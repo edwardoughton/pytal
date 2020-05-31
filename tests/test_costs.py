@@ -378,23 +378,29 @@ def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
 
 def test_get_fronthaul_costs(setup_region, setup_costs):
 
+    setup_region[0]['network_site_density'] = 1
+
+    assert get_fronthaul_costs(setup_region[0], setup_costs) == int(
+        setup_costs['fiber_urban_m'] *
+        (math.sqrt(1/setup_region[0]['network_site_density']) / 2) * 1000)
+
     setup_region[0]['network_site_density'] = 4
 
     assert get_fronthaul_costs(setup_region[0], setup_costs) == int(
         setup_costs['fiber_urban_m'] *
-        math.sqrt(1/setup_region[0]['network_site_density']) * 1000)
+        (math.sqrt(1/setup_region[0]['network_site_density']) / 2) * 1000)
 
     setup_region[0]['network_site_density'] = 0.5
 
     assert get_fronthaul_costs(setup_region[0], setup_costs) == int(
         setup_costs['fiber_urban_m'] *
-        math.sqrt(1/setup_region[0]['network_site_density']) * 1000)
+        (math.sqrt(1/setup_region[0]['network_site_density']) / 2) * 1000)
 
     setup_region[0]['network_site_density'] = 0.00001
 
     assert get_fronthaul_costs(setup_region[0], setup_costs) == int(
         setup_costs['fiber_urban_m'] *
-        math.sqrt(1/setup_region[0]['network_site_density']) * 1000)
+        (math.sqrt(1/setup_region[0]['network_site_density']) / 2) * 1000)
 
 
 def test_get_backhaul_costs(setup_region, setup_costs, setup_core_lut):
@@ -416,6 +422,11 @@ def test_get_backhaul_costs(setup_region, setup_costs, setup_core_lut):
 
     assert get_backhaul_costs(setup_region[0], 'fiber',
         setup_costs, setup_core_lut) == (setup_costs['fiber_urban_m'] * 250)
+
+    setup_region[0]['area_km2'] = 8
+
+    assert get_backhaul_costs(setup_region[0], 'fiber',
+        setup_costs, setup_core_lut) == (setup_costs['fiber_urban_m'] * 500)
 
     assert get_backhaul_costs(setup_region[0], 'incorrect_backhaul_tech_name',
         setup_costs, setup_core_lut) == 0
@@ -575,9 +586,9 @@ def test_calc_costs(setup_region, setup_global_parameters, setup_country_paramet
 
     answer, structure = calc_costs(setup_region[0],
         {'single_sector_antenna': 1500,
-            'single_baseband_unit': 4000,
-            'tower': 10000,
-            'site_rental': 9600},
+        'single_baseband_unit': 4000,
+        'tower': 10000,
+        'site_rental': 9600},
         'fiber',
         6,
         setup_global_parameters,
@@ -699,7 +710,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 734594.3#(110322 + 11952 + 11952 + 1027906)
+    assert answer['network_cost'] == 715999.9000000001#(110322 + 11952 + 11952 + 1027906)
 
     setup_region[0]['new_sites'] = 0
     setup_region[0]['upgraded_sites'] = 1
@@ -715,7 +726,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1158837.9#63357.0 + 1027906
+    assert answer['network_cost'] == 1149540.7#63357.0 + 1027906
 
     setup_region[0]['new_sites'] = 0
     setup_region[0]['upgraded_sites'] = 1
@@ -731,7 +742,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1158837.9#63357 + 1027906
+    assert answer['network_cost'] == 1149540.7#63357 + 1027906
 
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 1
@@ -747,7 +758,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1250638.4000000001#152690 + 1027906
+    assert answer['network_cost'] == 1232044.0000000002#152690 + 1027906
 
     setup_region[0]['new_sites'] = 1
     setup_region[0]['upgraded_sites'] = 0
@@ -763,7 +774,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1583508.3#450398.0 + 1027906
+    assert answer['network_cost'] == 1375624.7999999998#450398.0 + 1027906
 
     setup_region[0]['new_sites'] = 10
     setup_region[0]['upgraded_sites'] = 10
@@ -779,4 +790,4 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 2750488.4000000004#1451800.0 + 1027906
+    assert answer['network_cost'] == 2619016.4000000004#1451800.0 + 1027906
