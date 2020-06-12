@@ -119,6 +119,8 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     """
     Calculate spectrum costs.
 
+    A low spectrum cost of say 1%, means spectrum is only 1% of the baseline price.
+
     Parameters
     ----------
     region : dict
@@ -161,12 +163,13 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
             (country_parameters['financials']['spectrum_cost_low'] /100))
 
     if spectrum_cost == 'high':
+
         coverage_cost_usd_mhz_pop = (
             coverage_cost_usd_mhz_pop *
-            1 + (country_parameters['financials']['spectrum_cost_high'] / 100))
+            (1 + (country_parameters['financials']['spectrum_cost_high'] / 100)))
         capacity_cost_usd_mhz_pop = (
             capacity_cost_usd_mhz_pop *
-            1 + (country_parameters['financials']['spectrum_cost_high'] / 100))
+            (1 + (country_parameters['financials']['spectrum_cost_high'] / 100)))
 
     all_costs = []
 
@@ -177,6 +180,7 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
         bandwidth_total = channel_number * channel_bandwidth
 
         if frequency['frequency'] < 1000:
+
             cost = (
                 coverage_cost_usd_mhz_pop * bandwidth_total *
                 population)
@@ -242,9 +246,9 @@ def calculate_profit(region, country_parameters):
 
     """
     investment = (
-        region['network_cost'] +
-        region['spectrum_cost'] +
-        region['tax']
+        region['network_cost'] #+
+        # region['spectrum_cost'] +
+        # region['tax']
     )
 
     profit = investment * (country_parameters['financials']['profit_margin'] / 100)

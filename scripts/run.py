@@ -463,7 +463,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [50],#[5, 50, 95],#
+        'confidence': [5, 50, 95],#[50],#
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
@@ -479,8 +479,6 @@ if __name__ == '__main__':
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
     capacity_lut = read_capacity_lookup(path)
-
-    # countries, country_regional_levels = find_country_list(['Africa', 'South America'])
 
     countries = [
         {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, 'regional_nodes_level': 2},

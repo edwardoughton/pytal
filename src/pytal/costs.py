@@ -140,7 +140,6 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
 
-
     counter = collections.Counter()
     for d in regional_asset_cost:
         counter.update(d)
@@ -640,8 +639,7 @@ def get_fronthaul_costs(region, costs):
         Fiber fronthaul cost.
 
     """
-    average_cell_spacing_km = math.sqrt(1/region['network_site_density'])
-    average_cell_spacing_m = average_cell_spacing_km * 1000 #convert km to m
+    average_cell_spacing_m = (math.sqrt(1/region['network_site_density']) / 2) * 1000
 
     tech = 'fiber_{}_m'.format(region['geotype'].split(' ')[0])
     cost_per_meter = costs[tech]
@@ -680,6 +678,7 @@ def get_backhaul_costs(region, backhaul, costs, core_lut):
             combined_key = '{}_{}'.format(region['GID_id'], age)
             nodes += core_lut[asset_type][combined_key]
     node_density_km2 = nodes / region['area_km2']
+
     if node_density_km2 > 0:
         ave_distance_to_a_node_m = (math.sqrt(1/node_density_km2) / 2) * 1000
     else:
@@ -1127,6 +1126,7 @@ def calc_costs(region, cost_structure, backhaul, backhaul_quantity,
     backhaul_fronthaul = [
         'fronthaul',
         'backhaul',
+        'cloud_backhaul',
     ]
 
     civils = [
@@ -1139,7 +1139,6 @@ def calc_costs(region, cost_structure, backhaul, backhaul_quantity,
     ]
 
     core = [
-        'cloud_backhaul',
         'regional_node',
         'regional_edge',
         'core_node',

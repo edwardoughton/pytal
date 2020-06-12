@@ -246,8 +246,6 @@ COUNTRY_PARAMETERS = {
             'medium': 3,
             'low': 2,
         },
-        # Access Comm, Airtel, TNM
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': {
             'baseline_urban': 3,
             'baseline_suburban': 3,
@@ -256,8 +254,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -283,10 +279,10 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.02,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -311,7 +307,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -337,10 +332,10 @@ COUNTRY_PARAMETERS = {
         'financials': {
             'wacc': 15,
             'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.025,
-            'spectrum_capacity_baseline_usd_mhz_pop': 0.02,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.02,
+            'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -357,7 +352,6 @@ COUNTRY_PARAMETERS = {
             'medium': 7,
             'low': 2,
         },
-        'smartphone_pen': 0.5,
         'networks': {
             'baseline_urban': 3,
             'baseline_suburban': 3,
@@ -366,7 +360,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -395,7 +388,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -420,7 +413,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -449,7 +441,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -466,21 +458,14 @@ COUNTRY_PARAMETERS = {
             'medium': 2,
             'low': 1,
         },
-        # also GSMA, 2019 (same report as above)
-        # smartphone pen was 10% in 2017, so assume 15% in 2020
-        'smartphone_pen': 0.5,
-        # Access Comm, Airtel, TNM
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
         'networks': {
-            'baseline_urban': 3,
-            'baseline_suburban': 3,
-            'baseline_rural': 3,
-            'shared_urban': 3,
-            'shared_suburban': 3,
+            'baseline_urban': 4,
+            'baseline_suburban': 4,
+            'baseline_rural': 4,
+            'shared_urban': 4,
+            'shared_suburban': 4,
             'shared_rural': 1,
         },
-        # https://en.wikipedia.org/wiki/List_of_LTE_networks_in_Africa
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -513,7 +498,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.05,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.025,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -538,7 +523,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -567,7 +551,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.4,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -585,14 +569,13 @@ COUNTRY_PARAMETERS = {
             'low': 7,
         },
         'networks': {
-            'baseline_urban': 3,
-            'baseline_suburban': 3,
-            'baseline_rural': 3,
-            'shared_urban': 3,
-            'shared_suburban': 3,
+            'baseline_urban': 4,
+            'baseline_suburban': 4,
+            'baseline_rural': 4,
+            'shared_urban': 4,
+            'shared_suburban': 4,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -621,7 +604,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
@@ -646,7 +629,6 @@ COUNTRY_PARAMETERS = {
             'shared_suburban': 3,
             'shared_rural': 1,
         },
-        'proportion_of_sites': 30,
         'frequencies': {
             '4G': [
                 {
@@ -683,7 +665,7 @@ COUNTRY_PARAMETERS = {
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
             'spectrum_cost_low': 50,
-            'spectrum_cost_high': 10,
+            'spectrum_cost_high': 50,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,

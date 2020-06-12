@@ -693,7 +693,6 @@ ggsave(path, units="in", width=10, height=14.5, dpi=300)
 print(panel)
 dev.off()
 
-
 ##############NATIONAL COST PROFILE FOR MIXED OPTIONS
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -919,7 +918,6 @@ print(panel)
 dev.off()
 
 ####################################TOTAL COST AS % OF GDP
-
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
@@ -968,11 +966,18 @@ results$strategy = factor(results$strategy, levels=c("Revenue",
                                    "5G NSA (Microwave)",
                                    "5G SA (Fiber)"))
 
-results$confidence = factor(results$confidence, levels=c('5','50', '95'),
-                            labels=c("lower", 'mean', "upper"))
-
-wide <- select(results, country, scenario, strategy, confidence, gdp_percentage)
-wide <- spread(wide, confidence, gdp_percentage)
+results <- select(results, country, scenario, strategy, confidence, gdp_percentage)
+wide <- results %>% 
+             group_by(country, scenario, strategy) %>%
+             summarize(lower = min(gdp_percentage),
+                       mean = mean(gdp_percentage),
+                       upper = max(gdp_percentage))
+  
+# results$confidence = factor(results$confidence, levels=c('5','50', '95'),
+#                             labels=c("lower", 'mean', "upper"))
+# 
+# wide <- select(results, country, scenario, strategy, confidence, gdp_percentage)
+# wide <- spread(wide, confidence, gdp_percentage)
 
 gdp_percentage_ci <- ggplot(wide, aes(x=strategy, y=mean, fill=strategy)) +
   coord_flip() +
@@ -1116,8 +1121,6 @@ raw_total_summary_stats <- raw_num %>%
   summarize(lower = sum(lower)/1e9,
             mean = sum(mean)/1e9,
             upper = sum(upper)/1e9,)
-
-unique(raw_num$country)
 
 global_cost <- ggplot(raw_total_summary_stats, aes(x=strategy, y=mean/1e3, fill=strategy)) +
   coord_flip() +
