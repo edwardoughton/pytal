@@ -6,11 +6,6 @@
 Welcome to pytal's documentation!
 =================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
 
 Indices and tables
 ==================
@@ -18,3 +13,17 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   Getting Started <getting-started>
+
+.. toctree::
+   :maxdepth: 1
+
+   License <license>
+   Authors <authors>
