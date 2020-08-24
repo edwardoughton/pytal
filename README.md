@@ -19,7 +19,7 @@ packages.
 
 Create a conda environment called pytal:
 
-    conda create --name cdcam python=3.7 gdal
+    conda create --name pytal python=3.7 gdal
 
 Activate it (run this each time you switch projects):
 
