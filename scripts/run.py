@@ -281,6 +281,24 @@ def define_deciles(regions):
     return regions
 
 
+def write_annual_demand(regional_annual_demand, folder, metric):
+    """
+    Write all annual demand results.
+
+    """
+    print('Writing annual_demand')
+    regional_annual_demand = pd.DataFrame(regional_annual_demand)
+    regional_annual_demand = regional_annual_demand[[
+        'GID_0', 'GID_id', 'scenario', 'strategy',
+        'confidence', 'year', 'population', 'area_km2', 'population_km2',
+        'geotype', 'arpu_discounted', 'population_with_phones', 'phones_on_network',
+        'smartphones_on_network', 'revenue'
+    ]]
+
+    path = os.path.join(folder,'regional_annual_demand_{}.csv'.format(metric))
+    regional_annual_demand.to_csv(path, index=False)
+
+
 def write_results(regional_results, folder, metric):
     """
     Write all results.
@@ -290,7 +308,7 @@ def write_results(regional_results, folder, metric):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'population_km2', 'phones_on_network', 'smartphones_on_network',
+        'phones_on_network', 'smartphones_on_network',
         'sites_estimated_total', 'existing_network_sites', 'upgraded_sites', 'new_sites',
         'total_revenue', 'total_cost', 'cost_per_sp_user',
     ]]
@@ -306,7 +324,7 @@ def write_results(regional_results, folder, metric):
     print('Writing national cost composition results')
     national_cost_results = pd.DataFrame(regional_results)
     national_cost_results = national_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'population_km2',
+        'GID_0', 'scenario', 'strategy', 'confidence', 'population',
         'phones_on_network', 'cost_per_sp_user',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
         'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
@@ -463,7 +481,7 @@ if __name__ == '__main__':
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [5, 50, 95],#[50],#
+        'confidence': [50],#[5, 50, 95],#
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
@@ -502,86 +520,92 @@ if __name__ == '__main__':
 
         options = OPTIONS[decision_option]
 
-        regional_results = []
-        regional_cost_structure = []
+        for option in OPTIONS:
 
-        for country in countries:#[:1]:
+            regional_annual_demand = []
+            regional_results = []
+            regional_cost_structure = []
 
-            iso3 = country['iso3']
+            for country in countries:
 
-            country_parameters = COUNTRY_PARAMETERS[iso3]
+                iso3 = country['iso3']
 
-            folder = os.path.join(BASE_PATH, '..', 'vis', 'clustering', 'results')
-            filename = 'data_clustering_results.csv'
-            country['cluster'] = load_cluster(os.path.join(folder, filename), iso3)
+                country_parameters = COUNTRY_PARAMETERS[iso3]
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
-            filename = 'subs_forecast.csv'
-            penetration_lut = load_penetration(os.path.join(folder, filename))
+                folder = os.path.join(BASE_PATH, '..', 'vis', 'clustering', 'results')
+                filename = 'data_clustering_results.csv'
+                country['cluster'] = load_cluster(os.path.join(folder, filename), iso3)
 
-            folder = os.path.join(DATA_RAW, 'wb_smartphone_survey')
-            filename = 'wb_smartphone_survey.csv'
-            smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
+                folder = os.path.join(DATA_INTERMEDIATE, iso3, 'subscriptions')
+                filename = 'subs_forecast.csv'
+                penetration_lut = load_penetration(os.path.join(folder, filename))
 
-            folder = os.path.join(DATA_INTERMEDIATE, iso3)
-            filename = 'core_lut.csv'
-            core_lut = load_core_lut(os.path.join(folder, filename))
+                folder = os.path.join(DATA_RAW, 'wb_smartphone_survey')
+                filename = 'wb_smartphone_survey.csv'
+                smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
-            print('-----')
-            print('Working on {} in {}'.format(decision_option, iso3))
-            print(' ')
+                folder = os.path.join(DATA_INTERMEDIATE, iso3)
+                filename = 'core_lut.csv'
+                core_lut = load_core_lut(os.path.join(folder, filename))
 
-            for option in options:#[:3]:
+                print('-----')
+                print('Working on {} in {}'.format(decision_option, iso3))
+                print(' ')
 
-                print('Working on {} and {}'.format(option['scenario'], option['strategy']))
+                for option in options:
 
-                confidence_intervals = GLOBAL_PARAMETERS['confidence']
+                    print('Working on {} and {}'.format(option['scenario'], option['strategy']))
 
-                for ci in confidence_intervals:
+                    confidence_intervals = GLOBAL_PARAMETERS['confidence']
 
-                    print('CI: {}'.format(ci))
+                    for ci in confidence_intervals:
 
-                    path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
-                    data = load_regions(path)
+                        print('CI: {}'.format(ci))
 
-                    data_initial = data.to_dict('records')
+                        path = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
+                        data = load_regions(path)
 
-                    data_demand = estimate_demand(
-                        data_initial,
-                        option,
-                        GLOBAL_PARAMETERS,
-                        country_parameters,
-                        TIMESTEPS,
-                        penetration_lut,
-                        smartphone_lut
-                    )
+                        data_initial = data.to_dict('records')
 
-                    data_supply = estimate_supply(
-                        country,
-                        data_demand,
-                        capacity_lut,
-                        option,
-                        GLOBAL_PARAMETERS,
-                        country_parameters,
-                        COSTS,
-                        core_lut,
-                        ci
-                    )
+                        data_demand, annual_output = estimate_demand(
+                            data_initial,
+                            option,
+                            GLOBAL_PARAMETERS,
+                            country_parameters,
+                            TIMESTEPS,
+                            penetration_lut,
+                            smartphone_lut
+                        )
 
-                    data_assess = assess(
-                        country,
-                        data_supply,
-                        option,
-                        GLOBAL_PARAMETERS,
-                        country_parameters,
-                        COSTS
-                    )
+                        data_supply = estimate_supply(
+                            country,
+                            data_demand,
+                            capacity_lut,
+                            option,
+                            GLOBAL_PARAMETERS,
+                            country_parameters,
+                            COSTS,
+                            core_lut,
+                            ci
+                        )
 
-                    final_results = allocate_deciles(data_assess)
+                        data_assess = assess(
+                            country,
+                            data_supply,
+                            option,
+                            GLOBAL_PARAMETERS,
+                            country_parameters,
+                            TIMESTEPS,
+                            COSTS
+                        )
 
-                    regional_results = regional_results + final_results
+                        final_results = allocate_deciles(data_assess)
+
+                        regional_annual_demand = regional_annual_demand + annual_output
+                        regional_results = regional_results + final_results
 
         folder = os.path.join(BASE_PATH, '..', 'results')
+        write_annual_demand(regional_annual_demand, folder, decision_option)
         write_results(regional_results, folder, decision_option)
 
         print('Completed model run')
