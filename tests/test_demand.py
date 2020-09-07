@@ -62,6 +62,35 @@ def test_estimate_demand(
         smartphones_on_network * 50 / 100 / 2
     )
 
+    #Check suburban geotype uses urban in the smartphone lut
+    setup_region[0]['geotype'] = 'suburban'
+    answer, annual_answer = estimate_demand(
+        setup_region,
+        setup_option,
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_timesteps,
+        setup_penetration_lut,
+        {'urban': {'smartphone': 0.5}}
+    )
+
+    # pop = 10000
+    # pen = 50%
+    # = 5000 phones
+    assert answer[0]['population_with_phones'] == 5000
+
+    # 5000 phones
+    # 3 networks
+    # = 1667 phones
+    assert round(answer[0]['phones_on_network']) == round(5000 / 3)
+
+    # 5000 phones
+    # 3 networks
+    # 50% smartphones
+    # = 833 smartphones
+    smartphones_on_network = round(5000 / 3 * (50 / 100))
+    assert round(answer[0]['smartphones_on_network']) == smartphones_on_network
+
     answer, annual_answer = estimate_demand(
         setup_region_rural,
         setup_option_high,

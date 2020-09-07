@@ -308,9 +308,9 @@ def write_results(regional_results, folder, metric):
     national_results = pd.DataFrame(regional_results)
     national_results = national_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'phones_on_network', 'smartphones_on_network',
-        'sites_estimated_total', 'existing_network_sites', 'upgraded_sites', 'new_sites',
-        'total_revenue', 'total_cost', 'cost_per_sp_user',
+        'phones_on_network', 'smartphones_on_network', 'sites_estimated_total',
+        'existing_network_sites', 'upgraded_sites', 'new_sites',
+        'total_revenue', 'total_cost',
     ]]
 
     national_results = national_results.groupby([
@@ -325,17 +325,32 @@ def write_results(regional_results, folder, metric):
     national_cost_results = pd.DataFrame(regional_results)
     national_cost_results = national_cost_results[[
         'GID_0', 'scenario', 'strategy', 'confidence', 'population',
-        'phones_on_network', 'cost_per_sp_user',
-        'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
-        'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
-        'required_state_subsidy',
+        'phones_on_network', 'smartphones_on_network', 'total_revenue',
+        'ran', 'backhaul_fronthaul', 'civils', 'core_network',
+        'administration', 'spectrum_cost', 'tax', 'profit_margin',
+        'total_cost', 'available_cross_subsidy', 'deficit',
+        'used_cross_subsidy', 'required_state_subsidy',
     ]]
 
     national_cost_results = national_cost_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
+
     national_cost_results['cost_per_network_user'] = (
         national_cost_results['total_cost'] / national_cost_results['phones_on_network'])
+
+    #Calculate private, govt and societal costs
+    national_cost_results['private_cost'] = national_cost_results['total_cost']
+    national_cost_results['government_cost'] = (
+        national_cost_results['required_state_subsidy'] -
+            (
+                national_cost_results['spectrum_cost'] +
+                national_cost_results['tax']
+            )
+    )
+    national_cost_results['societal_cost'] = (
+        national_cost_results['private_cost'] +
+        national_cost_results['government_cost']
+    )
 
     path = os.path.join(folder,'national_cost_results_{}.csv'.format(metric))
     national_cost_results.to_csv(path, index=True)
@@ -345,11 +360,10 @@ def write_results(regional_results, folder, metric):
     decile_results = define_deciles(decile_results)
     decile_results = decile_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
-        'population', 'area_km2', #'population_km2',
-        'phones_on_network', #'phone_density_on_network_km2',
-        'smartphones_on_network', #'sp_density_on_network_km2',
-        'sites_estimated_total', 'existing_network_sites', 'upgraded_sites', 'new_sites',
-        'total_revenue', 'total_cost', #'cost_per_sp_user',
+        'population', 'area_km2', 'phones_on_network',
+        'smartphones_on_network', 'sites_estimated_total',
+        'existing_network_sites', 'upgraded_sites', 'new_sites',
+        'total_revenue', 'total_cost',
     ]]
     decile_results = decile_results.groupby([
         'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
@@ -366,8 +380,6 @@ def write_results(regional_results, folder, metric):
         decile_results['existing_network_sites'] / decile_results['area_km2'])
     decile_results['cost_per_network_user'] = (
         decile_results['total_cost'] / decile_results['phones_on_network'])
-    decile_results['cost_per_sp_user'] = (
-        decile_results['total_cost'] / decile_results['smartphones_on_network'])
 
     path = os.path.join(folder,'decile_results_{}.csv'.format(metric))
     decile_results.to_csv(path, index=True)
@@ -377,8 +389,7 @@ def write_results(regional_results, folder, metric):
     decile_cost_results = define_deciles(decile_cost_results)
     decile_cost_results = decile_cost_results[[
         'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
-        'population', 'area_km2', #'population_km2',
-        'phones_on_network', #'cost_per_sp_user',
+        'population', 'area_km2', 'phones_on_network',
         'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
         'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
         'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
@@ -398,8 +409,7 @@ def write_results(regional_results, folder, metric):
     regional_results = define_deciles(regional_results)
     regional_results = regional_results[[
         'GID_0', 'GID_id', 'scenario', 'strategy', 'decile',
-        'confidence', 'population', 'area_km2', #'population_km2',
-        'phones_on_network', 'cost_per_sp_user',
+        'confidence', 'population', 'area_km2', 'phones_on_network',
         'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
     ]]
     regional_results['cost_per_network_user'] = (
@@ -516,9 +526,11 @@ if __name__ == '__main__':
         'mixed_options',
     ]
 
+    all_results = []
+
     for decision_option in decision_options:#[:1]:
 
-        options = OPTIONS[decision_option]
+        options = OPTIONS[decision_option]#[:1]
 
         for option in OPTIONS:
 
@@ -608,4 +620,9 @@ if __name__ == '__main__':
         write_annual_demand(regional_annual_demand, folder, decision_option)
         write_results(regional_results, folder, decision_option)
 
-        print('Completed model run')
+        all_results = all_results + regional_results
+
+    folder = os.path.join(BASE_PATH, '..', 'results')
+    write_results(all_results, folder, 'all_options')
+
+    print('Completed model run')
