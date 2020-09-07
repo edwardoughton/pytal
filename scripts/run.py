@@ -526,9 +526,11 @@ if __name__ == '__main__':
         'mixed_options',
     ]
 
+    all_results = []
+
     for decision_option in decision_options:#[:1]:
 
-        options = OPTIONS[decision_option]
+        options = OPTIONS[decision_option]#[:1]
 
         for option in OPTIONS:
 
@@ -618,4 +620,9 @@ if __name__ == '__main__':
         write_annual_demand(regional_annual_demand, folder, decision_option)
         write_results(regional_results, folder, decision_option)
 
-        print('Completed model run')
+        all_results = all_results + regional_results
+
+    folder = os.path.join(BASE_PATH, '..', 'results')
+    write_results(all_results, folder, 'all_options')
+
+    print('Completed model run')
