@@ -43,6 +43,7 @@ def estimate_demand(regions, option, global_parameters,
 
     """
     output = []
+    annual_output = []
 
     # generation_core_backhaul_sharing_networks_spectrum_tax
     network_strategy = option['strategy'].split('_')[4]
@@ -72,7 +73,7 @@ def estimate_demand(regions, option, global_parameters,
 
         for timestep in timesteps:
 
-            region['arpu'] = estimate_arpu(
+            region['arpu_discounted'] = estimate_arpu(
                 region,
                 timestep,
                 global_parameters,
@@ -116,7 +117,27 @@ def estimate_demand(regions, option, global_parameters,
                 region['area_km2']
                 ))
 
-            revenue.append(region['arpu'] * region['phones_on_network'])
+            annual_revenue = region['arpu_discounted'] * region['phones_on_network']
+
+            revenue.append(annual_revenue)
+
+            annual_output.append({
+                'GID_0': region['GID_0'],
+                'GID_id': region['GID_id'],
+                'scenario': option['scenario'],
+                'strategy': option['strategy'],
+                'confidence': global_parameters['confidence'][0],
+                'year': timestep,
+                'population': region['population'],
+                'area_km2': region['area_km2'],
+                'population_km2': region['population_km2'],
+                'geotype': region['geotype'],
+                'arpu_discounted': region['arpu_discounted'],
+                'population_with_phones': region['population_with_phones'],
+                'phones_on_network': region['phones_on_network'],
+                'smartphones_on_network': region['smartphones_on_network'],
+                'revenue': annual_revenue,
+            })
 
         region['demand_mbps_km2'] = (
             round(sum(demand_mbps_km2) / len(demand_mbps_km2)))
@@ -125,7 +146,7 @@ def estimate_demand(regions, option, global_parameters,
 
         output.append(region)
 
-    return output
+    return output, annual_output
 
 
 def get_per_user_capacity(geotype, option):

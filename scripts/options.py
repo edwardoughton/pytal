@@ -19,219 +19,163 @@ spectrum: type of spectrum strategy, so baseline, high or low
 tax: type of taxation strategy, so baseline, high or low
 
 """
+def generate_tech_options():
+    """
+    Generate technology strategy options.
+
+    """
+    output = []
+
+    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
+    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    backhaul_types = ['microwave', 'fiber']
+    sharing_types = ['baseline']
+    networks_types = ['baseline']
+    spectrum_types = ['baseline']
+    tax_types = ['baseline']
+
+    for scenario in scenarios:
+        for generation_core_type in generation_core_types:
+                for backhaul in backhaul_types:
+                    for sharing in sharing_types:
+                        for network in networks_types:
+                            for spectrum in spectrum_types:
+                                for tax in tax_types:
+                                    strategy = '{}_{}_{}_{}_{}_{}'.format(
+                                        generation_core_type,
+                                        backhaul,
+                                        sharing,
+                                        network,
+                                        spectrum,
+                                        tax
+                                    )
+                                    output.append({
+                                        'scenario': scenario,
+                                        'strategy':strategy
+                                    })
+
+    return output
+
+
+def generate_business_model_options():
+    """
+    Generate business model strategy options.
+
+    """
+    output = []
+
+    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
+    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    backhaul_types = ['microwave', 'fiber']
+    sharing_types = ['baseline', 'passive', 'active', 'shared']
+    networks_types = ['baseline']
+    spectrum_types = ['baseline']
+    tax_types = ['baseline']
+
+    for scenario in scenarios:
+        for generation_core_type in generation_core_types:
+                for backhaul in backhaul_types:
+                    for sharing in sharing_types:
+                        for network in networks_types:
+                            for spectrum in spectrum_types:
+                                for tax in tax_types:
+                                    strategy = '{}_{}_{}_{}_{}_{}'.format(
+                                        generation_core_type,
+                                        backhaul,
+                                        sharing,
+                                        network,
+                                        spectrum,
+                                        tax
+                                    )
+                                    output.append({
+                                        'scenario': scenario,
+                                        'strategy':strategy
+                                    })
+
+    return output
+
+
+def generate_policy_options():
+    """
+    Generate policy strategy options.
+
+    """
+    output = []
+
+    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
+    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    backhaul_types = ['microwave', 'fiber']
+    sharing_types = ['baseline']
+    networks_types = ['baseline']
+    spectrum_types = ['baseline', 'low', 'high']
+    tax_types = ['baseline', 'low', 'high']
+
+    for scenario in scenarios:
+        for generation_core_type in generation_core_types:
+                for backhaul in backhaul_types:
+                    for sharing in sharing_types:
+                        for network in networks_types:
+                            for spectrum in spectrum_types:
+                                for tax in tax_types:
+                                    strategy = '{}_{}_{}_{}_{}_{}'.format(
+                                        generation_core_type,
+                                        backhaul,
+                                        sharing,
+                                        network,
+                                        spectrum,
+                                        tax
+                                    )
+                                    output.append({
+                                        'scenario': scenario,
+                                        'strategy':strategy
+                                    })
+
+    return output
+
+
+def generate_mixed_options():
+    """
+    Generate policy strategy options.
+
+    """
+    output = []
+
+    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
+    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    backhaul_types = ['microwave', 'fiber']
+    sharing_types = ['shared']
+    networks_types = ['baseline']
+    spectrum_types = ['low']
+    tax_types = ['low']
+
+    for scenario in scenarios:
+        for generation_core_type in generation_core_types:
+                for backhaul in backhaul_types:
+                    for sharing in sharing_types:
+                        for network in networks_types:
+                            for spectrum in spectrum_types:
+                                for tax in tax_types:
+                                    strategy = '{}_{}_{}_{}_{}_{}'.format(
+                                        generation_core_type,
+                                        backhaul,
+                                        sharing,
+                                        network,
+                                        spectrum,
+                                        tax
+                                    )
+                                    output.append({
+                                        'scenario': scenario,
+                                        'strategy':strategy
+                                    })
+
+    return output
+
+
 OPTIONS = {
-    'technology_options': [
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '4G_epc_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '4G_epc_fiber_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_sa_fiber_baseline_baseline_baseline_baseline',
-        },
-    ],
-    'business_model_options': [
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_passive_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_active_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_shared_baseline_baseline_baseline',
-        },
-    ],
-    'policy_options': [
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_low_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_high_baseline',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_low',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_baseline_baseline_baseline_high',
-        },
-    ],
-    'mixed_options': [  #generation_core_backhaul_sharing_subsidy_spectrum_tax
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '4G_epc_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '4G_epc_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '4G_epc_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '4G_epc_fiber_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '4G_epc_fiber_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '4G_epc_fiber_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_nsa_microwave_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S1_25_10_2',
-            'strategy': '5G_sa_fiber_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S2_200_50_5',
-            'strategy': '5G_sa_fiber_shared_baseline_low_low',
-        },
-        {
-            'scenario': 'S3_400_100_10',
-            'strategy': '5G_sa_fiber_shared_baseline_low_low',
-        },
-    ]
+    'technology_options': generate_tech_options(),
+    'business_model_options': generate_business_model_options(),
+    'policy_options': generate_policy_options(),
+    'mixed_options': generate_mixed_options(),
 }
 
 
