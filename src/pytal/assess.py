@@ -7,7 +7,8 @@ Winter 2020
 
 """
 
-def assess(country, regions, option, global_parameters, country_parameters, costs):
+def assess(country, regions, option, global_parameters, country_parameters,
+    timesteps, costs):
     """
     For each region, assess the viability level.
 
@@ -26,6 +27,8 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
         All global model parameters.
     country_parameters : dict
         All country specific parameters.
+    timesteps : list
+        All years for the assessment period.
     costs : dict
         All equipment costs.
 
@@ -43,7 +46,8 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
     for region in regions:
 
         # add administration cost
-        region = get_administration_cost(region, country_parameters)
+        region = get_administration_cost(region, country_parameters,
+            global_parameters, timesteps)
 
         # npv spectrum cost
         region['spectrum_cost'] = get_spectrum_costs(region, option['strategy'],
@@ -90,9 +94,9 @@ def assess(country, regions, option, global_parameters, country_parameters, cost
     return output
 
 
-def get_administration_cost(region, country_parameters):
+def get_administration_cost(region, country_parameters, global_parameters, timesteps):
     """
-    There is an administration cost to deploying and operating all assets.
+    There is an annual administration cost to deploying and operating all assets.
 
     Parameters
     ----------
@@ -107,10 +111,22 @@ def get_administration_cost(region, country_parameters):
         Contains all regional data.
 
     """
-    region['administration'] = (
+    annual_cost = (
         region['network_cost'] *
         (country_parameters['financials']['administration_percentage_of_network_cost'] /
         100))
+
+    costs = []
+
+    for timestep in timesteps:
+
+        timestep = timestep - 2020
+
+        discounted_cost = discount_admin_cost(annual_cost, timestep, global_parameters)
+
+        costs.append(discounted_cost)
+
+    region['administration'] = sum(costs)
 
     return region
 
@@ -326,3 +342,31 @@ def estimate_subsidies(region, available_for_cross_subsidy):
         region['required_state_subsidy'] = 0
 
     return region, available_for_cross_subsidy
+
+
+def discount_admin_cost(cost, timestep, global_parameters):
+    """
+    Discount admin cost based on return period.
+
+    192,744 = 23,773 / (1 + 0.05) ** (0:9)
+
+    Parameters
+    ----------
+    cost : float
+        Annual admin network running cost.
+    timestep : int
+        Time period (year) to discount against.
+    global_parameters : dict
+        All global model parameters.
+
+    Returns
+    -------
+    discounted_cost : float
+        The discounted admin cost over the desired time period.
+
+    """
+    discount_rate = global_parameters['discount_rate'] / 100
+
+    discounted_cost = cost / (1 + discount_rate) ** timestep
+
+    return discounted_cost
