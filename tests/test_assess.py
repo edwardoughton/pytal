@@ -6,7 +6,10 @@ from pytal.assess import (get_administration_cost,
 
 def test_get_administration_cost(setup_region, setup_country_parameters,
     setup_global_parameters, setup_timesteps):
+    """
+    Unit test.
 
+    """
     setup_region[0]['network_cost'] = 100
     setup_timesteps = list(range(2020, 2030 + 1))
 
@@ -17,7 +20,10 @@ def test_get_administration_cost(setup_region, setup_country_parameters,
 
 
 def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters, setup_country_parameters):
+    """
+    Unit test.
 
+    """
     setup_region[0]['new_sites'] = 1
 
     # 10000 people
@@ -50,7 +56,10 @@ def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters,
 
 
 def test_calculate_tax(setup_region, setup_option, setup_country_parameters):
+    """
+    Unit test.
 
+    """
     setup_region[0]['total_revenue'] = 1e7
     setup_region[0]['network_cost'] = 1e6
     setup_region[0]['spectrum_cost'] = 1e1
@@ -79,7 +88,10 @@ def test_calculate_tax(setup_region, setup_option, setup_country_parameters):
 
 
 def test_calculate_profit(setup_region, setup_country_parameters):
+    """
+    Unit test.
 
+    """
     setup_region[0]['network_cost'] = 1e6
     setup_region[0]['spectrum_cost'] = 6e4
     setup_region[0]['tax'] = 265e3
@@ -88,7 +100,10 @@ def test_calculate_profit(setup_region, setup_country_parameters):
 
 
 def test_estimate_subsidies():
+    """
+    Unit test.
 
+    """
     region = {
             'GID_id': 'a',
             'total_revenue': 10000,
@@ -150,9 +165,38 @@ def test_estimate_subsidies():
     assert available_cross_subsidy == 0
 
 
+def test_allocate_available_excess():
+    """
+    Unit test.
+
+    """
+    region = {
+            'total_revenue': 10000,
+            'total_cost': 5000,
+        }
+
+    answer = allocate_available_excess(region)
+
+    assert answer['available_cross_subsidy'] == 5000
+    assert answer['deficit'] == 0
+
+    regions = {
+            'total_revenue': 5000,
+            'total_cost': 10000,
+        }
+
+    answer = allocate_available_excess(regions)
+
+    assert answer['available_cross_subsidy'] == 0
+    assert answer['deficit'] == 5000
+
+
 def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     setup_timesteps, setup_costs):
+    """
+    Integration test.
 
+    """
     regions = [
         {
             'GID_id': 'a',
@@ -231,25 +275,19 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     assert answer[1]['used_cross_subsidy'] == 8420.0
     assert answer[1]['required_state_subsidy'] == 660.0
 
+    regions = [
+        {
+            'GID_id': 'a',
+            'population': 0,
+            'population_km2': 0,
+            'total_revenue': 0,
+            'network_cost': 0,
+            'smartphones_on_network': 0,
+            'phones_on_network': 0,
+        },
+    ]
 
-def test_allocate_available_excess():
+    answer = assess('MWI', regions, setup_option, setup_global_parameters,
+        setup_country_parameters, setup_timesteps, setup_costs)
 
-    region = {
-            'total_revenue': 10000,
-            'total_cost': 5000,
-        }
-
-    answer = allocate_available_excess(region)
-
-    assert answer['available_cross_subsidy'] == 5000
-    assert answer['deficit'] == 0
-
-    regions = {
-            'total_revenue': 5000,
-            'total_cost': 10000,
-        }
-
-    answer = allocate_available_excess(regions)
-
-    assert answer['available_cross_subsidy'] == 0
-    assert answer['deficit'] == 5000
+    assert answer[0]['cost_per_sp_user'] == 0

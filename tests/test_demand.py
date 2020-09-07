@@ -12,7 +12,10 @@ def test_estimate_demand(
     setup_timesteps,
     setup_penetration_lut
     ):
+    """
+    Integration test.
 
+    """
     answer, annual_answer = estimate_demand(
         setup_region,
         setup_option,
@@ -129,9 +132,27 @@ def test_estimate_demand(
         ((smartphones_on_network * 50 / 100 / 2) * 11) / 11
     )
 
+    setup_region[0]['population'] = 0
+    setup_region[0]['population_km2'] = 0
+
+    answer, annual_answer = estimate_demand(
+        setup_region,
+        setup_option,
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_timesteps,
+        setup_penetration_lut,
+        {'rural': {'smartphone': 0.5}}
+    )
+
+    assert answer[0]['population_with_phones'] == 0
+
 
 def test_get_per_user_capacity():
+    """
+    Unit test.
 
+    """
     answer = get_per_user_capacity('urban', {'scenario': 'S1_25_5_1'})
 
     assert answer == 25
@@ -151,7 +172,10 @@ def test_get_per_user_capacity():
 
 def test_estimate_arpu(setup_region, setup_timesteps, setup_global_parameters,
     setup_country_parameters):
+    """
+    Unit test.
 
+    """
     answer = estimate_arpu({'mean_luminosity_km2': 10}, 2020, setup_global_parameters,
         setup_country_parameters)
 

@@ -1,6 +1,48 @@
 import pytest
 from pytal.demand import estimate_demand
-from pytal.supply import estimate_supply, find_site_density, estimate_site_upgrades, estimate_backhaul_upgrades
+from pytal.supply import (
+    estimate_supply,
+    find_site_density,
+    estimate_site_upgrades,
+    estimate_backhaul_upgrades,
+    lookup_capacity
+)
+
+
+def test_estimate_supply(
+    setup_region,
+    setup_lookup,
+    setup_option,
+    setup_global_parameters,
+    setup_country_parameters,
+    setup_costs,
+    setup_core_lut,
+    setup_ci
+    ):
+    """
+    Integration test for main function.
+
+    """
+    #total sites across all operators
+    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['sites_4G'] = 0
+    setup_region[0]['backhaul_fiber'] = 0
+    setup_region[0]['backhaul_copper'] = 0
+    setup_region[0]['backhaul_microwave'] = 0
+    setup_region[0]['backhaul_satellite'] = 0
+
+    answer = estimate_supply('MWI',
+        setup_region,
+        setup_lookup,
+        setup_option,
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_costs,
+        setup_core_lut,
+        setup_ci
+    )
+
+    assert round(answer[0]['network_site_density'], 1) == 0.9
 
 
 def test_find_site_density(
@@ -14,6 +56,10 @@ def test_find_site_density(
     setup_lookup,
     setup_ci
     ):
+    """
+    Unit test.
+
+    """
     #test demand being larger than max capacity
     answer = find_site_density(
         {'demand_mbps_km2': 100000,
@@ -65,7 +111,10 @@ def test_estimate_site_upgrades(
     setup_option,
     setup_country_parameters,
     ):
+    """
+    Unit test.
 
+    """
     #total sites across all opterators
     setup_region[0]['sites_estimated_total'] = 100
     setup_region[0]['sites_4G'] = 0
@@ -153,43 +202,13 @@ def test_estimate_site_upgrades(
     assert answer['upgraded_sites'] == 50
 
 
-def test_estimate_supply(
-    setup_region,
-    setup_lookup,
-    setup_option,
-    setup_global_parameters,
-    setup_country_parameters,
-    setup_costs,
-    setup_core_lut,
-    setup_ci
-    ):
-
-    #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 100
-    setup_region[0]['sites_4G'] = 0
-    setup_region[0]['backhaul_fiber'] = 0
-    setup_region[0]['backhaul_copper'] = 0
-    setup_region[0]['backhaul_microwave'] = 0
-    setup_region[0]['backhaul_satellite'] = 0
-
-    answer = estimate_supply('MWI',
-        setup_region,
-        setup_lookup,
-        setup_option,
-        setup_global_parameters,
-        setup_country_parameters,
-        setup_costs,
-        setup_core_lut,
-        setup_ci
-    )
-
-    assert round(answer[0]['network_site_density'], 1) == 0.9
-
-
 def test_estimate_backhaul_upgrades(
     setup_region, setup_country_parameters
     ):
+    """
+    Unit test.
 
+    """
     setup_region[0]['new_sites'] = 45
     setup_region[0]['upgraded_sites'] = 45
 
@@ -234,3 +253,12 @@ def test_estimate_backhaul_upgrades(
     )
 
     assert answer['backhaul_new'] == 0
+
+
+def test_lookup_capacity():
+    """
+    Unit test.
+
+    """
+    with pytest.raises(KeyError):
+        lookup_capacity({}, 'test', 'test', 'test', 'test','test')
