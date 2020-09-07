@@ -446,8 +446,8 @@ data_mixed <- read.csv(file.path(folder, '..', 'results', 'national_cost_results
 data_mixed$private_cost = data_mixed$total_cost
 
 data_mixed$government_cost = (data_mixed$required_state_subsidy - 
-                                data_mixed$spectrum_cost - 
-                                data_mixed$tax)
+                                (data_mixed$spectrum_cost + 
+                                data_mixed$tax))
 
 data_mixed$societal_cost = data_mixed$total_cost + data_mixed$government_cost
 
