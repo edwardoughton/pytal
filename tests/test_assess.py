@@ -4,15 +4,16 @@ from pytal.assess import (get_administration_cost,
     assess, estimate_subsidies, allocate_available_excess)
 
 
-
-def test_get_administration_cost(setup_region, setup_country_parameters):
+def test_get_administration_cost(setup_region, setup_country_parameters,
+    setup_global_parameters, setup_timesteps):
 
     setup_region[0]['network_cost'] = 100
+    setup_timesteps = list(range(2020, 2030 + 1))
 
-    answer = get_administration_cost(setup_region[0], setup_country_parameters)
+    answer = get_administration_cost(setup_region[0], setup_country_parameters,
+        setup_global_parameters, setup_timesteps)
 
-    answer['administration'] = (setup_region[0]['network_cost']
-        * (setup_country_parameters['financials']['administration_percentage_of_network_cost']) / 100)
+    assert round(answer['administration']) == 174
 
 
 def test_get_spectrum_costs(setup_region, setup_option, setup_global_parameters, setup_country_parameters):
@@ -149,7 +150,8 @@ def test_estimate_subsidies():
     assert available_cross_subsidy == 0
 
 
-def test_assess(setup_option, setup_global_parameters, setup_country_parameters, setup_costs):
+def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
+    setup_timesteps, setup_costs):
 
     regions = [
         {
@@ -176,7 +178,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     setup_country_parameters['financials']['spectrum_capacity_baseline_usd_mhz_pop'] = 0.025
 
     answer = assess('MWI', regions, setup_option, setup_global_parameters,
-        setup_country_parameters, setup_costs)
+        setup_country_parameters, setup_timesteps, setup_costs)
 
     assert answer[0]['total_revenue'] == 20000
     assert answer[0]['network_cost'] == 5000
@@ -220,7 +222,7 @@ def test_assess(setup_option, setup_global_parameters, setup_country_parameters,
     ]
 
     answer = assess('MWI', regions, setup_option, setup_global_parameters,
-        setup_country_parameters, setup_costs)
+        setup_country_parameters, setup_timesteps, setup_costs)
 
     assert answer[0]['available_cross_subsidy'] == 8420.0
     assert answer[0]['used_cross_subsidy'] == 0
