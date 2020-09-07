@@ -29,10 +29,10 @@ def generate_tech_options():
     scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
     generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
     backhaul_types = ['microwave', 'fiber']
-    sharing_types = ['baseline']#, 'passive', 'active', 'shared']
+    sharing_types = ['baseline']
     networks_types = ['baseline']
-    spectrum_types = ['baseline']#, 'low', 'high']
-    tax_types = ['baseline']#, 'low', 'high']
+    spectrum_types = ['baseline']
+    tax_types = ['baseline']
 
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
@@ -69,8 +69,8 @@ def generate_business_model_options():
     backhaul_types = ['microwave', 'fiber']
     sharing_types = ['baseline', 'passive', 'active', 'shared']
     networks_types = ['baseline']
-    spectrum_types = ['baseline']#, 'low', 'high']
-    tax_types = ['baseline']#, 'low', 'high']
+    spectrum_types = ['baseline']
+    tax_types = ['baseline']
 
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
@@ -105,10 +105,48 @@ def generate_policy_options():
     scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
     generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
     backhaul_types = ['microwave', 'fiber']
-    sharing_types = ['baseline']#, 'passive', 'active', 'shared']
+    sharing_types = ['baseline']
     networks_types = ['baseline']
     spectrum_types = ['baseline', 'low', 'high']
     tax_types = ['baseline', 'low', 'high']
+
+    for scenario in scenarios:
+        for generation_core_type in generation_core_types:
+                for backhaul in backhaul_types:
+                    for sharing in sharing_types:
+                        for network in networks_types:
+                            for spectrum in spectrum_types:
+                                for tax in tax_types:
+                                    strategy = '{}_{}_{}_{}_{}_{}'.format(
+                                        generation_core_type,
+                                        backhaul,
+                                        sharing,
+                                        network,
+                                        spectrum,
+                                        tax
+                                    )
+                                    output.append({
+                                        'scenario': scenario,
+                                        'strategy':strategy
+                                    })
+
+    return output
+
+
+def generate_mixed_options():
+    """
+    Generate policy strategy options.
+
+    """
+    output = []
+
+    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
+    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    backhaul_types = ['microwave', 'fiber']
+    sharing_types = ['shared']
+    networks_types = ['baseline']
+    spectrum_types = ['low']
+    tax_types = ['low']
 
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
@@ -137,6 +175,7 @@ OPTIONS = {
     'technology_options': generate_tech_options(),
     'business_model_options': generate_business_model_options(),
     'policy_options': generate_policy_options(),
+    'mixed_options': generate_mixed_options(),
 }
 
 
