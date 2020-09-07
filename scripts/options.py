@@ -27,7 +27,7 @@ def generate_tech_options():
     output = []
 
     scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
-    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
+    generation_core_types = ['4G_epc', '5G_nsa', '5G_sa']
     backhaul_types = ['microwave', 'fiber']
     sharing_types = ['baseline']
     networks_types = ['baseline']
@@ -37,6 +37,13 @@ def generate_tech_options():
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
                 for backhaul in backhaul_types:
+
+                    if generation_core_type == '5G_nsa' and backhaul == 'fiber':
+                        continue
+
+                    if generation_core_type == '5G_sa' and backhaul == 'microwave':
+                        continue
+
                     for sharing in sharing_types:
                         for network in networks_types:
                             for spectrum in spectrum_types:
@@ -75,6 +82,13 @@ def generate_business_model_options():
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
                 for backhaul in backhaul_types:
+
+                    if generation_core_type == '5G_nsa' and backhaul == 'fiber':
+                        continue
+
+                    if generation_core_type == '5G_sa' and backhaul == 'microwave':
+                        continue
+
                     for sharing in sharing_types:
                         for network in networks_types:
                             for spectrum in spectrum_types:
@@ -113,6 +127,13 @@ def generate_policy_options():
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
                 for backhaul in backhaul_types:
+
+                    if generation_core_type == '5G_nsa' and backhaul == 'fiber':
+                        continue
+
+                    if generation_core_type == '5G_sa' and backhaul == 'microwave':
+                        continue
+
                     for sharing in sharing_types:
                         for network in networks_types:
                             for spectrum in spectrum_types:
@@ -151,6 +172,13 @@ def generate_mixed_options():
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
                 for backhaul in backhaul_types:
+
+                    if generation_core_type == '5G_nsa' and backhaul == 'fiber':
+                        continue
+
+                    if generation_core_type == '5G_sa' and backhaul == 'microwave':
+                        continue
+
                     for sharing in sharing_types:
                         for network in networks_types:
                             for spectrum in spectrum_types:
