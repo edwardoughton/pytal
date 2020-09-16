@@ -24,7 +24,7 @@ def test_estimate_supply(
 
     """
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['total_estimated_sites'] = 100
     setup_region[0]['sites_4G'] = 0
     setup_region[0]['backhaul_fiber'] = 0
     setup_region[0]['backhaul_copper'] = 0
@@ -116,7 +116,7 @@ def test_estimate_site_upgrades(
 
     """
     #total sites across all opterators
-    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['total_estimated_sites'] = 100
     setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
@@ -127,11 +127,11 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 2}},
     )
 
-    assert answer['new_sites'] == 50
-    assert answer['upgraded_sites'] == 50
+    assert answer['new_mno_sites'] == 50
+    assert answer['upgraded_mno_sites'] == 50
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 200
+    setup_region[0]['total_estimated_sites'] = 200
     setup_region[0]['sites_4G'] = 50
 
     #200 sites in total across two operators, hence 100 existing sites for this MNO
@@ -142,11 +142,11 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 2}},
     )
 
-    assert answer['new_sites'] == 0
-    assert answer['upgraded_sites'] == 75
+    assert answer['new_mno_sites'] == 0
+    assert answer['upgraded_mno_sites'] == 75
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 0
+    setup_region[0]['total_estimated_sites'] = 0
     setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
@@ -156,11 +156,11 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 2}},
     )
 
-    assert answer['new_sites'] == 100
-    assert answer['upgraded_sites'] == 0
+    assert answer['new_mno_sites'] == 100
+    assert answer['upgraded_mno_sites'] == 0
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['total_estimated_sites'] = 100
     setup_region[0]['sites_4G'] = 0
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
@@ -170,11 +170,11 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 10}},
     )
 
-    assert answer['new_sites'] == 90
-    assert answer['upgraded_sites'] == 10
+    assert answer['new_mno_sites'] == 90
+    assert answer['upgraded_mno_sites'] == 10
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['total_estimated_sites'] = 100
     setup_region[0]['sites_4G'] = 50
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
@@ -184,11 +184,11 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 2}},
     )
 
-    assert answer['new_sites'] == 50
-    assert answer['upgraded_sites'] == 25
+    assert answer['new_mno_sites'] == 50
+    assert answer['upgraded_mno_sites'] == 25
 
     #total sites across all operators
-    setup_region[0]['sites_estimated_total'] = 100
+    setup_region[0]['total_estimated_sites'] = 100
     setup_region[0]['sites_4G'] = 100
 
     #100 sites in total across two operators, hence 50 existing sites for this MNO
@@ -198,8 +198,8 @@ def test_estimate_site_upgrades(
         {'networks': {'baseline_urban': 2}},
     )
 
-    assert answer['new_sites'] == 0
-    assert answer['upgraded_sites'] == 50
+    assert answer['new_mno_sites'] == 0
+    assert answer['upgraded_mno_sites'] == 50
 
 
 def test_estimate_backhaul_upgrades(
@@ -209,8 +209,8 @@ def test_estimate_backhaul_upgrades(
     Unit test.
 
     """
-    setup_region[0]['new_sites'] = 45
-    setup_region[0]['upgraded_sites'] = 45
+    setup_region[0]['new_mno_sites'] = 45
+    setup_region[0]['upgraded_mno_sites'] = 45
 
     setup_region[0]['backhaul_fiber'] = 10
     setup_region[0]['backhaul_copper'] = 20
