@@ -112,5 +112,7 @@ vis/backhaul/figures/*
 vis/clustering/figures/*
 vis/subscriptions/data_inputs/*
 vis/smartphones/figures/*
+vis/smartphones/data_inputs/*
 vis/global_cost/figures/*
 vis/tables/*
+vis/vis_results/*

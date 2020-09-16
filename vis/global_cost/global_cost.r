@@ -1,8 +1,9 @@
-library(tidyverse)
-# library(dplyr)
+# library(tidyverse)
+library(dplyr)
 # library(ggrepel)
-require(rgdal)
+# require(rgdal)
 library(ggpubr)
+detach(package:plyr)
 
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -19,8 +20,10 @@ results <- merge(results, clusters, x.by='iso3', y.by='iso3', all=FALSE)
 results <- select(results, scenario, strategy, confidence, cost_per_network_user, cluster)
 
 results <- results %>% 
-           group_by(scenario, strategy, confidence, cluster) %>%
-           summarise(mean_cost_per_user = mean(cost_per_network_user))
+        group_by(scenario, strategy, confidence, cluster) %>%
+         summarise(
+           mean_cost_per_user = round(mean(cost_per_network_user))
+           )
 
 all_data <- merge(clusters, results, by='cluster', all=FALSE)
 
@@ -39,9 +42,9 @@ all_data$total_cost <- all_data$mean_cost_per_user * all_data$population
 all_data$confidence = factor(all_data$confidence, levels=c('5','50', '95'),
                             labels=c("lower", 'mean', "upper"))
 
-all_data$scenario = factor(all_data$scenario, levels=c("S1_25_10_5",
-                                                     "S2_200_50_25",
-                                                     "S3_400_100_50"),
+all_data$scenario = factor(all_data$scenario, levels=c("S1_25_10_2",
+                                                     "S2_200_50_5",
+                                                     "S3_400_100_10"),
                           labels=c("S1 (25 Mbps)",
                                    "S2 (200 Mbps)",
                                    "S3 (400 Mbps)"))

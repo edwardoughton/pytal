@@ -316,7 +316,6 @@ results = with(results, results[order(GID_0, scenario, strategy_summary, tech_st
 results$strategy = NULL
 results$Metric = 'Viability'
 
-
 names(results)[names(results)=="GID_0"] <- "Country"
 names(results)[names(results)=="scenario"] <- "Scenario"
 names(results)[names(results)=="tech_strategy"] <- "Strategy"
@@ -396,11 +395,12 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data_tech <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_technology_options.csv'))
 data_tech <- data_tech#[1,]
 
-data_tech$private_cost = data_tech$total_market_cost
-
-data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
-
-data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
+# data_tech$private_cost = data_tech$total_market_cost
+# data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
+# data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
+# data_tech$private_cost = data_tech$private_cost
+# data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
+# data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
 
 data_tech$strategy_summary = 'baseline'
 data_tech$strategy <- as.character(data_tech$strategy)
@@ -418,13 +418,11 @@ data_tech$backhaul = NULL
 #bus_mod
 data_bus_mod <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_business_model_options.csv'))
 
-data_bus_mod$private_cost = data_bus_mod$total_market_cost
-
-data_bus_mod$government_cost = (data_bus_mod$total_required_state_subsidy - 
-                                  data_bus_mod$total_spectrum_cost - 
-                                  data_bus_mod$total_tax)
-
-data_bus_mod$societal_cost = data_bus_mod$private_cost + data_bus_mod$government_cost
+# data_bus_mod$private_cost = data_bus_mod$total_market_cost
+# data_bus_mod$government_cost = (data_bus_mod$total_required_state_subsidy - 
+#                                   data_bus_mod$total_spectrum_cost - 
+#                                   data_bus_mod$total_tax)
+# data_bus_mod$societal_cost = data_bus_mod$private_cost + data_bus_mod$government_cost
 
 data_bus_mod$strategy <- as.character(data_bus_mod$strategy)
 
@@ -436,14 +434,12 @@ data_bus_mod = data_bus_mod[!(data_bus_mod$strategy_summary == 'baseline'), ]
 data_policy <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_policy_options.csv'))
 data_policy <- data_policy#[150,]
 
-data_policy$private_cost = data_policy$total_market_cost
-
-data_policy$government_cost = (data_policy$total_required_state_subsidy - 
-                                 data_policy$total_spectrum_cost - 
-                                 data_policy$total_tax)
-# data_policy$government_cost[data_policy$government_cost < 0 ] <- 0
-
-data_policy$societal_cost = data_policy$total_market_cost + data_policy$government_cost
+# data_policy$private_cost = data_policy$total_market_cost
+# data_policy$government_cost = (data_policy$total_required_state_subsidy - 
+#                                  data_policy$total_spectrum_cost - 
+#                                  data_policy$total_tax)
+# # data_policy$government_cost[data_policy$government_cost < 0 ] <- 0
+# data_policy$societal_cost = data_policy$total_market_cost + data_policy$government_cost
 
 spectrum_low = data_policy %>%
   filter(str_detect(strategy, "baseline_baseline_low_baseline")) 
@@ -464,13 +460,11 @@ tax_high$strategy_summary = 'tax_high'
 #mixed
 data_mixed <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_mixed_options.csv'))
 
-data_mixed$private_cost = data_mixed$total_market_cost
-
-data_mixed$government_cost = (data_mixed$total_required_state_subsidy - 
-                                (data_mixed$total_spectrum_cost + 
-                                data_mixed$total_tax))
-
-data_mixed$societal_cost = data_mixed$private_cost + data_mixed$government_cost
+# data_mixed$private_cost = data_mixed$total_market_cost
+# data_mixed$government_cost = (data_mixed$total_required_state_subsidy - 
+#                                 (data_mixed$total_spectrum_cost + 
+#                                 data_mixed$total_tax))
+# data_mixed$societal_cost = data_mixed$private_cost + data_mixed$government_cost
 
 data_mixed$strategy <- as.character(data_mixed$strategy)
 
