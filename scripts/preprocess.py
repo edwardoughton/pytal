@@ -1985,6 +1985,12 @@ def load_subscription_data(path, iso3):
 
 def forecast_subscriptions(country):
     """
+    Forecast subscriptions.
+
+    Parameters
+    ----------
+    country : string
+        ISO3 digital country code.
 
     """
     iso3 = country['iso3']
@@ -1996,7 +2002,7 @@ def forecast_subscriptions(country):
     end_point = 2030
     horizon = 4
 
-    forecast = forecast_linear(
+    forecast = forecast_subscriptions_linear(
         country,
         historical_data,
         start_point,
@@ -2019,7 +2025,7 @@ def forecast_subscriptions(country):
     return print('Completed subscription forecast')
 
 
-def forecast_linear(country, historical_data, start_point, end_point, horizon):
+def forecast_subscriptions_linear(country, historical_data, start_point, end_point, horizon):
     """
     Forcasts subscription adoption rate.
 
@@ -2059,82 +2065,208 @@ def forecast_linear(country, historical_data, start_point, end_point, horizon):
     return output
 
 
+def forecast_smartphones(country):
+    """
+    Forecast smartphone adoption.
+
+    Parameters
+    ----------
+    historical_data : list of dicts
+        Past penetration data.
+
+    """
+    iso3 = country['iso3']
+
+    path = os.path.join(DATA_RAW, 'wb_smartphone_survey', 'wb_smartphone_survey.csv')
+    survey_data = load_smartphone_data(path, country)
+
+    start_point = 2020
+    end_point = 2030
+
+    forecast = forecast_smartphones_linear(
+        survey_data,
+        country,
+        start_point,
+        end_point
+    )
+
+    forecast_df = pd.DataFrame(forecast)
+
+    path = os.path.join(DATA_INTERMEDIATE, iso3, 'smartphones')
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    forecast_df.to_csv(os.path.join(path, 'smartphone_forecast.csv'), index=False)
+
+    path = os.path.join(BASE_PATH, '..', 'vis', 'smartphones', 'data_inputs')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    forecast_df.to_csv(os.path.join(path, '{}.csv'.format(iso3)), index=False)
+
+    return print('Completed subscription forecast')
+
+
+def load_smartphone_data(path, country):
+    """
+    Load smartphone adoption survey data.
+
+    Parameters
+    ----------
+    path : string
+        Location of data as .csv.
+    country : string
+        ISO3 digital country code.
+
+    """
+    survey_data = pd.read_csv(path)
+
+    survey_data = survey_data.to_dict('records')
+
+    countries_with_data = [i['iso3'] for i in survey_data]
+
+    output = []
+
+    if country['iso3']  in countries_with_data:
+        for item in survey_data:
+                if item['iso3'] == country['iso3']:
+                    output.append({
+                        'country': item['iso3'],
+                        'cluster': item['cluster'],
+                        'settlement_type': item['Settlement'],
+                        'smartphone_penetration': item['Smartphone']
+                    })
+
+    else:
+        for item in survey_data:
+            if item['cluster'] == country['cluster']:
+                output.append({
+                    'country': country['iso3'],
+                    'cluster': item['cluster'],
+                    'settlement_type': item['Settlement'],
+                    'smartphone_penetration': item['Smartphone']
+                })
+
+    return output
+
+
+def forecast_smartphones_linear(data, country, start_point, end_point):
+    """
+    Forecast smartphone adoption.
+
+    """
+    output = []
+
+    smartphone_growth = country['smartphone_growth']
+
+    for item in data:
+
+        for year in range(start_point, end_point + 1):
+
+            if year == start_point:
+
+                penetration = item['smartphone_penetration']
+
+            else:
+                penetration = penetration * (1 + (smartphone_growth/100))
+
+            output.append({
+                'country': item['country'],
+                'settlement_type': item['settlement_type'].lower(),
+                'year': year,
+                'penetration': round(penetration, 2),
+            })
+
+    return output
+
+
 if __name__ == '__main__':
 
     # countries = find_country_list(['Africa'])
 
     countries = [
-        # {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, #'regional_nodes_level': 3,
-        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 3.5,
-        # },
-        # {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
-        #     'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2,
-        # },
+        {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, #'regional_nodes_level': 3,
+            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 3.5, 'smartphone_growth': 1.5, 'cluster': 'C1'
+        },
+        {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
+            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 2, 'smartphone_growth': 1.5, 'cluster': 'C1'
+        },
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
-            'region': 'SSA', 'pop_density_km2': 200, 'settlement_size': 1000, 'subs_growth': 1.5,
+            'region': 'SSA', 'pop_density_km2': 200, 'settlement_size': 1000,
+            'subs_growth': 1.5, 'smartphone_growth': 1.5, 'cluster': 'C2'
         },
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
-            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.5,
+            'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 1.5, 'smartphone_growth': 1.5, 'cluster': 'C2'
         },
-        # {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
-        #     'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 2.5,
-        # },
+        {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
+            'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 2.5, 'smartphone_growth': 2, 'cluster': 'C3'
+        },
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 2,
-            'region': 'Europe', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 0.3,
+            'region': 'Europe', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 0.3, 'smartphone_growth': 2, 'cluster': 'C4'
         },
-        # {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 0.5,
-        # },
-        # {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
-        #     'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000, 'subs_growth': 1.2,
-        # },
+        {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 0.5, 'smartphone_growth': 2, 'cluster': 'C5'
+        },
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
+            'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000,
+            'subs_growth': 1.2, 'smartphone_growth': 2, 'cluster': 'C6'
+        },
     ]
 
     for country in countries:
 
         print('Working on {}'.format(country['iso3']))
 
-        print('Processing country boundary')
-        process_country_shapes(country)
+        # print('Processing country boundary')
+        # process_country_shapes(country)
 
-        print('Processing regions')
-        process_regions(country)
+        # print('Processing regions')
+        # process_regions(country)
 
-        print('Processing settlement layer')
-        process_settlement_layer(country)
+        # print('Processing settlement layer')
+        # process_settlement_layer(country)
 
-        print('Processing night lights')
-        process_night_lights(country)
+        # print('Processing night lights')
+        # process_night_lights(country)
 
-        print('Processing coverage shapes')
-        process_coverage_shapes(country)
+        # print('Processing coverage shapes')
+        # process_coverage_shapes(country)
 
-        print('Getting regional data')
-        get_regional_data(country)
+        # print('Getting regional data')
+        # get_regional_data(country)
 
-        print('Generating agglomeration lookup table')
-        generate_agglomeration_lut(country)
+        # print('Generating agglomeration lookup table')
+        # generate_agglomeration_lut(country)
 
-        print('Load existing fiber infrastructure')
-        process_existing_fiber(country)
+        # print('Load existing fiber infrastructure')
+        # process_existing_fiber(country)
 
-        print('Estimate existing nodes')
-        find_nodes_on_existing_infrastructure(country)
+        # print('Estimate existing nodes')
+        # find_nodes_on_existing_infrastructure(country)
 
-        print('Find regional nodes')
-        find_regional_nodes(country)
+        # print('Find regional nodes')
+        # find_regional_nodes(country)
 
-        print('Fit edges')
-        prepare_edge_fitting(country)
+        # print('Fit edges')
+        # prepare_edge_fitting(country)
 
-        print('Fit regional edges')
-        fit_regional_edges(country)
+        # print('Fit regional edges')
+        # fit_regional_edges(country)
 
-        print('Create core lookup table')
-        generate_core_lut(country)
+        # print('Create core lookup table')
+        # generate_core_lut(country)
 
-        print('Create backhaul lookup table')
-        generate_backhaul_lut(country)
+        # print('Create backhaul lookup table')
+        # generate_backhaul_lut(country)
 
-        print('Create subscription forcast')
-        forecast_subscriptions(country)
+        # print('Create subscription forcast')
+        # forecast_subscriptions(country)
+
+        print('Forecasting smartphones')
+        forecast_smartphones(country)
