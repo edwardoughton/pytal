@@ -18,6 +18,7 @@ from options import OPTIONS, COUNTRY_PARAMETERS
 from pytal.demand import estimate_demand
 from pytal.supply import estimate_supply
 from pytal.assess import assess
+from write import define_deciles, write_mno_demand, write_results
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
@@ -36,6 +37,11 @@ def load_regions(path):
     regions = pd.read_csv(path)
 
     regions['geotype'] = regions.apply(define_geotype, axis=1)
+
+    regions.columns = regions.columns.str.replace(
+        'sites_estimated_total', #old column name
+        'total_estimated_sites' #new column name
+    )
 
     return regions
 
@@ -185,50 +191,19 @@ def load_smartphones(country, path):
     defaults to the mean values across all surveyed countries.
 
     """
-    cluster = country['cluster']
-    iso3 = country['iso3']
-
-    countries = set()
-
-    with open(path, 'r') as source:
-        reader = csv.DictReader(source)
-        for row in reader:
-            countries.add(row['iso3'])
-
     output = {}
-    all_data = {
-        'urban': [],
-        'rural': []
-    }
+    settlement_types = [
+        'urban',
+        'rural']
 
-    with open(path, 'r') as source:
-        reader = csv.DictReader(source)
-        for row in reader:
-            if iso3 in list(countries):
-                if row['iso3'] == iso3:
-                    iso3 = row['iso3']
-                    settlement = row['Settlement'].lower()
-                    output[settlement] = {
-                        'basic': float(row['Basic']) / 100,
-                        'feature': float(row['Feature']) / 100,
-                        'smartphone': float(row['Smartphone']) / 100,
-                    }
-            elif row['cluster'] == cluster:
-                settlement = row['Settlement'].lower()
-                output[settlement] = {
-                    'basic': float(row['Basic']) / 100,
-                    'feature': float(row['Feature']) / 100,
-                    'smartphone': float(row['Smartphone']) / 100,
-                }
-            else:
-                settlement = row['Settlement'].lower()
-                all_data[settlement].append(float(row['Smartphone']) / 100)
-
-    if len(output) == 0:
-        output = {
-            'urban': {'smartphone': sum(all_data['urban']) / len(all_data['urban'])},
-            'rural': {'smartphone': sum(all_data['rural']) / len(all_data['rural'])},
-        }
+    for settlement_type in settlement_types:
+        with open(path, 'r') as source:
+            reader = csv.DictReader(source)
+            intermediate = {}
+            for row in reader:
+                if settlement_type == row['settlement_type']:
+                    intermediate[int(row['year'])] = float(row['penetration'])
+            output[settlement_type] = intermediate
 
     return output
 
@@ -267,156 +242,6 @@ def load_core_lut(path):
                 output[asset_type] = asset_dict
 
     return output
-
-
-def define_deciles(regions):
-
-    regions = regions.sort_values(by='population_km2', ascending=True)
-
-    regions['decile'] = regions.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).population_km2.apply( #cost_per_sp_user
-            pd.qcut, q=11, precision=0,
-            labels=[100,90,80,70,60,50,40,30,20,10,0], duplicates='drop') #   [0,10,20,30,40,50,60,70,80,90,100]
-
-    return regions
-
-
-def write_annual_demand(regional_annual_demand, folder, metric):
-    """
-    Write all annual demand results.
-
-    """
-    print('Writing annual_demand')
-    regional_annual_demand = pd.DataFrame(regional_annual_demand)
-    regional_annual_demand = regional_annual_demand[[
-        'GID_0', 'GID_id', 'scenario', 'strategy',
-        'confidence', 'year', 'population', 'area_km2', 'population_km2',
-        'geotype', 'arpu_discounted', 'population_with_phones', 'phones_on_network',
-        'smartphones_on_network', 'revenue'
-    ]]
-
-    path = os.path.join(folder,'regional_annual_demand_{}.csv'.format(metric))
-    regional_annual_demand.to_csv(path, index=False)
-
-
-def write_results(regional_results, folder, metric):
-    """
-    Write all results.
-
-    """
-    print('Writing national results')
-    national_results = pd.DataFrame(regional_results)
-    national_results = national_results[[
-        'GID_0', 'scenario', 'strategy', 'confidence', 'population', 'area_km2',
-        'phones_on_network', 'smartphones_on_network', 'sites_estimated_total',
-        'existing_network_sites', 'upgraded_sites', 'new_sites',
-        'total_revenue', 'total_cost',
-    ]]
-
-    national_results = national_results.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
-    national_results['cost_per_network_user'] = (
-        national_results['total_cost'] / national_results['phones_on_network'])
-
-    path = os.path.join(folder,'national_results_{}.csv'.format(metric))
-    national_results.to_csv(path, index=True)
-
-    print('Writing national cost composition results')
-    national_cost_results = pd.DataFrame(regional_results)
-    national_cost_results = national_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'confidence', 'population',
-        'phones_on_network', 'smartphones_on_network', 'total_revenue',
-        'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'administration', 'spectrum_cost', 'tax', 'profit_margin',
-        'total_cost', 'available_cross_subsidy', 'deficit',
-        'used_cross_subsidy', 'required_state_subsidy',
-    ]]
-
-    national_cost_results = national_cost_results.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence'], as_index=True).sum()
-
-    national_cost_results['cost_per_network_user'] = (
-        national_cost_results['total_cost'] / national_cost_results['phones_on_network'])
-
-    #Calculate private, govt and societal costs
-    national_cost_results['private_cost'] = national_cost_results['total_cost']
-    national_cost_results['government_cost'] = (
-        national_cost_results['required_state_subsidy'] -
-            (
-                national_cost_results['spectrum_cost'] +
-                national_cost_results['tax']
-            )
-    )
-    national_cost_results['societal_cost'] = (
-        national_cost_results['private_cost'] +
-        national_cost_results['government_cost']
-    )
-
-    path = os.path.join(folder,'national_cost_results_{}.csv'.format(metric))
-    national_cost_results.to_csv(path, index=True)
-
-    print('Writing general decile results')
-    decile_results = pd.DataFrame(regional_results)
-    decile_results = define_deciles(decile_results)
-    decile_results = decile_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
-        'population', 'area_km2', 'phones_on_network',
-        'smartphones_on_network', 'sites_estimated_total',
-        'existing_network_sites', 'upgraded_sites', 'new_sites',
-        'total_revenue', 'total_cost',
-    ]]
-    decile_results = decile_results.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
-
-    decile_results['population_km2'] = (
-        decile_results['population'] / decile_results['area_km2'])
-    decile_results['phone_density_on_network_km2'] = (
-        decile_results['phones_on_network'] / decile_results['area_km2'])
-    decile_results['sp_density_on_network_km2'] = (
-        decile_results['smartphones_on_network'] / decile_results['area_km2'])
-    decile_results['sites_estimated_total_km2'] = (
-        decile_results['sites_estimated_total'] / decile_results['area_km2'])
-    decile_results['existing_network_sites_km2'] = (
-        decile_results['existing_network_sites'] / decile_results['area_km2'])
-    decile_results['cost_per_network_user'] = (
-        decile_results['total_cost'] / decile_results['phones_on_network'])
-
-    path = os.path.join(folder,'decile_results_{}.csv'.format(metric))
-    decile_results.to_csv(path, index=True)
-
-    print('Writing cost decile results')
-    decile_cost_results = pd.DataFrame(regional_results)
-    decile_cost_results = define_deciles(decile_cost_results)
-    decile_cost_results = decile_cost_results[[
-        'GID_0', 'scenario', 'strategy', 'decile', 'confidence',
-        'population', 'area_km2', 'phones_on_network',
-        'total_revenue', 'ran', 'backhaul_fronthaul', 'civils', 'core_network',
-        'administration', 'spectrum_cost', 'tax', 'profit_margin', 'total_cost',
-        'available_cross_subsidy', 'deficit', 'used_cross_subsidy',
-        'required_state_subsidy',
-    ]]
-
-    decile_cost_results = decile_cost_results.groupby([
-        'GID_0', 'scenario', 'strategy', 'confidence', 'decile'], as_index=True).sum()
-    decile_cost_results['cost_per_network_user'] = (
-        decile_cost_results['total_cost'] / decile_cost_results['phones_on_network'])
-
-    path = os.path.join(folder,'decile_cost_results_{}.csv'.format(metric))
-    decile_cost_results.to_csv(path, index=True)
-
-    print('Writing regional results')
-    regional_results = pd.DataFrame(regional_results)
-    regional_results = define_deciles(regional_results)
-    regional_results = regional_results[[
-        'GID_0', 'GID_id', 'scenario', 'strategy', 'decile',
-        'confidence', 'population', 'area_km2', 'phones_on_network',
-        'upgraded_sites','new_sites', 'total_revenue', 'total_cost',
-    ]]
-    regional_results['cost_per_network_user'] = (
-        regional_results['total_cost'] / regional_results['phones_on_network'])
-
-    path = os.path.join(folder,'regional_results_{}.csv'.format(metric))
-    regional_results.to_csv(path, index=True)
 
 
 def allocate_deciles(data):
@@ -552,8 +377,8 @@ if __name__ == '__main__':
                 filename = 'subs_forecast.csv'
                 penetration_lut = load_penetration(os.path.join(folder, filename))
 
-                folder = os.path.join(DATA_RAW, 'wb_smartphone_survey')
-                filename = 'wb_smartphone_survey.csv'
+                folder = os.path.join(DATA_INTERMEDIATE, iso3, 'smartphones')
+                filename = 'smartphone_forecast.csv'
                 smartphone_lut = load_smartphones(country, os.path.join(folder, filename))
 
                 folder = os.path.join(DATA_INTERMEDIATE, iso3)
@@ -579,7 +404,7 @@ if __name__ == '__main__':
 
                         data_initial = data.to_dict('records')
 
-                        data_demand, annual_output = estimate_demand(
+                        data_demand, annual_demand = estimate_demand(
                             data_initial,
                             option,
                             GLOBAL_PARAMETERS,
@@ -613,11 +438,13 @@ if __name__ == '__main__':
 
                         final_results = allocate_deciles(data_assess)
 
-                        regional_annual_demand = regional_annual_demand + annual_output
+                        regional_annual_demand = regional_annual_demand + annual_demand
                         regional_results = regional_results + final_results
 
         folder = os.path.join(BASE_PATH, '..', 'results')
-        write_annual_demand(regional_annual_demand, folder, decision_option)
+        path = os.path.join(folder, 'regional_annual_demand_{}.csv'.format(decision_option))
+        write_mno_demand(regional_annual_demand, folder, decision_option, path)
+
         write_results(regional_results, folder, decision_option)
 
         all_results = all_results + regional_results
