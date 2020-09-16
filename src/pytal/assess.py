@@ -59,7 +59,7 @@ def assess(country, regions, option, global_parameters, country_parameters,
         #profit margin value calculated on all costs + taxes
         region['profit_margin'] = calculate_profit(region, country_parameters)
 
-        region['total_cost'] = (
+        region['total_mno_cost'] = (
             region['network_cost'] +
             region['administration'] +
             region['spectrum_cost'] +
@@ -68,9 +68,9 @@ def assess(country, regions, option, global_parameters, country_parameters,
         )
 
         #avoid zero division
-        if region['total_cost'] > 0 and region['smartphones_on_network'] > 0:
+        if region['total_mno_cost'] > 0 and region['smartphones_on_network'] > 0:
             region['cost_per_sp_user'] = (
-                region['total_cost'] / region['smartphones_on_network'])
+                region['total_mno_cost'] / region['smartphones_on_network'])
         else:
             region['cost_per_sp_user'] = 0
 
@@ -82,16 +82,19 @@ def assess(country, regions, option, global_parameters, country_parameters,
 
     interim = sorted(interim, key=lambda k: k['deficit'], reverse=False)
 
-    output = []
+    intermediate_regions = []
 
     for region in interim:
 
         region, available_for_cross_subsidy = estimate_subsidies(
             region, available_for_cross_subsidy)
 
-        output.append(region)
+        intermediate_regions.append(region)
 
-    return output
+    output = calculate_total_market_costs(
+        intermediate_regions, option, country_parameters)
+
+    return output#, total_market_costs
 
 
 def get_administration_cost(region, country_parameters, global_parameters, timesteps):
@@ -287,7 +290,7 @@ def allocate_available_excess(region):
         Contains all regional data.
 
     """
-    difference = region['total_revenue'] - region['total_cost']
+    difference = region['total_mno_revenue'] - region['total_mno_cost']
 
     if difference > 0:
         region['available_cross_subsidy'] = difference
@@ -333,8 +336,8 @@ def estimate_subsidies(region, available_for_cross_subsidy):
     else:
         region['used_cross_subsidy'] = 0
 
-    required_state_subsidy = (region['total_cost'] -
-        (region['total_revenue'] + region['used_cross_subsidy']))
+    required_state_subsidy = (region['total_mno_cost'] -
+        (region['total_mno_revenue'] + region['used_cross_subsidy']))
 
     if required_state_subsidy > 0:
         region['required_state_subsidy'] = required_state_subsidy
@@ -370,3 +373,58 @@ def discount_admin_cost(cost, timestep, global_parameters):
     discounted_cost = cost / (1 + discount_rate) ** timestep
 
     return discounted_cost
+
+
+def calculate_total_market_costs(regions, option, country_parameters):
+    """
+    Calculate the costs for all Mobile Network Operators (MNOs).
+
+    """
+    output = []
+
+    # generation_core_backhaul_sharing_networks_spectrum_tax
+    network_strategy = option['strategy'].split('_')[4]
+
+    for region in regions:
+
+        geotype = region['geotype'].split(' ')[0]
+
+        net_handle = network_strategy + '_' + geotype
+        networks = country_parameters['networks'][net_handle]
+
+        ms = 100 / networks
+
+        region['total_phones'] = calc(region, 'phones_on_network', ms)
+        region['total_smartphones'] = calc(region, 'smartphones_on_network', ms)
+        region['total_market_revenue'] = calc(region, 'total_mno_revenue', ms)
+        region['total_upgraded_sites'] = calc(region, 'upgraded_mno_sites', ms)
+        region['total_new_sites'] = calc(region, 'new_mno_sites', ms)
+        region['total_ran'] = calc(region, 'ran', ms)
+        region['total_backhaul_fronthaul'] = calc(region, 'backhaul_fronthaul', ms)
+        region['total_civils'] = calc(region, 'civils', ms)
+        region['total_core_network'] = calc(region, 'core_network', ms)
+        region['total_network_cost'] = calc(region, 'network_cost', ms)
+        region['total_administration'] = calc(region, 'administration', ms)
+        region['total_spectrum_cost'] = calc(region, 'spectrum_cost', ms)
+        region['total_tax'] = calc(region, 'tax', ms)
+        region['total_profit_margin'] = calc(region, 'profit_margin', ms)
+        region['total_market_cost'] = calc(region, 'total_mno_cost', ms)
+        region['total_available_cross_subsidy'] = calc(region, 'available_cross_subsidy', ms)
+        region['total_deficit'] = calc(region, 'deficit', ms)
+        region['total_used_cross_subsidy'] = calc(region, 'used_cross_subsidy', ms)
+        region['total_required_state_subsidy'] = calc(region, 'required_state_subsidy', ms)
+
+        output.append(region)
+
+    return output
+
+
+def calc(region, metric, ms):
+    """
+
+    """
+    if metric in region:
+        value = region[metric]
+        return round((value / ms) * 100)
+    else:
+        return 0
