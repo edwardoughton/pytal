@@ -299,34 +299,34 @@ def estimate_site_upgrades(region, strategy, total_sites_required,
     networks = country_parameters['networks']['baseline' + '_' + geotype]
 
     #get the total number of existing sites that the network has (2G-4G)
-    region['existing_network_sites'] = (
-        region['sites_estimated_total'] / networks)
+    region['existing_mno_sites'] = (
+        region['total_estimated_sites'] / networks)
 
     #get the number of existing 4G sites
     existing_4G_sites = math.ceil(region['sites_4G'] / networks )
 
-    if total_sites_required > region['existing_network_sites']:
+    if total_sites_required > region['existing_mno_sites']:
 
-        region['new_sites'] = (int(round(total_sites_required -
-            region['existing_network_sites'])))
+        region['new_mno_sites'] = (int(round(total_sites_required -
+            region['existing_mno_sites'])))
 
-        if region['existing_network_sites'] > 0:
+        if region['existing_mno_sites'] > 0:
             if generation == '4G' and existing_4G_sites > 0 :
-                region['upgraded_sites'] = (region['existing_network_sites'] -
+                region['upgraded_mno_sites'] = (region['existing_mno_sites'] -
                     existing_4G_sites)
             else:
-                region['upgraded_sites'] = region['existing_network_sites']
+                region['upgraded_mno_sites'] = region['existing_mno_sites']
         else:
-            region['upgraded_sites'] = 0
+            region['upgraded_mno_sites'] = 0
 
     else:
-        region['new_sites'] = 0
+        region['new_mno_sites'] = 0
 
         if generation == '4G' and existing_4G_sites > 0 :
             to_upgrade = total_sites_required - existing_4G_sites
-            region['upgraded_sites'] = to_upgrade if to_upgrade >= 0 else 0
+            region['upgraded_mno_sites'] = to_upgrade if to_upgrade >= 0 else 0
         else:
-            region['upgraded_sites'] = total_sites_required
+            region['upgraded_mno_sites'] = total_sites_required
 
     return region
 
@@ -356,7 +356,7 @@ def estimate_backhaul_upgrades(region, strategy, country_parameters):
     backhaul = strategy.split('_')[2]
     geotype = region['geotype'].split(' ')[0]
     networks = country_parameters['networks']['baseline' + '_' + geotype]
-    all_sites = (region['new_sites'] + region['upgraded_sites']) / networks
+    all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites']) / networks
 
     if backhaul == 'fiber':
 

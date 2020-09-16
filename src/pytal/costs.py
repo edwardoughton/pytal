@@ -46,9 +46,9 @@ def find_single_network_cost(region, option, costs, global_parameters,
     core = strategy.split('_')[1]
     backhaul = strategy.split('_')[2]
 
-    new_sites = region['new_sites']
-    upgraded_sites = region['upgraded_sites']
-    all_sites = new_sites + upgraded_sites
+    new_mno_sites = region['new_mno_sites']
+    upgraded_mno_sites = region['upgraded_mno_sites']
+    all_sites = new_mno_sites + upgraded_mno_sites
 
     new_backhaul = region['backhaul_new']
 
@@ -57,7 +57,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
 
     for i in range(1, int(all_sites) + 1):
 
-        if i <= upgraded_sites and generation == '4G':
+        if i <= upgraded_mno_sites and generation == '4G':
 
             cost_structure = upgrade_to_4g(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -71,7 +71,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_asset_cost.append(cost_by_asset)
 
 
-        if i <= upgraded_sites and generation == '5G' and core == 'nsa':
+        if i <= upgraded_mno_sites and generation == '5G' and core == 'nsa':
 
             cost_structure = upgrade_to_5g_nsa(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -85,7 +85,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_asset_cost.append(cost_by_asset)
 
 
-        if i <= upgraded_sites and generation == '5G' and core == 'sa':
+        if i <= upgraded_mno_sites and generation == '5G' and core == 'sa':
 
             cost_structure = upgrade_to_5g_sa(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -99,7 +99,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_asset_cost.append(cost_by_asset)
 
 
-        if i > upgraded_sites and generation == '4G':
+        if i > upgraded_mno_sites and generation == '4G':
 
             cost_structure = greenfield_4g(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -113,7 +113,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_asset_cost.append(cost_by_asset)
 
 
-        if i > upgraded_sites and generation == '5G' and core == 'nsa':
+        if i > upgraded_mno_sites and generation == '5G' and core == 'nsa':
 
             cost_structure = greenfield_5g_nsa(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -127,7 +127,7 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_asset_cost.append(cost_by_asset)
 
 
-        if i > upgraded_sites and generation == '5G' and core == 'sa':
+        if i > upgraded_mno_sites and generation == '5G' and core == 'sa':
 
             cost_structure = greenfield_5g_sa(region, strategy, costs,
                 global_parameters, core_lut, country_parameters)
@@ -140,13 +140,14 @@ def find_single_network_cost(region, option, costs, global_parameters,
             regional_cost.append(total_cost)
             regional_asset_cost.append(cost_by_asset)
 
+
     counter = collections.Counter()
     for d in regional_asset_cost:
         counter.update(d)
-    test = dict(counter)
+    counter_dict = dict(counter)
 
     network_cost = 0
-    for k, v in test.items():
+    for k, v in counter_dict.items():
         region[k] = v
         network_cost += v
 
@@ -743,7 +744,7 @@ def local_net_costs(region, costs, strategy, country_parameters,
 
     local_node_cost = int(local_nodes_proportion * cost_each)
 
-    all_sites = math.ceil((region['new_sites'] + region['upgraded_sites']))
+    all_sites = math.ceil((region['new_mno_sites'] + region['upgraded_mno_sites']))
 
     if all_sites == 0:
         return 0
@@ -792,7 +793,7 @@ def regional_net_costs(region, asset_type, costs, core_lut, strategy, country_pa
                 cost_m = costs['regional_edge']
                 cost = int(distance_m * cost_m)
 
-                all_sites = (region['new_sites'] + region['upgraded_sites'])
+                all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites'])
 
                 if all_sites == 0:
                     return 0
@@ -809,7 +810,7 @@ def regional_net_costs(region, asset_type, costs, core_lut, strategy, country_pa
 
                 regional_node_cost = int(regional_nodes * cost_each)
 
-                all_sites = (region['new_sites'] + region['upgraded_sites'])
+                all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites'])
 
                 if all_sites == 0:
                     return 0
@@ -872,7 +873,7 @@ def core_costs(region, asset_type, costs, core_lut, strategy, country_parameters
                 cost = int(distance_m * costs['core_edge'])
                 total_cost.append(cost)
 
-                all_sites = (region['new_sites'] + region['upgraded_sites'])
+                all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites'])
 
                 if all_sites == 0:
                     return 0
@@ -897,7 +898,7 @@ def core_costs(region, asset_type, costs, core_lut, strategy, country_parameters
             cost = int(nodes * costs['core_node_{}'.format(core)])
             total_cost.append(cost)
 
-            all_sites = (region['new_sites'] + region['upgraded_sites'])
+            all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites'])
 
             if all_sites == 0:
                 return 0
@@ -1034,7 +1035,7 @@ def calc_costs(region, cost_structure, backhaul, backhaul_quantity,
         The cost aggregated by general asset group (RAN, civils etc.).
 
     """
-    all_sites = region['upgraded_sites'] + region['new_sites']
+    all_sites = region['upgraded_mno_sites'] + region['new_mno_sites']
     geotype = region['geotype'].split(' ')[0]
 
     total_cost = 0

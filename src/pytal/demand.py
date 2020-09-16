@@ -63,7 +63,6 @@ def estimate_demand(regions, option, global_parameters,
             geotype_sps = 'urban'
         else:
             geotype_sps = geotype
-        smartphones = smartphone_lut[geotype_sps]
 
         revenue = []
         demand_mbps_km2 = []
@@ -80,12 +79,12 @@ def estimate_demand(regions, option, global_parameters,
                 country_parameters
             )
 
-            penetration = penetration_lut[timestep]
+            region['penetration'] = penetration_lut[timestep]
 
             #cell_penetration : float
             #Number of cell phones per member of the population.
             region['population_with_phones'] = (
-                region['population'] * (penetration / 100))
+                region['population'] * (region['penetration'] / 100))
 
             #phones : int
             #Total number of phones on the network being modeled.
@@ -98,10 +97,15 @@ def estimate_demand(regions, option, global_parameters,
                 region['phones_on_network'] / region['area_km2']
             )
 
+            #add regional smartphone penetration
+            region['smartphone_penetration'] = smartphone_lut[geotype_sps][timestep]
+
             #phones : int
             #Total number of smartphones on the network being modeled.
             region['smartphones_on_network'] = (
-                region['phones_on_network'] * smartphones['smartphone'])
+                region['phones_on_network'] *
+                (region['smartphone_penetration'] / 100)
+            )
 
             #get smartphone density
             region['sp_density_on_network_km2'] = (
@@ -133,15 +137,16 @@ def estimate_demand(regions, option, global_parameters,
                 'population_km2': region['population_km2'],
                 'geotype': region['geotype'],
                 'arpu_discounted': region['arpu_discounted'],
+                'penetration': region['penetration'],
                 'population_with_phones': region['population_with_phones'],
                 'phones_on_network': region['phones_on_network'],
+                'smartphone_penetration': region['smartphone_penetration'],
                 'smartphones_on_network': region['smartphones_on_network'],
                 'revenue': annual_revenue,
             })
 
-        region['demand_mbps_km2'] = (
-            round(sum(demand_mbps_km2) / len(demand_mbps_km2)))
-        region['total_revenue'] = round(sum(revenue))
+        region['demand_mbps_km2'] = max(demand_mbps_km2)
+        region['total_mno_revenue'] = round(sum(revenue))
         region['revenue_km2'] = round(sum(revenue) / region['area_km2'])
 
         output.append(region)
