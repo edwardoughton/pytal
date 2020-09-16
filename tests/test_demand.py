@@ -23,7 +23,7 @@ def test_estimate_demand(
         setup_country_parameters,
         setup_timesteps,
         setup_penetration_lut,
-        {'urban': {'smartphone': 0.5}}
+        {'urban': {2020: 50}}
     )
 
     # pop = 10000
@@ -45,7 +45,7 @@ def test_estimate_demand(
 
     # 1667 phones
     # arpu = 15
-    assert round(answer[0]['total_revenue']) == round(15 * 5000 / 3)
+    assert round(answer[0]['total_mno_revenue']) == round(15 * 5000 / 3)
 
     # 1667 phones
     # arpu = 15
@@ -71,7 +71,7 @@ def test_estimate_demand(
         setup_country_parameters,
         setup_timesteps,
         setup_penetration_lut,
-        {'urban': {'smartphone': 0.5}}
+        {'urban': {2020: 50}}
     )
 
     # pop = 10000
@@ -98,23 +98,29 @@ def test_estimate_demand(
         setup_country_parameters,
         setup_timesteps,
         setup_penetration_lut,
-        {'rural': {'smartphone': 0.5}}
+        {'rural': {2020: 50}}
     )
 
     # 1667 phones on network
     # arpu = 15
     # 40% subsidy
-    assert round(answer[0]['total_revenue']) == round(5000 * 15 / 3)
+    assert round(answer[0]['total_mno_revenue']) == round(5000 * 15 / 3)
 
     setup_region[0]['geotype'] = 'rural'
     setup_region[0]['mean_luminosity_km2'] = 2
     setup_option['strategy'] = '4G_epc_microwave_baseline_shared_baseline_baseline'
     setup_country_parameters['arpu']['medium'] = 7
 
+    #iterate through years to create annual lookup
     setup_timesteps = list(range(2020, 2030 + 1))
     setup_penetration_lut = {}
+    intermediate = {}
     for i in setup_timesteps:
         setup_penetration_lut[i] = 50
+        intermediate[i] = 50
+
+    setup_smartphone_lut = {}
+    setup_smartphone_lut['rural'] = intermediate
 
     answer, annual_answer = estimate_demand(
         setup_region,
@@ -123,7 +129,7 @@ def test_estimate_demand(
         setup_country_parameters,
         setup_timesteps,
         setup_penetration_lut,
-        {'rural': {'smartphone': 0.5}}
+        setup_smartphone_lut
     )
 
     # pop = 10000
@@ -149,7 +155,7 @@ def test_estimate_demand(
     #[35000.0, 33333.33333333333, 31746.031746031746, 30234.31594860166,
     # 28794.586617715864, 27423.41582639606, 26117.538882281962, 24873.846554554246,
     # 23689.377671004044, 22561.312067622897, 21486.963873926572]
-    assert round(answer[0]['total_revenue']) == round(305261)
+    assert round(answer[0]['total_mno_revenue']) == round(305261)
 
     # 2500 smartphones
     # scenario = 50
@@ -171,7 +177,7 @@ def test_estimate_demand(
         setup_country_parameters,
         setup_timesteps,
         setup_penetration_lut,
-        {'rural': {'smartphone': 0.5}}
+        setup_smartphone_lut
     )
 
     assert answer[0]['population_with_phones'] == 0
