@@ -334,7 +334,7 @@ def test_calculate_total_market_costs(setup_option, setup_country_parameters):
             'geotype': 'rural 1',
             'population': 0,
             'population_km2': 0,
-            'total_mno_revenue': 0,
+            'total_mno_revenue': 33.3,
             'network_cost': 0,
             'smartphones_on_network': 0,
             'phones_on_network': 0,
@@ -353,6 +353,7 @@ def test_calculate_total_market_costs(setup_option, setup_country_parameters):
 
     answer = calculate_total_market_costs(regions, setup_option, setup_country_parameters)
 
+    assert answer[0]['total_market_revenue'] == 100
     assert answer[0]['total_administration'] == 100
     assert answer[0]['total_spectrum_cost'] == 100
     assert answer[0]['total_market_cost'] == 100
