@@ -6,18 +6,16 @@ library(ggpubr)
 ####################SUPPLY-DEMAND METRICS
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-data <- read.csv(file.path(folder, '..', 'results', 'decile_results_technology_options.csv'))
-
-data <- data[!(data$total_cost == "NA"),]
+data <- read.csv(file.path(folder, '..', 'results', 'decile_mno_results_technology_options.csv'))
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 #select desired columns
 data <- select(data, country, scenario, strategy, confidence, decile, #population, area_km2, 
-               population_km2, sites_estimated_total, existing_network_sites,
-               sites_estimated_total_km2, existing_network_sites_km2,
-               phone_density_on_network_km2, sp_density_on_network_km2, 
-               total_revenue, total_cost, cost_per_network_user, 
+               population_km2, total_estimated_sites, existing_mno_sites,
+               total_estimated_sites_km2, existing_mno_sites_km2,
+               phone_density_on_network_km2, sp_density_on_network_km2,
+               total_mno_revenue, total_mno_cost, cost_per_network_user, 
                # cost_per_sp_user
                )
 
@@ -46,7 +44,8 @@ demand = data[(
     ),]
 
 demand <- select(demand, country, decile, population_km2, 
-                 phone_density_on_network_km2, sp_density_on_network_km2)
+                 phone_density_on_network_km2, 
+                 sp_density_on_network_km2)
 
 demand <- gather(demand, metric, value, population_km2:sp_density_on_network_km2)
 
@@ -55,8 +54,8 @@ demand$metric = factor(demand$metric,
                              "phone_density_on_network_km2",
                              "sp_density_on_network_km2"),
                        labels=c("Population Density",
-                                "Phone Density",
-                                "Smartphone Density"))
+                                "Modeled Network Phone Density",
+                                "Modeled Network Smartphone Density"))
 
 demand_densities <- ggplot(demand, aes(x=decile, y=value, colour=metric, group=metric)) + 
   geom_line() +
@@ -77,13 +76,13 @@ supply = data[(
     data$strategy == '4G_epc_fiber_baseline_baseline_baseline_baseline'
 ),]
 
-supply <- select(supply, country, decile, sites_estimated_total_km2, existing_network_sites_km2)
+supply <- select(supply, country, decile, total_estimated_sites_km2, existing_mno_sites_km2)
 
-supply <- gather(supply, metric, value, sites_estimated_total_km2:existing_network_sites_km2)
+supply <- gather(supply, metric, value, total_estimated_sites_km2:existing_mno_sites_km2)
 
 supply$metric = factor(supply$metric, 
-                       levels=c("sites_estimated_total_km2",
-                                "existing_network_sites_km2"),
+                       levels=c("total_estimated_sites_km2",
+                                "existing_mno_sites_km2"),
                        labels=c("Total Site Density",
                                 "Modeled Network Site Density"))
 
@@ -112,15 +111,16 @@ dev.off()
 ####################TECHNOLOGIES BY DECILE
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-data <- read.csv(file.path(folder, '..', 'results', 'decile_results_technology_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_technology_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 #select desired columns
-data <- select(data, country, scenario, strategy, confidence, decile, area_km2, population, 
-               total_cost, total_revenue)
+data <- select(data, country, scenario, strategy, confidence, decile, 
+               area_km2, population, 
+               total_market_cost, total_market_revenue)
 
 data <- data[(data$confidence == 50),]
 
@@ -184,12 +184,12 @@ labels=c("Malawi (C1) (S1: 25 Mbps)", "Malawi (C1) (S2: 200 Mbps)", "Malawi (C1)
 
 data <- data[order(data$country, data$scenario, data$strategy, data$decile),]
 
-data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
+data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_revenue)
 data1 <- data1[(data1$strategy == "4G_epc_microwave_baseline_baseline_baseline_baseline"),]
 data1$strategy <- "Revenue" 
-names(data1)[names(data1) == 'total_revenue'] <- 'value'
-data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_cost)
-names(data2)[names(data2) == 'total_cost'] <- 'value'
+names(data1)[names(data1) == 'total_market_revenue'] <- 'value'
+data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_cost)
+names(data2)[names(data2) == 'total_market_cost'] <- 'value'
 data <- rbind(data1, data2)
 remove(data1, data2)
 
@@ -231,9 +231,9 @@ dev.off()
 
 ##################BUSINESS MODELS BY DECILE
 #load data
-data <- read.csv(file.path(folder, '..', 'results', 'decile_results_business_model_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_business_model_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 
 data <- data[(data$confidence == 50),]
 
@@ -299,27 +299,34 @@ data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                 "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
                                 "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
-data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
+data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_revenue)
 data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
 data1$strategy <- "Revenue" 
-names(data1)[names(data1) == 'total_revenue'] <- 'value'
-data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_cost)
-names(data2)[names(data2) == 'total_cost'] <- 'value'
+names(data1)[names(data1) == 'total_market_revenue'] <- 'value'
+data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_cost)
+names(data2)[names(data2) == 'total_market_cost'] <- 'value'
 data <- rbind(data1, data2)
 remove(data1, data2)
+
+data <- data[(
+  data$strategy == 'Revenue' |
+    data$strategy == '5G_nsa_microwave_baseline_baseline_baseline_baseline' |
+    data$strategy == '5G_nsa_microwave_passive_baseline_baseline_baseline' |
+    data$strategy == '5G_nsa_microwave_active_baseline_baseline_baseline' |
+    data$strategy == '5G_nsa_microwave_shared_baseline_baseline_baseline'),]
 
 data <- data[!(data$value == "NA"),]
 
 data$strategy = factor(data$strategy, levels=c("Revenue",
-                                              "5G_nsa_microwave_baseline_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_passive_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_active_baseline_baseline_baseline",
-                                               "5G_nsa_microwave_shared_baseline_baseline_baseline"),
-                                      labels=c("Revenue",
-                                              "Baseline (No sharing)",
-                                              "Passive (Site Sharing)",
-                                              "Active (RAN and Site Sharing)",
-                                              "Single Wholesale Network"))
+                        "5G_nsa_microwave_baseline_baseline_baseline_baseline",
+                         "5G_nsa_microwave_passive_baseline_baseline_baseline",
+                         "5G_nsa_microwave_active_baseline_baseline_baseline",
+                         "5G_nsa_microwave_shared_baseline_baseline_baseline"),
+                labels=c("Revenue",
+                        "Baseline (No sharing)",
+                        "Passive (Site Sharing)",
+                        "Active (RAN and Site Sharing)",
+                        "Single Wholesale Network"))
 
 data <- data[order(data$combined, data$country, data$scenario, data$strategy, data$decile),]
 
@@ -349,21 +356,21 @@ dev.off()
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #load data
-data <- read.csv(file.path(folder, '..', 'results', 'decile_results_policy_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_policy_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
+data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_revenue)
 data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
 data1$strategy <- "Revenue"
-names(data1)[names(data1) == 'total_revenue'] <- 'value'
-data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_cost)
-names(data2)[names(data2) == 'total_cost'] <- 'value'
+names(data1)[names(data1) == 'total_market_revenue'] <- 'value'
+data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_cost)
+names(data2)[names(data2) == 'total_market_cost'] <- 'value'
 data <- rbind(data1, data2)
 
 data <- data[(
@@ -474,21 +481,21 @@ dev.off()
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #load data
-data <- read.csv(file.path(folder, '..', 'results', 'decile_results_policy_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_policy_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_revenue)
+data1 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_revenue)
 data1 <- data1[(data1$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
 data1$strategy <- "Revenue"
-names(data1)[names(data1) == 'total_revenue'] <- 'value'
-data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_cost)
-names(data2)[names(data2) == 'total_cost'] <- 'value'
+names(data1)[names(data1) == 'total_market_revenue'] <- 'value'
+data2 <- select(data, combined, country, scenario, strategy, confidence, decile, total_market_cost)
+names(data2)[names(data2) == 'total_market_cost'] <- 'value'
 data <- rbind(data1, data2)
 
 remove(data1, data2)
@@ -594,19 +601,19 @@ dev.off()
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #load data
-data <- read.csv(file.path(folder, '..', 'results', 'national_cost_results_technology_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_technology_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data <- select(data, strategy, combined, ran, backhaul_fronthaul, 
-               civils, core_network, administration, 
-               spectrum_cost, tax, profit_margin,
-               used_cross_subsidy, required_state_subsidy)
+data <- select(data, strategy, combined, total_ran, total_backhaul_fronthaul, 
+               total_civils, total_core_network, total_administration, 
+               total_spectrum_cost, total_tax, total_profit_margin,
+               total_used_cross_subsidy, total_required_state_subsidy)
 
 data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
@@ -651,18 +658,18 @@ data$strategy = factor(data$strategy, levels=c(
            "5G NSA (MW)",
            "5G SA (FB)"))
 
-data <- gather(data, metric, value, ran:required_state_subsidy)
+data <- gather(data, metric, value, total_ran:total_required_state_subsidy)
 
-data$metric = factor(data$metric, levels=c("required_state_subsidy",
-                                           "used_cross_subsidy",
-                                           "profit_margin",
-                                           "tax",
-                                           "spectrum_cost",
-                                           "administration",
-                                           "ran",
-                                           'backhaul_fronthaul',
-                                           'civils',
-                                           'core_network'
+data$metric = factor(data$metric, levels=c("total_required_state_subsidy",
+                                           "total_used_cross_subsidy",
+                                           "total_profit_margin",
+                                           "total_tax",
+                                           "total_spectrum_cost",
+                                           "total_administration",
+                                           "total_ran",
+                                           'total_backhaul_fronthaul',
+                                           'total_civils',
+                                           'total_core_network'
 ),
 labels=c("Required Subsidy",
          "Cross-Subsidy",
@@ -696,9 +703,9 @@ dev.off()
 ##############NATIONAL COST PROFILE FOR MIXED OPTIONS
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-data <- read.csv(file.path(folder, '..', 'results', 'national_cost_results_mixed_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_mixed_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
@@ -708,17 +715,17 @@ names(data)[names(data) == 'GID_0'] <- 'country'
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data <- select(data, strategy, combined, ran, backhaul_fronthaul, 
-               civils, core_network, administration, 
-               spectrum_cost, tax, profit_margin,
-               used_cross_subsidy, required_state_subsidy)
+data <- select(data, strategy, combined, total_ran, total_backhaul_fronthaul, 
+               total_civils, total_core_network, total_administration, 
+               total_spectrum_cost, total_tax, total_profit_margin,
+               total_used_cross_subsidy, total_required_state_subsidy)
 
-required_subsidy <- select(data, combined, strategy, required_state_subsidy)
-required_subsidy <- spread(required_subsidy, strategy, required_state_subsidy)
+required_subsidy <- select(data, combined, strategy, total_required_state_subsidy)
+required_subsidy <- spread(required_subsidy, strategy, total_required_state_subsidy)
 path = file.path(folder, '..','results', 'required_subsidy.csv')
 write.csv(required_subsidy, path)
 
-data <- gather(data, metric, value, ran:required_state_subsidy)
+data <- gather(data, metric, value, total_ran:total_required_state_subsidy)
 # 
 # lower_data <- data[(data$confidence == 'lower'),]
 # mean_data <- data[(data$confidence == 'mean'),]
@@ -770,16 +777,16 @@ data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                 "Peru (C5) (S1: 25 Mbps)", "Peru (C5) (S2: 200 Mbps)", "Peru (C5) (S3: 400 Mbps)",
                                 "Mexico (C6) (S1: 25 Mbps)", "Mexico (C6) (S2: 200 Mbps)", "Mexico (C6) (S3: 400 Mbps)" ))
 
-data$metric = factor(data$metric, levels=c("required_state_subsidy",
-                                           "used_cross_subsidy",
-                                           "profit_margin",
-                                           "tax",
-                                           "spectrum_cost",
-                                           "administration",
-                                           "ran",
-                                           'backhaul_fronthaul',
-                                           'civils',
-                                           'core_network'
+data$metric = factor(data$metric, levels=c("total_required_state_subsidy",
+                                           "total_used_cross_subsidy",
+                                           "total_profit_margin",
+                                           "total_tax",
+                                           "total_spectrum_cost",
+                                           "total_administration",
+                                           "total_ran",
+                                           'total_backhaul_fronthaul',
+                                           'total_civils',
+                                           'total_core_network'
 ),
 labels=c("Required Subsidy",
          "Cross-Subsidy",
@@ -825,9 +832,9 @@ dev.off()
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #load data
-data <- read.csv(file.path(folder, '..', 'results', 'decile_cost_results_mixed_options.csv'))
+data <- read.csv(file.path(folder, '..', 'results', 'decile_market_cost_results_mixed_options.csv'))
 
-data <- data[!(data$total_cost == "NA"),]
+data <- data[!(data$total_market_cost == "NA"),]
 data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
@@ -836,11 +843,12 @@ data <- data[(data$strategy == '5G_nsa_microwave_shared_baseline_low_low'),]
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 
-data <- select(data, combined, decile, ran, backhaul_fronthaul, 
-               civils, core_network, administration, spectrum_cost, tax, profit_margin, 
-               used_cross_subsidy, required_state_subsidy)
+data <- select(data, combined, decile, total_ran, total_backhaul_fronthaul, 
+               total_civils, total_core_network, total_administration, 
+               total_spectrum_cost, total_tax, total_profit_margin, 
+               total_used_cross_subsidy, total_required_state_subsidy)
 
-data <- gather(data, metric, value, ran:required_state_subsidy)
+data <- gather(data, metric, value, total_ran:total_required_state_subsidy)
 
 data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
                                                'MWI_S2_200_50_5',
@@ -878,16 +886,16 @@ data$combined = factor(data$combined, levels=c('MWI_S1_25_10_2',
 
 data$decile = factor(data$decile, levels=c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))
 
-data$metric = factor(data$metric, levels=c("required_state_subsidy",
-                                           "used_cross_subsidy",
-                                           "profit_margin",
-                                           "tax",
-                                           "spectrum_cost",
-                                           "administration",
-                                           "ran",
-                                           'backhaul_fronthaul',
-                                           'civils',
-                                           'core_network'
+data$metric = factor(data$metric, levels=c("total_required_state_subsidy",
+                                           "total_used_cross_subsidy",
+                                           "total_profit_margin",
+                                           "total_tax",
+                                           "total_spectrum_cost",
+                                           "total_administration",
+                                           "total_ran",
+                                           'total_backhaul_fronthaul',
+                                           'total_civils',
+                                           'total_core_network'
 ),
 labels=c("Required Subsidy",
          "Cross-Subsidy",
@@ -921,7 +929,7 @@ dev.off()
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-results <- read.csv(file.path(folder, '..', 'results', 'national_results_technology_options.csv'))
+results <- read.csv(file.path(folder, '..', 'results', 'national_market_results_technology_options.csv'))
 names(results)[names(results) == 'GID_0'] <- 'iso3'
 
 gdp <- read.csv(file.path(folder, 'gdp.csv'))
@@ -929,7 +937,7 @@ names(gdp)[names(gdp) == 'iso3'] <- 'iso3'
 
 results <- merge(results, gdp, by='iso3', all=FALSE)
 
-results$gdp_percentage <- (results$total_cost / 5) / results$gdp * 100
+results$gdp_percentage <- (results$total_market_cost / 5) / results$gdp * 100
 
 results$combined <- paste(results$iso3, results$scenario, sep="_")
 
@@ -1002,7 +1010,7 @@ dev.off()
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
-results <- read.csv(file.path(folder, '..', 'results', 'national_results_technology_options.csv'))
+results <- read.csv(file.path(folder, '..', 'results', 'national_market_results_technology_options.csv'))
 names(results)[names(results) == 'GID_0'] <- 'iso3'
 
 clusters <- read.csv(file.path(folder, 'clustering', 'results', 'data_clustering_results.csv'))
@@ -1035,9 +1043,9 @@ results <- merge(results, pop, by='iso3', all=FALSE)
 #Current costs are for a user on a network with 25% market share
 #We then multiply the user cost across the whole population?
 #check and revise this
-results$total_cost <- results$mean_cost_per_user * results$population
+results$total_market_cost <- results$mean_cost_per_user * results$population
 
-results$gdp_percentage <- (results$total_cost / 5) / results$gdp * 100
+results$gdp_percentage <- (results$total_market_cost / 5) / results$gdp * 100
 
 results$confidence = factor(results$confidence, levels=c('5','50', '95'),
                             labels=c("lower", 'mean', "upper"))
@@ -1062,8 +1070,8 @@ results$strategy = factor(results$strategy, levels=c(
 
 results <- results[complete.cases(results), ]
 
-raw_num <- select(results, country, cluster, scenario, strategy, confidence, total_cost)
-raw_num <- spread(raw_num, confidence, total_cost)
+raw_num <- select(results, country, cluster, scenario, strategy, confidence, total_market_cost)
+raw_num <- spread(raw_num, confidence, total_market_cost)
 
 cost_by_strategy <- ggplot(raw_num, aes(x=raw_num$cluster, y=raw_num$mean/1e9, colour=raw_num$cluster)) + 
   geom_boxplot(aes(group=factor(raw_num$cluster))) + 
@@ -1126,12 +1134,13 @@ global_cost <- ggplot(raw_total_summary_stats, aes(x=strategy, y=mean/1e3, fill=
   coord_flip() +
   geom_bar(stat="identity") +
   geom_errorbar(aes(ymin = lower/1e3, ymax = upper/1e3),width = 0.25) +
-  theme( legend.position = NULL) +
+  theme(legend.position = NULL) +
   labs(colour=NULL,
        title = "Global Investment Cost: Low- and Middle-Income Countries (N=173)",
        subtitle = "Results reported by scenario and strategy at 95% confidence",
        x = NULL, y = "Investment Cost ($USD Trillions)") +
   theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  scale_y_continuous(expand = c(0, 0), limits=c(0,9.7), breaks=c(0,2,4,6,8,10)) + 
   guides(fill=FALSE) +
   facet_grid(~scenario)
 
@@ -1140,3 +1149,4 @@ path = file.path(folder, 'figures', 'k_global_costs_by_strategy.png')
 ggsave(path, units="cm", width=18, height=8)
 print(global_cost)
 dev.off()
+
