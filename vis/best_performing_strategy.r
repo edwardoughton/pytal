@@ -15,6 +15,8 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 data_tech <- read.csv(file.path(folder, '..', 'results', 'national_market_results_technology_options.csv'))
 data_tech <- select(data_tech, GID_0, scenario, strategy, confidence, total_market_cost)
 
+data_tech <- data_tech[(data_tech$confidence == 50),]
+
 baseline <- data_tech %>%
   filter(str_detect(strategy, "_baseline_baseline_baseline_baseline")) %>% 
   group_by(GID_0, scenario) %>%
@@ -146,10 +148,12 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #technology
 data_revenue <- read.csv(file.path(folder, '..', 'results', 'national_market_results_technology_options.csv'))
-data_revenue <- select(data_revenue, GID_0, scenario, strategy, confidence, total_market_revenue)
+data_revenue <- data_revenue[(data_revenue$confidence == 50),]
+data_revenue <- select(data_revenue, GID_0, scenario, strategy,  total_market_revenue)
 
 data_tech <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_technology_options.csv'))
-data_tech <- select(data_tech, GID_0, scenario, strategy, decile, total_market_cost)
+data_tech <- data_tech[(data_tech$confidence == 50),]
+data_tech <- select(data_tech, GID_0, scenario, strategy,  decile, total_market_cost)
 
 data_tech <- merge(data_tech, data_revenue, by=c('GID_0', 'strategy', 'scenario'))
 
@@ -158,7 +162,7 @@ data_tech <- data_tech[order(data_tech$GID_0, data_tech$scenario, data_tech$stra
 data_tech <- data_tech %>%
   group_by(GID_0, strategy, scenario) %>%
   mutate(
-    total_market_revenue = total_market_revenue/1e9,
+    total_market_revenue = round(total_market_revenue / 1e9,3),
     cumulative_cost_bn = cumsum(round(total_market_cost / 1e9, 3)))
 
 data_tech <- data_tech %>%
@@ -184,9 +188,11 @@ data_tech$backhaul = NULL
 
 #business model
 data_revenue <- read.csv(file.path(folder, '..', 'results', 'national_market_results_business_model_options.csv'))
-data_revenue <- select(data_revenue, GID_0, scenario, strategy, confidence, total_market_revenue)
+data_revenue <- data_revenue[(data_revenue$confidence == 50),]
+data_revenue <- select(data_revenue, GID_0, scenario, strategy, total_market_revenue)
 
 data_bus_mod <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_business_model_options.csv'))
+data_bus_mod <- data_bus_mod[(data_bus_mod$confidence == 50),]
 data_bus_mod <- select(data_bus_mod, GID_0, scenario, strategy, decile, total_market_cost)
 
 data_bus_mod <- merge(data_bus_mod, data_revenue, by=c('GID_0', 'strategy', 'scenario'))
@@ -215,9 +221,11 @@ data_bus_mod = data_bus_mod[!(data_bus_mod$strategy_summary == 'baseline'), ]
 
 #policy
 data_revenue <- read.csv(file.path(folder, '..', 'results', 'national_market_results_policy_options.csv'))
-data_revenue <- select(data_revenue, GID_0, scenario, strategy, confidence, total_market_revenue)
+data_revenue <- data_revenue[(data_revenue$confidence == 50),]
+data_revenue <- select(data_revenue, GID_0, scenario, strategy, total_market_revenue)
 
 data_policy <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_policy_options.csv'))
+data_policy <- data_policy[(data_policy$confidence == 50),]
 data_policy <- select(data_policy, GID_0, scenario, strategy, decile, total_market_cost)
 
 data_policy <- merge(data_policy, data_revenue, by=c('GID_0', 'strategy', 'scenario'))
@@ -256,9 +264,11 @@ tax_high$strategy_summary = 'tax_high'
 
 #mixed
 data_revenue <- read.csv(file.path(folder, '..', 'results', 'national_market_results_mixed_options.csv'))
-data_revenue <- select(data_revenue, GID_0, scenario, strategy, confidence, total_market_revenue)
+data_revenue <- data_revenue[(data_revenue$confidence == 50),]
+data_revenue <- select(data_revenue, GID_0, scenario, strategy, total_market_revenue)
 
 data_mixed <- read.csv(file.path(folder, '..', 'results', 'decile_market_results_mixed_options.csv'))
+data_mixed <- data_mixed[(data_mixed$confidence == 50),]
 data_mixed <- select(data_mixed, GID_0, scenario, strategy, decile, total_market_cost)
 
 data_mixed <- merge(data_mixed, data_revenue, by=c('GID_0', 'strategy', 'scenario'))
@@ -315,7 +325,6 @@ results$tech_strategy = factor(results$tech_strategy,
 results = with(results, results[order(GID_0, scenario, strategy_summary, tech_strategy),])
 results$strategy = NULL
 results$Metric = 'Viability'
-
 
 names(results)[names(results)=="GID_0"] <- "Country"
 names(results)[names(results)=="scenario"] <- "Scenario"
@@ -376,14 +385,14 @@ viability_table <- function(x, df, y){
   kableExtra::save_kable(df, file=y, zoom = 1.5)
 }
 
-# viability_table('Malawi', results_viability, 'b_viability_a_malawi.png')
-# viability_table('Uganda', results_viability, 'b_viability_b_uganda.png')
-# viability_table('Senegal', results_viability, 'b_viability_c_senegal.png')
-# viability_table('Kenya', results_viability, 'b_viability_d_kenya.png')
-# viability_table('Pakistan', results_viability, 'b_viability_e_pakistan.png')
-# viability_table('Albania', results_viability, 'b_viability_f_albania.png')
-# viability_table('Peru', results_viability, 'b_viability_g_peru.png')
-# viability_table('Mexico', results_viability, 'b_viability_h_mexico.png')
+viability_table('Malawi', results_viability, 'b_viability_a_malawi.png')
+viability_table('Uganda', results_viability, 'b_viability_b_uganda.png')
+viability_table('Senegal', results_viability, 'b_viability_c_senegal.png')
+viability_table('Kenya', results_viability, 'b_viability_d_kenya.png')
+viability_table('Pakistan', results_viability, 'b_viability_e_pakistan.png')
+viability_table('Albania', results_viability, 'b_viability_f_albania.png')
+viability_table('Peru', results_viability, 'b_viability_g_peru.png')
+viability_table('Mexico', results_viability, 'b_viability_h_mexico.png')
 
 path = file.path(folder,'vis_results', 'b_viability_of_strategies.csv')
 write.csv(results_viability, path, row.names=FALSE)
@@ -394,13 +403,14 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #technology
 data_tech <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_technology_options.csv'))
-data_tech <- data_tech#[1,]
+data_tech <- data_tech[(data_tech$confidence == 50),]
 
-data_tech$private_cost = data_tech$total_market_cost
-
-data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
-
-data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
+# data_tech$private_cost = data_tech$total_market_cost
+# data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
+# data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
+# data_tech$private_cost = data_tech$private_cost
+# data_tech$government_cost = (data_tech$total_required_state_subsidy - data_tech$total_spectrum_cost) - data_tech$total_tax
+# data_tech$societal_cost = data_tech$total_market_cost + data_tech$total_government_cost
 
 data_tech$strategy_summary = 'baseline'
 data_tech$strategy <- as.character(data_tech$strategy)
@@ -417,14 +427,13 @@ data_tech$backhaul = NULL
 
 #bus_mod
 data_bus_mod <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_business_model_options.csv'))
+data_bus_mod <- data_bus_mod[(data_bus_mod$confidence == 50),]
 
-data_bus_mod$private_cost = data_bus_mod$total_market_cost
-
-data_bus_mod$government_cost = (data_bus_mod$total_required_state_subsidy - 
-                                  data_bus_mod$total_spectrum_cost - 
-                                  data_bus_mod$total_tax)
-
-data_bus_mod$societal_cost = data_bus_mod$private_cost + data_bus_mod$government_cost
+# data_bus_mod$private_cost = data_bus_mod$total_market_cost
+# data_bus_mod$government_cost = (data_bus_mod$total_required_state_subsidy - 
+#                                   data_bus_mod$total_spectrum_cost - 
+#                                   data_bus_mod$total_tax)
+# data_bus_mod$societal_cost = data_bus_mod$private_cost + data_bus_mod$government_cost
 
 data_bus_mod$strategy <- as.character(data_bus_mod$strategy)
 
@@ -434,16 +443,14 @@ data_bus_mod = data_bus_mod[!(data_bus_mod$strategy_summary == 'baseline'), ]
 
 #policy
 data_policy <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_policy_options.csv'))
-data_policy <- data_policy#[150,]
+data_policy <- data_policy[(data_policy$confidence == 50),]
 
-data_policy$private_cost = data_policy$total_market_cost
-
-data_policy$government_cost = (data_policy$total_required_state_subsidy - 
-                                 data_policy$total_spectrum_cost - 
-                                 data_policy$total_tax)
-# data_policy$government_cost[data_policy$government_cost < 0 ] <- 0
-
-data_policy$societal_cost = data_policy$total_market_cost + data_policy$government_cost
+# data_policy$private_cost = data_policy$total_market_cost
+# data_policy$government_cost = (data_policy$total_required_state_subsidy - 
+#                                  data_policy$total_spectrum_cost - 
+#                                  data_policy$total_tax)
+# # data_policy$government_cost[data_policy$government_cost < 0 ] <- 0
+# data_policy$societal_cost = data_policy$total_market_cost + data_policy$government_cost
 
 spectrum_low = data_policy %>%
   filter(str_detect(strategy, "baseline_baseline_low_baseline")) 
@@ -463,14 +470,12 @@ tax_high$strategy_summary = 'tax_high'
 
 #mixed
 data_mixed <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_mixed_options.csv'))
-
-data_mixed$private_cost = data_mixed$total_market_cost
-
-data_mixed$government_cost = (data_mixed$total_required_state_subsidy - 
-                                (data_mixed$total_spectrum_cost + 
-                                data_mixed$total_tax))
-
-data_mixed$societal_cost = data_mixed$private_cost + data_mixed$government_cost
+data_mixed <- data_mixed[(data_mixed$confidence == 50),]
+# data_mixed$private_cost = data_mixed$total_market_cost
+# data_mixed$government_cost = (data_mixed$total_required_state_subsidy - 
+#                                 (data_mixed$total_spectrum_cost + 
+#                                 data_mixed$total_tax))
+# data_mixed$societal_cost = data_mixed$private_cost + data_mixed$government_cost
 
 data_mixed$strategy <- as.character(data_mixed$strategy)
 
@@ -537,6 +542,9 @@ cost_table <- function(df, x, y, z, a){
   df = df %>%
     pivot_wider(names_from = strategy_summary, values_from = y)
 
+  df = select(df, 'Country', 'Scenario', 'Strategy', 'Baseline', 'Passive', 'Active', 'Neutral',
+              'Low P.', 'High P.', 'Low T.', 'High T.', 'Mixed')
+  
   df[is.na(df)] <- 0
 
   df = kbl(df, 'html',
@@ -555,44 +563,47 @@ cost_table <- function(df, x, y, z, a){
   setwd(path)
   kableExtra::save_kable(df, file=z, zoom = 1.5)
 }
-# 
-# a = 'Total societal cost ($m) of reaching universal access (operators plus net cost to government)'
-# cost_table(results, 'Malawi', 'societal_cost', 'c_societal_cost_a_malawi.png', a)
-# cost_table(results, 'Uganda', 'societal_cost', 'c_societal_cost_b_uganda.png', a)
-# cost_table(results, 'Senegal', 'societal_cost', 'c_societal_cost_c_senegal.png', a)
-# cost_table(results, 'Kenya', 'societal_cost', 'c_societal_cost_d_kenya.png', a)
-# cost_table(results, 'Pakistan', 'societal_cost', 'c_societal_cost_e_pakistan.png', a)
-# cost_table(results, 'Albania', 'societal_cost', 'c_societal_cost_f_albania.png', a)
-# cost_table(results, 'Peru', 'societal_cost', 'c_societal_cost_g_peru.png', a)
-# cost_table(results, 'Mexico', 'societal_cost', 'c_societal_cost_h_mexico.png', a)
-# 
-# a = 'Total cost ($m) of reaching universal access to operators'
-# cost_table(results, 'Malawi', 'private_cost', 'd_private_cost_a_malawi.png', a)
-# cost_table(results, 'Uganda', 'private_cost', 'd_private_cost_b_uganda.png', a)
-# cost_table(results, 'Senegal', 'private_cost', 'd_private_cost_c_senegal.png', a)
-# cost_table(results, 'Kenya', 'private_cost', 'd_private_cost_d_kenya.png', a)
-# cost_table(results, 'Pakistan', 'private_cost', 'd_private_cost_e_pakistan.png', a)
-# cost_table(results, 'Albania', 'private_cost', 'd_private_cost_f_albania.png', a)
-# cost_table(results, 'Peru', 'private_cost', 'd_private_cost_g_peru.png', a)
-# cost_table(results, 'Mexico', 'private_cost', 'd_private_cost_h_mexico.png', a)
-# 
-# a = 'Total net cost ($m) of reaching universal access to government (subsidy outlay minus revenues from spectrum fees and taxes)'
-# cost_table(results, 'Malawi', 'government_cost', 'e_government_cost_a_malawi.png', a)
-# cost_table(results, 'Uganda', 'government_cost', 'e_government_cost_b_uganda.png', a)
-# cost_table(results, 'Senegal', 'government_cost', 'e_government_cost_c_senegal.png', a)
-# cost_table(results, 'Kenya', 'government_cost', 'e_government_cost_d_kenya.png', a)
-# cost_table(results, 'Pakistan', 'government_cost', 'e_government_cost_e_pakistan.png', a)
-# cost_table(results, 'Albania', 'government_cost', 'e_government_cost_f_albania.png', a)
-# cost_table(results, 'Peru', 'government_cost', 'e_government_cost_g_peru.png', a)
-# cost_table(results, 'Mexico', 'government_cost', 'e_government_cost_h_mexico.png', a)
+
+a = 'Total societal cost ($m) of reaching universal access (operator cost plus net cost to government)'
+cost_table(results, 'Malawi', 'societal_cost', 'c_societal_cost_a_malawi.png', a)
+cost_table(results, 'Uganda', 'societal_cost', 'c_societal_cost_b_uganda.png', a)
+cost_table(results, 'Senegal', 'societal_cost', 'c_societal_cost_c_senegal.png', a)
+cost_table(results, 'Kenya', 'societal_cost', 'c_societal_cost_d_kenya.png', a)
+cost_table(results, 'Pakistan', 'societal_cost', 'c_societal_cost_e_pakistan.png', a)
+cost_table(results, 'Albania', 'societal_cost', 'c_societal_cost_f_albania.png', a)
+cost_table(results, 'Peru', 'societal_cost', 'c_societal_cost_g_peru.png', a)
+cost_table(results, 'Mexico', 'societal_cost', 'c_societal_cost_h_mexico.png', a)
+
+a = 'Total cost ($m) of reaching universal access to operators'
+cost_table(results, 'Malawi', 'private_cost', 'd_private_cost_a_malawi.png', a)
+cost_table(results, 'Uganda', 'private_cost', 'd_private_cost_b_uganda.png', a)
+cost_table(results, 'Senegal', 'private_cost', 'd_private_cost_c_senegal.png', a)
+cost_table(results, 'Kenya', 'private_cost', 'd_private_cost_d_kenya.png', a)
+cost_table(results, 'Pakistan', 'private_cost', 'd_private_cost_e_pakistan.png', a)
+cost_table(results, 'Albania', 'private_cost', 'd_private_cost_f_albania.png', a)
+cost_table(results, 'Peru', 'private_cost', 'd_private_cost_g_peru.png', a)
+cost_table(results, 'Mexico', 'private_cost', 'd_private_cost_h_mexico.png', a)
+
+a = 'Total net cost ($m) of reaching universal access to government (subsidy outlay minus revenues from spectrum fees and taxes)'
+cost_table(results, 'Malawi', 'government_cost', 'e_government_cost_a_malawi.png', a)
+cost_table(results, 'Uganda', 'government_cost', 'e_government_cost_b_uganda.png', a)
+cost_table(results, 'Senegal', 'government_cost', 'e_government_cost_c_senegal.png', a)
+cost_table(results, 'Kenya', 'government_cost', 'e_government_cost_d_kenya.png', a)
+cost_table(results, 'Pakistan', 'government_cost', 'e_government_cost_e_pakistan.png', a)
+cost_table(results, 'Albania', 'government_cost', 'e_government_cost_f_albania.png', a)
+cost_table(results, 'Peru', 'government_cost', 'e_government_cost_g_peru.png', a)
+cost_table(results, 'Mexico', 'government_cost', 'e_government_cost_h_mexico.png', a)
 
 results_costs = with(results, results[order(Country, Scenario, strategy_summary, Strategy),])
 results_costs$strategy = NULL
 
+path = file.path(folder, 'vis_results', 'd_results_costs.csv')
+write.csv(results_costs, path, row.names=FALSE)
+
 results_by_country <- gather(results_costs, Metric, value, societal_cost:government_cost)
 
 results_by_country = results_by_country %>%
-  pivot_wider(names_from = strategy_summary, values_from = value)
+  pivot_wider(names_from = strategy_summary, values_from = value) 
 
 results_by_country = rbind(results_by_country, results_viability)
 
