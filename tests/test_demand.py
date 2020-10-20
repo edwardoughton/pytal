@@ -45,12 +45,12 @@ def test_estimate_demand(
 
     # 1667 phones
     # arpu = 15
-    assert round(answer[0]['total_mno_revenue']) == round(15 * 5000 / 3)
+    assert round(answer[0]['total_mno_revenue']) == round(15 * 5000 * 12 / 3)
 
     # 1667 phones
     # arpu = 15
     # area = 2
-    assert round(answer[0]['revenue_km2']) == round((15 * 5000 / 3) / 2)
+    assert round(answer[0]['revenue_km2']) == round((15 * 5000 * 12 / 3) / 2)
 
     # 833 smartphones
     # scenario = 30
@@ -104,7 +104,7 @@ def test_estimate_demand(
     # 1667 phones on network
     # arpu = 15
     # 40% subsidy
-    assert round(answer[0]['total_mno_revenue']) == round(5000 * 15 / 3)
+    assert round(answer[0]['total_mno_revenue']) == round(5000 * 15 * 12 / 3)
 
     setup_region[0]['geotype'] = 'rural'
     setup_region[0]['mean_luminosity_km2'] = 2
@@ -150,12 +150,13 @@ def test_estimate_demand(
     assert round(answer[0]['smartphones_on_network']) == smartphones_on_network
 
     # 5000 phones
-    # arpu = 7
+    # arpu = 7 # monthly
     # discounted arpur over 10 years @ 5% = 242
     #[35000.0, 33333.33333333333, 31746.031746031746, 30234.31594860166,
     # 28794.586617715864, 27423.41582639606, 26117.538882281962, 24873.846554554246,
     # 23689.377671004044, 22561.312067622897, 21486.963873926572]
-    assert round(answer[0]['total_mno_revenue']) == round(305261)
+    # multplied by 12 months per year
+    assert round(answer[0]['total_mno_revenue']) == round(3663129)
 
     # 2500 smartphones
     # scenario = 50

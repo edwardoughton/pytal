@@ -56,7 +56,6 @@ def setup_global_parameters():
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
         'confidence': [1, 10, 50],
-        # 'networks': 2,
         'local_node_spacing_km2': 40,
         'cots_processing_split_urban': 2,
         'cots_processing_split_suburban': 4,
@@ -67,6 +66,7 @@ def setup_global_parameters():
         'cloud_power_supply_converter_split': 7,
         'software_split': 7,
         'cloud_backhaul_split': 7,
+        'tdd_dl_to_ul': '80:20'
     }
 
 
@@ -172,7 +172,8 @@ def setup_costs():
         'control_unit': 1500,
         'cooling_fans': 250,
         'distributed_power_supply_converter': 250,
-        'power_generator_battery_system': 5000,
+        'power_generator_battery_system_4G': 5000,
+        'power_generator_battery_system_5G': 5000,
         'bbu_cabinet': 500,
         'cots_processing': 500,
         'io_n2_n3': 1500,
@@ -187,7 +188,8 @@ def setup_costs():
         'site_rental_suburban': 4000,
         'site_rental_rural': 2000,
         'router': 2000,
-        'power': 600,
+        'power_4G': 600,
+        'power_5G': 600,
         'microwave_small': 20000,
         'microwave_medium': 30000,
         'microwave_large': 40000,
@@ -225,7 +227,20 @@ def setup_lookup():
             (0.15, 40),
             (2, 1000)
         ],
-
+        ('urban', 'macro', '700', '5G', '50'): [
+            (0.01, 1),
+            (0.02, 2),
+            (0.05, 5),
+            (0.15, 15),
+            (2, 100)
+        ],
+        ('urban', 'macro', '3500', '5G', '50'): [
+            (0.01, 5),
+            (0.02, 10),
+            (0.05, 20),
+            (0.15, 40),
+            (2, 1000)
+        ],
     }
 
 
