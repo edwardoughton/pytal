@@ -111,6 +111,7 @@ vis/spectrum/figures/*
 vis/backhaul/figures/*
 vis/clustering/figures/*
 vis/subscriptions/data_inputs/*
+vis/subscriptions/figures/*
 vis/smartphones/figures/*
 vis/smartphones/data_inputs/*
 vis/global_cost/figures/*
