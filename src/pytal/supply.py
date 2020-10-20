@@ -55,7 +55,7 @@ def estimate_supply(country, regions, capacity_lut, option, global_parameters,
     for region in regions:
 
         region['network_site_density'] = find_site_density(region, option,
-            country_parameters, capacity_lut, ci)
+            global_parameters, country_parameters, capacity_lut, ci)
 
         total_sites_required = math.ceil(region['network_site_density'] *
             region['area_km2'])
@@ -87,7 +87,8 @@ def estimate_supply(country, regions, capacity_lut, option, global_parameters,
     return output_regions
 
 
-def find_site_density(region, option, country_parameters, capacity_lut, ci):
+def find_site_density(region, option, global_parameters, country_parameters,
+    capacity_lut, ci):
     """
     For a given region, estimate the number of needed sites.
 
@@ -101,6 +102,8 @@ def find_site_density(region, option, country_parameters, capacity_lut, ci):
         on the type of technology generation, core and backhaul, and the
         strategy for infrastructure sharing, the number of networks in each
         geotype, spectrum and taxation.
+    global_parameters : dict
+        All global model parameters.
     country_parameters : dict
         All country specific parameters.
     capacity_lut : dict
@@ -137,7 +140,7 @@ def find_site_density(region, option, country_parameters, capacity_lut, ci):
             frequency,
             generation,
             ci
-            )
+        )
 
         for item in density_capacities:
             site_density, capacity = item
@@ -146,11 +149,18 @@ def find_site_density(region, option, country_parameters, capacity_lut, ci):
     density_lut = []
 
     for density in list(unique_densities):
+
         capacity = 0
+
         for item in frequencies:
 
             frequency = str(item['frequency'])
-            bandwidth = float(item['bandwidth'].split('x')[1])
+            channels, bandwidth = item['bandwidth'].split('x')
+            channels, bandwidth = float(channels), float(bandwidth)
+
+            if channels == 1: #allocate downlink channel width when using TDD
+                downlink = float(global_parameters['tdd_dl_to_ul'].split(':')[0])
+                bandwidth = bandwidth * (downlink / 100)
 
             density_capacities = lookup_capacity(
                 capacity_lut,

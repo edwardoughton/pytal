@@ -275,7 +275,8 @@ if __name__ == '__main__':
         'control_unit': 1500,
         'cooling_fans': 250,
         'distributed_power_supply_converter': 250,
-        'power_generator_battery_system': 5000,
+        'power_generator_battery_system_4G': 5000,
+        'power_generator_battery_system_5G': 15000,
         'bbu_cabinet': 500,
         'cots_processing': 500,
         'io_n2_n3': 1500,
@@ -290,12 +291,12 @@ if __name__ == '__main__':
         'site_rental_suburban': 4000,
         'site_rental_rural': 1000,
         'router': 2000,
-        'microwave_small': 20000,
-        'microwave_medium': 30000,
-        'microwave_large': 60000,
-        'fiber_urban_m': 20,
-        'fiber_suburban_m': 10,
-        'fiber_rural_m': 2,
+        'microwave_small': 30000,
+        'microwave_medium': 40000,
+        'microwave_large': 80000,
+        'fiber_urban_m': 25,
+        'fiber_suburban_m': 15,
+        'fiber_rural_m': 5,
         'core_node_epc': 75000,
         'core_node_nsa': 75000,
         'core_node_sa': 250000,
@@ -307,16 +308,17 @@ if __name__ == '__main__':
         'regional_node_lower_epc': 20000,
         'regional_node_lower_nsa': 20000,
         'regional_node_lower_sa': 100000,
-        'power': 650,
+        'power_4G': 5000,
+        'power_5G': 10000,
     }
 
     GLOBAL_PARAMETERS = {
-        'overbooking_factor': 50,
+        'overbooking_factor': 20,
         'return_period': 10,
         'discount_rate': 5,
         'opex_percentage_of_capex': 10,
         'sectorization': 3,
-        'confidence': [5, 50, 95],# [50],
+        'confidence': [50], #[5, 50, 95],
         'networks': 3,
         'local_node_spacing_km2': 40,
         'io_n2_n3': 1,
@@ -328,6 +330,7 @@ if __name__ == '__main__':
         'rack_split': 7,
         'cloud_power_supply_converter_split': 7,
         'cloud_backhaul_split': 7,
+        'tdd_dl_to_ul': '70:30'
         }
 
     path = os.path.join(DATA_RAW, 'pysim5g', 'capacity_lut_by_frequency.csv')
@@ -341,7 +344,7 @@ if __name__ == '__main__':
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2},
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 1},
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1},
-        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1},
+        {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 3, 'regional_nodes_level': 1},
         ]
 
     decision_options = [

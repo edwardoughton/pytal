@@ -72,7 +72,7 @@ def estimate_demand(regions, option, global_parameters,
 
         for timestep in timesteps:
 
-            region['arpu_discounted'] = estimate_arpu(
+            region['arpu_discounted_monthly'] = estimate_arpu(
                 region,
                 timestep,
                 global_parameters,
@@ -121,7 +121,11 @@ def estimate_demand(regions, option, global_parameters,
                 region['area_km2']
                 ))
 
-            annual_revenue = region['arpu_discounted'] * region['phones_on_network']
+            annual_revenue = (
+                region['arpu_discounted_monthly'] *
+                region['phones_on_network'] *
+                12
+            )
 
             revenue.append(annual_revenue)
 
@@ -136,7 +140,7 @@ def estimate_demand(regions, option, global_parameters,
                 'area_km2': region['area_km2'],
                 'population_km2': region['population_km2'],
                 'geotype': region['geotype'],
-                'arpu_discounted': region['arpu_discounted'],
+                'arpu_discounted_monthly': region['arpu_discounted_monthly'],
                 'penetration': region['penetration'],
                 'population_with_phones': region['population_with_phones'],
                 'phones_on_network': region['phones_on_network'],

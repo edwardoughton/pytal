@@ -198,7 +198,7 @@ def process_regions(country):
 
     print('Completed processing of regional shapes level {}'.format(level))
 
-    return print('complete')
+    return print('Complete')
 
 
 def process_settlement_layer(country):
@@ -435,8 +435,8 @@ def process_regional_coverage(country):
     regions = gpd.read_file(path)
 
     technologies = [
-        'GSM',
-        '3G',
+        # 'GSM',
+        # '3G',
         '4G'
     ]
 
@@ -466,9 +466,9 @@ def process_regional_coverage(country):
     return output
 
 
-def get_regional_data(country):
+def get_pop_and_luminosity_data(country):
     """
-    Extract regional data including luminosity and population.
+    Extract regional luminosity and population data.
 
     Parameters
     ----------
@@ -485,15 +485,8 @@ def get_regional_data(country):
     # if os.path.exists(path_output):
     #     return print('Regional data already exists')
 
-    path_country = os.path.join(DATA_INTERMEDIATE, iso3,
-        'national_outline.shp')
-
-    coverage = process_regional_coverage(country)
-
-    single_country = gpd.read_file(path_country)
-
     print('----')
-    print('working on {}'.format(iso3))
+    print('Working on pop/luminosity for {}'.format(iso3))
 
     path_night_lights = os.path.join(DATA_INTERMEDIATE, iso3,
         'night_lights.tif')
@@ -545,41 +538,68 @@ def get_regional_data(country):
             mean_luminosity_km2 = 0
             population_km2 = 0
 
-        if 'GSM' in [c for c in coverage.keys()]:
-            if region[gid_level] in coverage['GSM']:
-                coverage_GSM_km2 = coverage['GSM'][region[gid_level]]
-            else:
-                coverage_GSM_km2 = 0
-        else:
-            coverage_GSM_km2 = 0
-
-        if '3G' in [c for c in coverage.keys()]:
-            if region[gid_level] in coverage['3G']:
-                coverage_3G_km2 = coverage['3G'][region[gid_level]]
-            else:
-                coverage_3G_km2 = 0
-        else:
-            coverage_3G_km2 = 0
-
-        if '4G' in [c for c in coverage.keys()]:
-            if region[gid_level] in coverage['4G']:
-                coverage_4G_km2 = coverage['4G'][region[gid_level]]
-            else:
-                coverage_4G_km2 = 0
-        else:
-            coverage_4G_km2 = 0
-
         results.append({
             'GID_0': region['GID_0'],
             'GID_id': region[gid_level],
             'GID_level': gid_level,
             'mean_luminosity_km2': mean_luminosity_km2,
-            'population': population_summation,
+            'population': (population_summation if population_summation else 0),
             'area_km2': area_km2,
             'population_km2': population_km2,
-            'coverage_GSM_percent': round(coverage_GSM_km2 / area_km2 * 100 if coverage_GSM_km2 else 0, 1),
-            'coverage_3G_percent': round(coverage_3G_km2 / area_km2 * 100 if coverage_3G_km2 else 0, 1),
-            'coverage_4G_percent': round(coverage_4G_km2 / area_km2 * 100 if coverage_4G_km2 else 0, 1),
+        })
+
+    results_df = pd.DataFrame(results)
+
+    results_df.to_csv(path_output, index=False)
+
+    return print('Completed population/luminosity data gathering')
+
+
+def get_regional_data(country):
+    """
+    Allocate regional coverage, estimated sites and backhaul.
+
+    Parameters
+    ----------
+    country : string
+        Three digit ISO country code.
+
+    """
+    iso3 = country['iso3']
+
+    path_input = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
+
+    regions = pd.read_csv(path_input)
+
+    path_output = os.path.join(DATA_INTERMEDIATE, iso3, 'regional_data.csv')
+
+    regions = regions.sort_values(by=['population_km2'], ascending=False)
+
+    total_pop = regions['population'].sum()
+
+    coverage_4G_to_allocate = country['coverage_4G'] # population coverage
+
+    results = []
+
+    for index, region in regions.iterrows():
+
+        pop_share_percentage = (region['population'] / total_pop) * 100
+
+        if coverage_4G_to_allocate <= 0:
+            coverage = 0
+        else:
+            coverage = 100
+            coverage_4G_to_allocate -= pop_share_percentage
+
+        results.append({
+            'GID_0': region['GID_0'],
+            'GID_id': region['GID_id'],
+            'GID_level': region['GID_level'],
+            'mean_luminosity_km2': region['mean_luminosity_km2'],
+            'population': region['population'],
+            'area_km2': region['area_km2'],
+            'population_km2': region['population_km2'],
+            'coverage_4G_percent': coverage,
         })
 
     print('Working on backhaul')
@@ -592,13 +612,18 @@ def get_regional_data(country):
 
     results_df.to_csv(path_output, index=False)
 
-    print('Completed {}'.format(single_country.NAME_0.values[0]))
-
-    return print('Completed night lights data querying')
+    print('Completed regional data gathering')
 
 
 def estimate_sites(data, iso3, backhaul_lut):
     """
+    Estimate sites based on mobile population coverage (2G-4G).
+
+    Parameters
+    ----------
+    data :
+    iso3 : string
+        Three digit ISO country code.
 
     """
     output = []
@@ -687,12 +712,9 @@ def estimate_sites(data, iso3, backhaul_lut):
                 'population': region['population'],
                 'area_km2': region['area_km2'],
                 'population_km2': region['population_km2'],
-                'coverage_GSM_percent': region['coverage_GSM_percent'],
-                'coverage_3G_percent': region['coverage_3G_percent'],
                 'coverage_4G_percent': region['coverage_4G_percent'],
                 'sites_estimated_total': sites_estimated_total,
                 'sites_estimated_km2': sites_estimated_km2,
-                'sites_3G': sites_estimated_total * (region['coverage_3G_percent'] /100),
                 'sites_4G': sites_estimated_total * (region['coverage_4G_percent'] /100),
                 'backhaul_fiber': backhaul_fiber,
                 'backhaul_copper': backhaul_copper,
@@ -2187,35 +2209,35 @@ if __name__ == '__main__':
     countries = [
         {'iso3': 'MWI', 'iso2': 'MW', 'regional_level': 2, #'regional_nodes_level': 3,
             'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 3.5, 'smartphone_growth': 1.5, 'cluster': 'C1'
+            'subs_growth': 3.5, 'smartphone_growth': 5, 'cluster': 'C1', 'coverage_4G': 16
         },
         {'iso3': 'UGA', 'iso2': 'UG', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 2, 'smartphone_growth': 1.5, 'cluster': 'C1'
+            'subs_growth': 2, 'smartphone_growth': 5, 'cluster': 'C1', 'coverage_4G': 30
         },
         {'iso3': 'SEN', 'iso2': 'SN', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'SSA', 'pop_density_km2': 200, 'settlement_size': 1000,
-            'subs_growth': 1.5, 'smartphone_growth': 1.5, 'cluster': 'C2'
+            'subs_growth': 1.5, 'smartphone_growth': 2, 'cluster': 'C2', 'coverage_4G': 55
         },
         {'iso3': 'KEN', 'iso2': 'KE', 'regional_level': 2, 'regional_nodes_level': 1,
             'region': 'SSA', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 1.5, 'smartphone_growth': 1.5, 'cluster': 'C2'
+            'subs_growth': 1.5, 'smartphone_growth': 2, 'cluster': 'C2', 'coverage_4G': 65
         },
         {'iso3': 'PAK', 'iso2': 'PK', 'regional_level': 3, 'regional_nodes_level': 2,
             'region': 'S&SE Asia', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 2.5, 'smartphone_growth': 2, 'cluster': 'C3'
+            'subs_growth': 2.5, 'smartphone_growth': 4, 'cluster': 'C3', 'coverage_4G': 67
         },
         {'iso3': 'ALB', 'iso2': 'AL', 'regional_level': 2, 'regional_nodes_level': 2,
             'region': 'Europe', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 0.3, 'smartphone_growth': 2, 'cluster': 'C4'
+            'subs_growth': 0.3, 'smartphone_growth': 1.5, 'cluster': 'C4', 'coverage_4G': 96
         },
         {'iso3': 'PER', 'iso2': 'PE', 'regional_level': 2, 'regional_nodes_level': 1,
             'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 0.5, 'smartphone_growth': 2, 'cluster': 'C5'
+            'subs_growth': 0.5, 'smartphone_growth': 1, 'cluster': 'C5', 'coverage_4G': 84
         },
         {'iso3': 'MEX', 'iso2': 'MX', 'regional_level': 2, 'regional_nodes_level': 1,
             'region': 'LAC', 'pop_density_km2': 500, 'settlement_size': 1000,
-            'subs_growth': 1.2, 'smartphone_growth': 2, 'cluster': 'C6'
+            'subs_growth': 1.2, 'smartphone_growth': 1, 'cluster': 'C6', 'coverage_4G': 85
         },
     ]
 
@@ -2223,50 +2245,53 @@ if __name__ == '__main__':
 
         print('Working on {}'.format(country['iso3']))
 
-        # print('Processing country boundary')
-        # process_country_shapes(country)
+        print('Processing country boundary')
+        process_country_shapes(country)
 
-        # print('Processing regions')
-        # process_regions(country)
+        print('Processing regions')
+        process_regions(country)
 
-        # print('Processing settlement layer')
-        # process_settlement_layer(country)
+        print('Processing settlement layer')
+        process_settlement_layer(country)
 
-        # print('Processing night lights')
-        # process_night_lights(country)
+        print('Processing night lights')
+        process_night_lights(country)
 
-        # print('Processing coverage shapes')
-        # process_coverage_shapes(country)
+        print('Processing coverage shapes')
+        process_coverage_shapes(country)
 
-        # print('Getting regional data')
-        # get_regional_data(country)
+        print('Getting population and luminosity')
+        get_pop_and_luminosity_data(country)
 
-        # print('Generating agglomeration lookup table')
-        # generate_agglomeration_lut(country)
+        print('Getting regional data')
+        get_regional_data(country)
 
-        # print('Load existing fiber infrastructure')
-        # process_existing_fiber(country)
+        print('Generating agglomeration lookup table')
+        generate_agglomeration_lut(country)
 
-        # print('Estimate existing nodes')
-        # find_nodes_on_existing_infrastructure(country)
+        print('Load existing fiber infrastructure')
+        process_existing_fiber(country)
 
-        # print('Find regional nodes')
-        # find_regional_nodes(country)
+        print('Estimate existing nodes')
+        find_nodes_on_existing_infrastructure(country)
 
-        # print('Fit edges')
-        # prepare_edge_fitting(country)
+        print('Find regional nodes')
+        find_regional_nodes(country)
 
-        # print('Fit regional edges')
-        # fit_regional_edges(country)
+        print('Fit edges')
+        prepare_edge_fitting(country)
 
-        # print('Create core lookup table')
-        # generate_core_lut(country)
+        print('Fit regional edges')
+        fit_regional_edges(country)
 
-        # print('Create backhaul lookup table')
-        # generate_backhaul_lut(country)
+        print('Create core lookup table')
+        generate_core_lut(country)
 
-        # print('Create subscription forcast')
-        # forecast_subscriptions(country)
+        print('Create backhaul lookup table')
+        generate_backhaul_lut(country)
+
+        print('Create subscription forcast')
+        forecast_subscriptions(country)
 
         print('Forecasting smartphones')
         forecast_smartphones(country)

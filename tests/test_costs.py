@@ -85,7 +85,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 596171.4
+    assert answer['network_cost'] == 601671.4
 
     setup_region[0]['new_mno_sites'] = 0
     setup_region[0]['upgraded_mno_sites'] = 1
@@ -101,7 +101,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert round(answer['network_cost']) == round(468402)
+    assert round(answer['network_cost']) == round(473902)
 
     setup_region[0]['sites_4G'] = 0
     setup_region[0]['new_mno_sites'] = 1
@@ -118,7 +118,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 715999.9000000001#(110322 + 11952 + 11952 + 1027906)
+    assert answer['network_cost'] == 721499.9000000001#(110322 + 11952 + 11952 + 1027906)
 
     setup_region[0]['new_mno_sites'] = 0
     setup_region[0]['upgraded_mno_sites'] = 1
@@ -134,7 +134,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1149540.7#63357.0 + 1027906
+    assert answer['network_cost'] == 1155040.7#63357.0 + 1027906
 
     setup_region[0]['new_mno_sites'] = 0
     setup_region[0]['upgraded_mno_sites'] = 1
@@ -150,7 +150,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1149540.7#63357 + 1027906
+    assert answer['network_cost'] == 1155040.7#63357 + 1027906
 
     setup_region[0]['new_mno_sites'] = 1
     setup_region[0]['upgraded_mno_sites'] = 1
@@ -166,7 +166,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 1232044.0000000002#152690 + 1027906
+    assert answer['network_cost'] == 1237544.0000000002#152690 + 1027906
 
     setup_region[0]['new_mno_sites'] = 1
     setup_region[0]['upgraded_mno_sites'] = 0
@@ -198,7 +198,7 @@ def test_find_single_network_cost(setup_region, setup_costs,
         setup_core_lut
     )
 
-    assert answer['network_cost'] == 2619016.4000000004#1451800.0 + 1027906
+    assert answer['network_cost'] == 2674016.4000000004#1451800.0 + 1027906
 
 
 def test_greenfield_4g(setup_region, setup_option, setup_costs,

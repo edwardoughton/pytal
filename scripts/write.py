@@ -41,7 +41,7 @@ def write_mno_demand(regional_annual_demand, folder, metric, path):
     regional_annual_demand = regional_annual_demand[[
         'GID_0', 'GID_id', 'scenario', 'strategy',
         'confidence', 'year', 'population', 'area_km2', 'population_km2',
-        'geotype', 'arpu_discounted', 'penetration', 'population_with_phones',
+        'geotype', 'arpu_discounted_monthly', 'penetration', 'population_with_phones',
         'phones_on_network', 'smartphone_penetration',
         'smartphones_on_network', 'revenue'
     ]]

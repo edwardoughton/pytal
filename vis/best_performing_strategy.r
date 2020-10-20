@@ -594,6 +594,112 @@ cost_table(results, 'Albania', 'government_cost', 'e_government_cost_f_albania.p
 cost_table(results, 'Peru', 'government_cost', 'e_government_cost_g_peru.png', a)
 cost_table(results, 'Mexico', 'government_cost', 'e_government_cost_h_mexico.png', a)
 
+
+
+
+
+
+#TABLE1
+results_wide <- gather(results, Metric, value, societal_cost:government_cost)
+
+results_wide = results_wide %>%
+  pivot_wider(names_from = strategy_summary, values_from = value) 
+
+results_wide = select(results_wide, Country, Scenario, Strategy, Metric, Baseline)
+
+results_wide = results_wide %>%
+  pivot_wider(names_from = Country, values_from = Baseline) 
+
+results_wide = with(results_wide, results_wide[order(Scenario, Strategy, Metric),])
+
+results_wide$Metric = factor(results_wide$Metric,
+   levels=c('private_cost', 'government_cost', 'societal_cost'),
+   labels=c('Private Cost ($m)', 'Government Cost ($m)','Societal Cost ($m)'))
+
+table1 = kbl(results_wide, 'html', caption = 'Baseline Technology Results by Country') %>%
+  kable_classic("striped", full_width = F, html_font = "Cambria")
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'tables')
+setwd(path)
+kableExtra::save_kable(table1, file='table1_baseline_tech_country_costs.png', zoom = 1.5)
+
+#TABLE2
+results_wide <- gather(results, Metric, value, societal_cost:government_cost)
+
+results_wide = results_wide[(results_wide$Strategy == '5G NSA (W)'),]
+
+results_wide = results_wide[
+  (results_wide$strategy_summary == "Baseline" | 
+   results_wide$strategy_summary == "Passive" |
+     results_wide$strategy_summary == "Active" | 
+     results_wide$strategy_summary == "Neutral" ), ]
+
+results_wide = results_wide %>%
+  pivot_wider(names_from = Country, values_from = value) 
+
+results_wide$Strategy = NULL
+# names(results_wide)[names(results_wide)=="Strategy"] <- "Technology"
+names(results_wide)[names(results_wide)=="strategy_summary"] <- "Strategy"
+
+results_wide$Metric = factor(results_wide$Metric,
+                   levels=c('private_cost', 'government_cost', 'societal_cost'),
+                   labels=c('Private Cost ($m)', 'Government Cost ($m)','Societal Cost ($m)'))
+
+
+results_wide = with(results_wide, results_wide[order(Scenario, Strategy),])
+
+table2 = kbl(results_wide, 'html', caption = 'Infrastructure Sharing Results by Country') %>%
+    kable_classic("striped", full_width = F, html_font = "Cambria")
+  
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'tables')
+setwd(path)
+kableExtra::save_kable(table2, file='table2_infra_sharing_country_costs.png', zoom = 1.5)
+
+
+#TABLE3
+results_wide <- gather(results, Metric, value, societal_cost:government_cost)
+
+results_wide = results_wide[(results_wide$Strategy == '5G NSA (W)'),]
+
+results_wide = results_wide[
+  (results_wide$strategy_summary == "Baseline" | 
+     results_wide$strategy_summary == "Low P." |
+     results_wide$strategy_summary == "High P."), ]
+
+results_wide = results_wide %>%
+  pivot_wider(names_from = Country, values_from = value) 
+
+results_wide$Strategy = NULL
+
+names(results_wide)[names(results_wide)=="strategy_summary"] <- "Strategy"
+
+results_wide$Metric = factor(results_wide$Metric,
+                             levels=c('private_cost', 'government_cost', 'societal_cost'),
+                             labels=c('Private Cost ($m)', 'Government Cost ($m)','Societal Cost ($m)'))
+
+results_wide$Strategy = factor(results_wide$Strategy,
+                   levels=c('Low P.', 'Baseline', 'High P.'),
+                   labels=c('Low Prices (-50%)', 'Baseline','High Prices (+50%)'))
+
+results_wide = with(results_wide, results_wide[order(Scenario, Strategy),])
+
+table3 = kbl(results_wide, 'html', caption = 'Spectrum Pricing Results by Country') %>%
+  kable_classic("striped", full_width = F, html_font = "Cambria")
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'tables')
+setwd(path)
+kableExtra::save_kable(table3, file='table3_spectrum_pricing_country_costs.png', zoom = 1.5)
+
+
+
+
+
+
+
+
 results_costs = with(results, results[order(Country, Scenario, strategy_summary, Strategy),])
 results_costs$strategy = NULL
 

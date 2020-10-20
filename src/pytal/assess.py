@@ -176,7 +176,7 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     if spectrum_cost == 'low':
         coverage_cost_usd_mhz_pop = (
             coverage_cost_usd_mhz_pop *
-            (country_parameters['financials']['spectrum_cost_low'] /100))
+            (country_parameters['financials']['spectrum_cost_low'] / 100))
         capacity_cost_usd_mhz_pop = (
             capacity_cost_usd_mhz_pop *
             (country_parameters['financials']['spectrum_cost_low'] /100))
