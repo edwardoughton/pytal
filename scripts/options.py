@@ -116,13 +116,28 @@ def generate_policy_options():
     """
     output = []
 
-    scenarios = ['S1_25_10_2', 'S2_200_50_5', 'S3_400_100_10']
-    generation_core_types = ['4G_epc','5G_nsa', '5G_sa']
-    backhaul_types = ['microwave', 'fiber']
+    scenarios = [
+        'S1_25_10_2',
+        'S2_200_50_5',
+        'S3_400_100_10'
+        ]
+    generation_core_types = [
+        '4G_epc',
+        '5G_nsa',
+        '5G_sa'
+        ]
+    backhaul_types = [
+        'microwave',
+        'fiber'
+        ]
     sharing_types = ['baseline']
     networks_types = ['baseline']
     spectrum_types = ['baseline', 'low', 'high']
-    tax_types = ['baseline', 'low', 'high']
+    tax_types = [
+        'baseline',
+        'low',
+        'high'
+        ]
 
     for scenario in scenarios:
         for generation_core_type in generation_core_types:
@@ -210,13 +225,13 @@ OPTIONS = {
 COUNTRY_PARAMETERS = {
     'MWI': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 6,
-            'medium': 3,
-            'low': 2,
+            'high': 3.5,
+            'medium': 2.5,
+            'low': 1,
         },
         'networks': {
             'baseline_urban': 3,
@@ -250,26 +265,26 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.02,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'UGA': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 6,
-            'medium': 3,
-            'low': 2,
+            'high': 3.5,
+            'medium': 2.5,
+            'low': 1,
         },
         'networks': {
             'baseline_urban': 3,
@@ -303,25 +318,25 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.02,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.01,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'SEN': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 9,
-            'medium': 7,
+            'high': 8,
+            'medium': 5,
             'low': 2,
         },
         'networks': {
@@ -356,25 +371,25 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
+            'profit_margin': 20,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.15,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'KEN': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 9,
-            'medium': 7,
+            'high': 8,
+            'medium': 5,
             'low': 2,
         },
         'networks': {
@@ -409,21 +424,21 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
-            'spectrum_coverage_baseline_usd_mhz_pop': 0.1,
+            'profit_margin': 20,
+            'spectrum_coverage_baseline_usd_mhz_pop': 0.15,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.08,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'PAK': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
             'high': 4,
@@ -466,26 +481,26 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.05,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.025,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'ALB': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 9,
+            'high': 8,
             'medium': 7,
-            'low': 5,
+            'low': 4,
         },
         'networks': {
             'baseline_urban': 3,
@@ -519,26 +534,26 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.4,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'PER': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 12,
+            'high': 11,
             'medium': 10,
-            'low': 7,
+            'low': 5,
         },
         'networks': {
             'baseline_urban': 4,
@@ -572,26 +587,26 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     'MEX': {
         'luminosity': {
-            'high': 3,
-            'medium': 1,
+            'high': 20,
+            'medium': 15,
         },
         'arpu': {
-            'high': 12,
+            'high': 11,
             'medium': 10,
-            'low': 7,
+            'low': 5,
         },
         'networks': {
             'baseline_urban': 3,
@@ -633,15 +648,15 @@ COUNTRY_PARAMETERS = {
         },
         'financials': {
             'wacc': 15,
-            'profit_margin': 10,
+            'profit_margin': 20,
             'spectrum_coverage_baseline_usd_mhz_pop': 0.2,
             'spectrum_capacity_baseline_usd_mhz_pop': 0.1,
-            'spectrum_cost_low': 50,
-            'spectrum_cost_high': 50,
+            'spectrum_cost_low': 25,
+            'spectrum_cost_high': 100,
             'tax_low': 10,
             'tax_baseline': 30,
             'tax_high': 40,
-            'administration_percentage_of_network_cost': 10,
+            'administration_percentage_of_network_cost': 20,
             },
         },
     }
