@@ -350,6 +350,9 @@ path = file.path(folder, 'tables')
 setwd(path)
 kableExtra::save_kable(table1, file='sup_baseline_tech_country_costs.png', zoom = 1.5)
 
+path = file.path(folder, 'vis_results', 'sup_baseline_tech_country_costs.csv')
+write.csv(results_wide, path, row.names=FALSE)
+
 results_wide = results_wide[(results_wide$Metric == 'Social Cost ($Bn)'),]
 
 table1 = results_wide %>%
@@ -418,11 +421,13 @@ table2 = results_wide %>%
   add_header_above(
     c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
 
-
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'tables')
 setwd(path)
 kableExtra::save_kable(table2, file='sup_infra_sharing_country_costs.png', zoom = 1.5)
+
+path = file.path(folder, 'vis_results', 'sup_infra_sharing_country_costs.csv')
+write.csv(results_wide, path, row.names=FALSE)
 
 results_wide = results_wide[(results_wide$Metric == 'Social Cost ($Bn)'),]
 
@@ -499,6 +504,9 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'tables')
 setwd(path)
 kableExtra::save_kable(table3, file='sup_spectrum_pricing_country_costs.png', zoom = 1.5)
+
+path = file.path(folder, 'vis_results', 'sup_spectrum_pricing_country_costs.csv')
+write.csv(results_wide, path, row.names=FALSE)
 
 results_S2 = results_wide[(results_wide$Scenario == 'S2 (<200 Mbps)'),]
 
@@ -646,6 +654,7 @@ cb <- function(x) {
     )
   )
 }
+
 headline_costs = ungroup(headline_costs)
 
 table4 = headline_costs %>%
@@ -669,19 +678,24 @@ path = file.path(folder, 'tables')
 setwd(path)
 kableExtra::save_kable(table4, file='e_costs_by_income_group.png', zoom = 1.5)
 
+path = file.path(folder, 'vis_results', 'headline_costs.csv')
+write.csv(headline_costs, path, row.names=FALSE)
+
 inc_group_costs = results[!(results$income_group == 'HIC'),]
 
 inc_group_costs <- select(inc_group_costs, country, scenario, strategy, metric,
-                          income_group, total_market_cost, gdp)
+                          income_group, total_market_cost, gdp, population)
 
 inc_group_costs = inc_group_costs %>%
   group_by(scenario, strategy, metric, income_group) %>%
   summarize(
+    population = sum(population),
     total_market_cost = sum(total_market_cost),
     gdp = sum(gdp)
   )
 
-inc_group_costs = inc_group_costs %>% gather(econ_metric, value, total_market_cost, gdp)
+inc_group_costs = inc_group_costs %>% 
+                  gather(econ_metric, value, total_market_cost, gdp)
 
 inc_group_costs$value_dc = round(inc_group_costs$value/1e9, 2)
 
@@ -689,16 +703,25 @@ inc_group_costs$combined <- paste(inc_group_costs$income_group, inc_group_costs$
 
 inc_group_costs = ungroup(inc_group_costs)
 
-inc_group_costs <- select(inc_group_costs, scenario, strategy, combined, econ_metric, value)
+inc_group_costs <- select(inc_group_costs, scenario, strategy, 
+                          combined, econ_metric, value, population)
 
 inc_group_costs =  inc_group_costs %>% spread(econ_metric, value)
+
+path = file.path(folder, 'vis_results', 'test.csv')
+write.csv(inc_group_costs, path, row.names=FALSE)
 
 inc_group_costs <- inc_group_costs %>%
   group_by(scenario, strategy, combined) %>%
   summarize(
-    # `(US$Bn)` = round(sum(total_market_cost)/1e9),
+    `population` = sum(population),
+    `total_cost $USDbn` = (sum(total_market_cost)/1e9),
+    `(GDP$Bn)` = round(sum(gdp)/1e9),
     `(GDP%)` = round((sum(total_market_cost)/5) / sum(gdp) * 100, 2),
   )
+
+path = file.path(folder, 'vis_results', 'test2.csv')
+write.csv(inc_group_costs, path, row.names=FALSE)
 
 inc_group_costs$combined = factor(inc_group_costs$combined,
                 levels=c(
@@ -742,7 +765,7 @@ cb <- function(x) {
   )
 }
 
-inc_group_costs = inc_group_costs %>%
+table5 = inc_group_costs %>%
   mutate(
     `Baseline\nLIC` = cb(`Baseline\nLIC`),
     `Lowest\nLIC` = cb(`Lowest\nLIC`),
@@ -764,4 +787,7 @@ inc_group_costs = inc_group_costs %>%
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'tables')
 setwd(path)
-kableExtra::save_kable(inc_group_costs, file='f_costs_by_income_group.png', zoom = 1.5)
+kableExtra::save_kable(table5, file='f_costs_by_income_group.png', zoom = 1.5)
+
+path = file.path(folder, 'vis_results', 'costs_by_income_group.csv')
+write.csv(inc_group_costs, path, row.names=FALSE)
