@@ -1,16 +1,117 @@
 ###VISUALISE MODEL OUTPUTS###
-# install.packages("tidyverse")
 library(tidyverse)
 library(ggpubr)
-# install.packages('kableExtra')
 library(kableExtra)
-# install.packages("magick")
 library(magick)
-# install.packages("webshot")
-# webshot::install_phantomjs()
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
+####################SUPPLY-DEMAND METRICS
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+
+data <- read.csv(file.path(folder, '..', 'results', 'decile_mno_results_technology_options.csv'))
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+#select desired columns
+data <- select(data, country, scenario, strategy, confidence, decile, #population, area_km2, 
+               population_km2, total_estimated_sites, existing_mno_sites,
+               total_estimated_sites_km2, existing_mno_sites_km2,
+               phone_density_on_network_km2, sp_density_on_network_km2,
+               total_mno_revenue, total_mno_cost, cost_per_network_user, 
+               # cost_per_sp_user
+)
+
+data <- data[(data$confidence == 50),]
+
+data$combined <- paste(data$country, data$scenario, sep="_")
+
+data$country = factor(data$country, levels=c('MWI',
+                                             "UGA",
+                                             "SEN",
+                                             "KEN",
+                                             "PAK",
+                                             "ALB",
+                                             "PER",
+                                             "MEX"),
+                      labels=c("Malawi","Uganda",
+                               "Senegal","Kenya",
+                               "Pakistan",
+                               "Albania",
+                               "Peru",
+                               "Mexico"))
+
+demand = data[(
+  data$scenario == 'S1_25_10_2' &
+    data$strategy == '4G_epc_fiber_baseline_baseline_baseline_baseline'
+),]
+
+demand <- select(demand, country, decile, population_km2, 
+                 phone_density_on_network_km2, 
+                 sp_density_on_network_km2)
+
+demand <- gather(demand, metric, value, population_km2:sp_density_on_network_km2)
+
+demand$metric = factor(demand$metric, 
+                       levels=c("population_km2",
+                                "phone_density_on_network_km2",
+                                "sp_density_on_network_km2"),
+                       labels=c("Population Density",
+                                "Modeled Network Phone Density",
+                                "Modeled Network Smartphone Density"))
+
+demand_densities <- ggplot(demand, aes(x=decile, y=value, colour=metric, group=metric)) + 
+  geom_line() +
+  scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
+  theme( legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  labs(colour=NULL,
+       title = "Demand-Side Density Metrics by Population Decile",
+       # subtitle = "Population and user densities",
+       x = "Population Decile", y = "Density (per km^2)") + 
+  scale_x_continuous(expand = c(0, 0.5), breaks = seq(0,100,20)) + 
+  scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
+  theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  guides(colour=guide_legend(ncol=3)) +
+  facet_wrap(~country, scales = "free", ncol=4) 
+
+supply = data[(
+  data$scenario == 'S1_25_10_2' &
+    data$strategy == '4G_epc_fiber_baseline_baseline_baseline_baseline'
+),]
+
+supply <- select(supply, country, decile, total_estimated_sites_km2, existing_mno_sites_km2)
+
+supply <- gather(supply, metric, value, total_estimated_sites_km2:existing_mno_sites_km2)
+
+supply$metric = factor(supply$metric, 
+                       levels=c("total_estimated_sites_km2",
+                                "existing_mno_sites_km2"),
+                       labels=c("Total Site Density",
+                                "Modeled Network Site Density"))
+
+supply_densities <- ggplot(supply, aes(x=decile, y=value, colour=metric, group=metric)) + 
+  geom_line() +
+  scale_fill_brewer(palette="Spectral", name = expression('Cost Type'), direction=1) +
+  theme( legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  labs(colour=NULL,
+       title = "Supply-Side Density Metrics by Population Decile",
+       x = "Population decile", y = "Density (per km^2)") + 
+  scale_x_continuous(expand = c(0, 0.5), breaks = seq(0,100,20)) + 
+  scale_y_continuous(expand = c(0, 0)) + #, limits = c(0,20)) +  
+  theme(panel.spacing = unit(0.6, "lines")) + expand_limits(y=0) +
+  guides(colour=guide_legend(ncol=3)) +
+  facet_wrap(~country, scales = "free", ncol=4) 
+
+demand_supply <- ggarrange(demand_densities, supply_densities, 
+                           ncol = 1, nrow = 2, align = c("hv"))
+
+#export to folder
+path = file.path(folder, 'figures_tables', 'a_demand_supply_panel.png')
+ggsave(path,  units="in", width=8, height=9, dpi=300)
+print(demand_supply)
+dev.off()
+
+################################
 #technology
 data_tech <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_technology_options.csv'))
 data_tech <- select(data_tech, GID_0, scenario, strategy, confidence, societal_cost)
@@ -101,6 +202,7 @@ rm(data_tech, data_bus_mod, data_policy, baseline, passive, active, shared,
 results$GID_0 = factor(results$GID_0,
                levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
                labels=c('Malawi', 'Uganda', 'Senegal', 'Kenya', 'Pakistan', 'Albania', 'Peru', 'Mexico'))
+
 results$scenario = factor(results$scenario, levels=c("S1_25_10_2",
                                                      "S2_200_50_5",
                                                      "S3_400_100_10"),
@@ -172,9 +274,9 @@ results = kable(results, "html", escape = F,
       "Hybrid" = 1)) 
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(results, file = 'a_best_performing_technology.png', zoom = 1.5)
+kableExtra::save_kable(results, file = 'b_best_performing_technology.png', zoom = 1.5)
 
 #################
 #Social Cost = MNO cost + govt cost
@@ -260,9 +362,9 @@ results = select(results, GID_0, scenario, tech_strategy, strategy_summary,
                  societal_cost, private_cost, government_cost,
 )
 
-results$private_cost = round(results$private_cost/1e9, 2)
-results$government_cost = round(results$government_cost/1e9, 2)
-results$societal_cost = round(results$societal_cost/1e9, 2)
+results$private_cost = signif(results$private_cost/1e9, 2)
+results$government_cost = signif(results$government_cost/1e9, 2)
+results$societal_cost = signif(results$societal_cost/1e9, 2)
 
 results$GID_0 = factor(results$GID_0,
                        levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
@@ -287,10 +389,10 @@ names(results)[names(results)=="GID_0"] <- "Country"
 names(results)[names(results)=="scenario"] <- "Scenario"
 names(results)[names(results)=="tech_strategy"] <- "Strategy"
 
-path = file.path(folder, 'vis_results', 'c_societal_costs.csv')
+path = file.path(folder, 'vis_results', 'societal_costs.csv')
 write.csv(results, path, row.names=FALSE)
 
-#TABLE1
+#######################################
 results_wide <- gather(results, Metric, value, societal_cost:government_cost)
 
 results_wide = results_wide %>%
@@ -343,13 +445,18 @@ table1 = results_wide %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Infrastructure Sharing Strategy: Baseline.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table1, file='sup_baseline_tech_country_costs.png', zoom = 1.5)
 
+######################################
 path = file.path(folder, 'vis_results', 'sup_baseline_tech_country_costs.csv')
 write.csv(results_wide, path, row.names=FALSE)
 
@@ -366,18 +473,23 @@ table1 = results_wide %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = 'Technology Results by Country') %>%
+  kable(escape = F, 
+  caption = 'Technology Results reported by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Infrastructure Sharing Strategy: Baseline.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(table1, file='b_baseline_tech_country_costs.png', zoom = 1.5)
+kableExtra::save_kable(table1, file='c_baseline_tech_country_costs.png', zoom = 1.5)
 
-#TABLE2
+#######################################
 results_wide <- gather(results, Metric, value, societal_cost:government_cost)
 
 results_wide = results_wide[(results_wide$Strategy == '5G NSA (W)'),]
@@ -415,20 +527,24 @@ table2 = results_wide %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = 'Infrastructure Sharing Results for 5G NSA (W) by Country') %>%
+  kable(escape = F, caption = 'Infrastructure Sharing Results by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table2, file='sup_infra_sharing_country_costs.png', zoom = 1.5)
 
 path = file.path(folder, 'vis_results', 'sup_infra_sharing_country_costs.csv')
 write.csv(results_wide, path, row.names=FALSE)
 
+#######################################
 results_wide = results_wide[(results_wide$Metric == 'Social Cost ($Bn)'),]
 
 table2 = results_wide %>%
@@ -442,18 +558,22 @@ table2 = results_wide %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = 'Infrastructure Sharing Results for 5G NSA (W) by Country') %>%
+  kable(escape = F, caption = 'Infrastructure Sharing Results by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(table2, file='c_infra_sharing_country_costs.png', zoom = 1.5)
+kableExtra::save_kable(table2, file='d_infra_sharing_country_costs.png', zoom = 1.5)
 
-#TABLE3
+###############################
 results_wide <- gather(results, Metric, value, societal_cost:government_cost)
 
 results_wide = results_wide[(results_wide$Strategy == '5G NSA (W)'),]
@@ -494,23 +614,185 @@ table3 = results_wide %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = 'Spectrum Pricing Results for 5G NSA (W) by Country') %>%
+  kable(escape = F, caption = 'Spectrum Pricing Results by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Infrastructure Sharing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table3, file='sup_spectrum_pricing_country_costs.png', zoom = 1.5)
 
 path = file.path(folder, 'vis_results', 'sup_spectrum_pricing_country_costs.csv')
 write.csv(results_wide, path, row.names=FALSE)
 
-results_S2 = results_wide[(results_wide$Scenario == 'S2 (<200 Mbps)'),]
+###############################
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+results_S2 = read.csv(file.path(folder, 'spectrum_ratio.csv'))
+results_S2$Scenario = NULL
+specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
 
-table3 = results_S2 %>%
+results_S2$Pakistan = specify_decimal(results_S2$Pakistan, 2)
+results_S2$Albania = specify_decimal(results_S2$Albania, 2)
+results_S2$Peru = specify_decimal(results_S2$Peru, 2)
+results_S2$Mexico = specify_decimal(results_S2$Mexico, 2)
+
+table4 = results_S2 %>%
+  kable(escape = F, caption = 'Spectrum Pricing Results by Country', digits=2) %>%
+  kable_classic("striped", full_width = F, html_font = "Cambria") %>%
+  row_spec(0, align = "c") %>%
+  row_spec(which(results_S2$Malawi >6), bold = T, color = "black", background = "lightgrey") %>%
+  add_header_above(
+    c(" "= 2, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Scenario: S2 (<200 Mbps).",
+                      "Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Infrastructure Sharing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 d.p."))
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'figures_tables')
+setwd(path)
+kableExtra::save_kable(table4, file='d_S2_spectrum_costs_ratio.png', zoom = 1.5)
+
+###################NATIONAL COST PROFILE FOR BASELINE
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+data <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_technology_options.csv'))
+
+data <- data[(data$strategy == "5G_nsa_microwave_baseline_baseline_baseline_baseline"),]
+# data <- data[(data$scenario == "S2_200_50_5"),]
+data <- data[(data$confidence == 50),]
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+data <- select(data, scenario, strategy, country, total_ran:total_market_cost)
+
+data = data %>%
+  group_by(scenario, strategy, country) %>%
+  mutate(
+    perc_ran = total_ran / total_market_cost * 100,
+    perc_backhaul = total_backhaul_fronthaul / total_market_cost * 100,
+    perc_civils = total_civils / total_market_cost * 100,
+    perc_core_network = total_core_network / total_market_cost * 100,
+    perc_administration = total_administration / total_market_cost * 100,
+    perc_spectrum_cost = total_spectrum_cost / total_market_cost * 100,
+    perc_tax = total_tax / total_market_cost * 100,
+    perc_profit_margin = total_profit_margin / total_market_cost * 100,
+  ) %>%
+  select(scenario, strategy, country, perc_ran, perc_backhaul, perc_civils, 
+         perc_core_network, perc_administration, perc_spectrum_cost,
+        perc_tax, perc_profit_margin)
+
+data <- gather(data, metric, value, perc_ran:perc_profit_margin)#ran:profit_margin)#
+
+data$metric = factor(data$metric, levels=c(
+  'perc_profit_margin',
+  'perc_tax',
+  'perc_spectrum_cost',
+  'perc_administration',
+  'perc_core_network',
+  'perc_civils',
+  'perc_backhaul',
+  'perc_ran'
+),
+labels=c(
+  "Profit",
+  "Tax",
+  "Spectrum",
+  "Administration",
+  'Core',
+  "Civils",
+  "Backhaul",
+  "RAN"
+))
+
+data$scenario = factor(data$scenario, levels=c("S1_25_10_2",
+                                                     "S2_200_50_5",
+                                                     "S3_400_100_10"),
+                          labels=c("S1 (<25 Mbps)",
+                                   "S2 (<200 Mbps)",
+                                   "S3 (<400 Mbps)"))
+
+data$country = factor(data$country, levels=c(
+  'MEX','PER','ALB','PAK','KEN','SEN','UGA','MWI'
+),
+labels=c(
+  'Mexico','Peru', 'Albania', 'Pakistan', 'Kenya', 'Senegal', 'Uganda','Malawi' 
+))
+
+table5 <- ggplot(data, aes(x=country, y=(value), group=metric, fill=metric)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_fill_brewer(palette="Spectral", name = NULL, direction=1) +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Private Cost Composition for 5G NSA (W) by Country", colour=NULL,
+       subtitle = "Baseline Infrastructure Sharing, Spectrum Pricing and Taxation",
+       x = NULL, y = "Percentage of Total Private Cost (%)") +
+  scale_y_continuous(expand = c(0, 0)) +  
+  theme(panel.spacing = unit(0.6, "lines")) +
+  guides(fill=guide_legend(ncol=8, reverse = TRUE)) +
+  facet_wrap(~scenario, scales = "free", ncol=3)
+
+path = file.path(folder, 'figures_tables', 'e_percentage_of_total_private_cost.png')
+ggsave(path, units="in", width=7, height=4, dpi=300)
+print(table5)
+dev.off()
+
+###################
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+data <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_all_options.csv'))
+
+data <- data[(data$confidence == 50),]
+
+names(data)[names(data) == 'GID_0'] <- 'country'
+
+data <- select(data, scenario, strategy, country, societal_cost)
+
+baseline <- data %>%
+  filter(str_detect(strategy, "5G_nsa_microwave")) %>% 
+  group_by(country, scenario) %>% 
+  filter(str_detect(strategy, "baseline_baseline_baseline_baseline")) 
+baseline$type = 'Baseline ($Bn)'
+
+data <- data %>%
+  filter(str_detect(strategy, "5G_nsa_microwave")) %>% 
+  group_by(country, scenario) %>%
+  filter(societal_cost == min(societal_cost)) 
+data$type = 'Lowest ($Bn)'
+
+all_data = rbind(data, baseline)
+
+all_data$country = factor(all_data$country,
+ levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
+ labels=c('Malawi', 'Uganda', 'Senegal', 'Kenya', 
+          'Pakistan', 'Albania', 'Peru', 'Mexico'))
+
+all_data$strategy = NULL
+
+all_data = all_data[!duplicated(all_data[c('scenario', 'country', 'type')]),]
+
+all_data$scenario = factor(all_data$scenario, levels=c("S1_25_10_2",
+                                                       "S2_200_50_5",
+                                                       "S3_400_100_10"),
+                           labels=c("S1 (<25 Mbps)",
+                                    "S2 (<200 Mbps)",
+                                    "S3 (<400 Mbps)"))
+
+all_data$societal_cost = round(all_data$societal_cost / 1e9, 1)
+
+names(all_data)[names(all_data) == 'scenario'] <- 'Scenario'
+names(all_data)[names(all_data) == 'type'] <- 'Strategy'
+
+all_data <- spread(all_data, country, societal_cost)
+
+table6 = all_data %>%
   mutate(
     Malawi = cb(Malawi),
     Uganda = cb(Uganda),
@@ -521,16 +803,218 @@ table3 = results_S2 %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = 'Spectrum Pricing Results for 5G NSA (W) by Country') %>%
+  kable(escape = F, caption = '(A) Social Cost of Universal Access NPV 2020-2030 by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
-    c(" "= 3, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1))
+    c(" "= 2, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Infrastructure Sharing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 1 d.p."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(table3, file='d_S2_spectrum_pricing_country_costs.png', zoom = 1.5)
+kableExtra::save_kable(table6, file='f_a_social_cost.png', zoom = 1.5)
+
+
+###################
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+data_revenue <- read.csv(file.path(folder, '..', 'results', 'national_mno_results_all_options.csv'))
+data_revenue <- data_revenue[(data_revenue$confidence == 50),]
+data_revenue <- select(data_revenue, GID_0, scenario, strategy, total_mno_revenue)
+
+data <- read.csv(file.path(folder, '..', 'results', 'decile_mno_cost_results_all_options.csv'))
+data <- data[(data$confidence == 50),]
+data <- data %>% filter(str_detect(strategy, "5G_nsa_microwave")) 
+
+data <- select(data, GID_0, scenario, strategy, decile, total_mno_cost, required_state_subsidy)
+
+data <- merge(data, data_revenue, by=c('GID_0', 'strategy', 'scenario'))
+
+data <- data[order(data$GID_0, data$scenario, data$strategy, data$decile),]
+
+#get baseline rows
+baseline <- data %>% filter(str_detect(strategy, "baseline_baseline_baseline_baseline")) 
+
+baseline <- baseline %>%
+  group_by(GID_0, scenario) %>%
+  mutate(
+    total_mno_revenue = total_mno_revenue/1e9,
+    cumulative_cost_bn = cumsum(round(total_mno_cost / 1e9, 3)),
+    cumulative_subsidy_bn = cumsum(round(required_state_subsidy / 1e9, 2))
+    )
+baseline$type = 'Baseline (%)'
+
+problems <- baseline %>%
+  group_by(GID_0, strategy, scenario) %>%
+  filter(total_mno_revenue <= cumulative_cost_bn) %>%
+  filter(decile == min(decile)) 
+
+baseline <- baseline %>%
+  group_by(GID_0, strategy, scenario) %>%
+  filter(total_mno_revenue >= cumulative_cost_bn)
+
+#get baseline rows
+lowest <- filter(data, !strategy %in% "5G_nsa_microwave_baseline_baseline_baseline_baseline") 
+
+lowest <- lowest[order(lowest$GID_0, lowest$scenario, lowest$strategy, lowest$decile),]
+
+lowest <- lowest %>%
+  group_by(GID_0, strategy, scenario) %>%
+  mutate(
+    total_mno_revenue = total_mno_revenue/1e9,
+    cumulative_cost_bn = cumsum(round(total_mno_cost / 1e9, 3)),
+    cumulative_subsidy_bn = cumsum(round(required_state_subsidy / 1e9, 2))
+    )
+lowest$type = 'Lowest (%)'
+
+lowest <- lowest %>%
+  group_by(GID_0, strategy, scenario) %>%
+  filter(total_mno_revenue >= cumulative_cost_bn)
+
+all_data = rbind(lowest, baseline)
+
+subsidy_all = all_data
+subsidy_all = rbind(subsidy_all, problems)
+
+all_data <- all_data %>%
+  group_by(GID_0, scenario, type) %>%
+  filter(decile == max(decile)) 
+
+all_data = rbind(all_data, problems)
+
+all_data$GID_0 = factor(all_data$GID_0,
+                        levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
+                        labels=c('Malawi', 'Uganda', 'Senegal', 'Kenya', 
+                                 'Pakistan', 'Albania', 'Peru', 'Mexico'))
+
+all_data = select(all_data, scenario, GID_0, decile, type)
+
+all_data = all_data[!duplicated(all_data[c('scenario', 'GID_0', 'type')]),]
+
+all_data$scenario = factor(all_data$scenario, levels=c("S1_25_10_2",
+                                                       "S2_200_50_5",
+                                                       "S3_400_100_10"),
+                           labels=c("S1 (<25 Mbps)",
+                                    "S2 (<200 Mbps)",
+                                    "S3 (<400 Mbps)"))
+
+names(all_data)[names(all_data) == 'scenario'] <- 'Scenario'
+names(all_data)[names(all_data) == 'type'] <- 'Strategy'
+
+all_data <- spread(all_data, GID_0, decile)
+
+all_data[is.na(all_data)] <- 0
+
+cb_inverted <- function(x) {
+  range <- max(abs(x))
+  width <- round(abs(range / x * 5), 2)
+  ifelse(
+    x < 100,
+    paste0(
+      '<span style="display: inline-block; border-radius: 2px; ',
+      'padding-right: 2px; background-color: lightpink; width: ',
+      width, '%; margin-right: 50%; text-align: right; float: right; ">', x, '</span>'
+    ),
+    paste0(
+      '<span style="display: inline-block; border-radius: 2px; ',
+      'padding-right: 2px; background-color: lightgreen; width: ',
+      width, '%; margin-left: 50%; text-align: left;">', x, '</span>'
+    )
+
+  )
+}
+
+table7 = all_data %>%
+  mutate(
+    Malawi = cb_inverted(Malawi),
+    Uganda = cb_inverted(Uganda),
+    Senegal = cb_inverted(Senegal),
+    Kenya = cb_inverted(Kenya),
+    Pakistan = cb_inverted(Pakistan),
+    Albania = cb_inverted(Albania),
+    Peru = cb_inverted(Peru),
+    Mexico = cb_inverted(Mexico)
+  ) %>%
+  kable(escape = F, caption = '(B) Commercially Viable Population Coverage by Country') %>%
+  kable_classic("striped", full_width = F, html_font = "Cambria") %>%
+  row_spec(0, align = "c") %>%
+  add_header_above(
+    c(" "= 2, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Infrastructure Sharing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 1 d.p."))
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'figures_tables')
+setwd(path)
+kableExtra::save_kable(table7, file='f_b_viable_coverage.png', zoom = 1.5)
+
+#########################################
+subsidy = ungroup(subsidy_all)
+
+subsidy <- subsidy %>%
+  group_by(GID_0, scenario, type) %>%
+  filter(decile == max(decile)) 
+
+subsidy = select(subsidy, scenario, strategy, GID_0, cumulative_subsidy_bn, type)
+
+subsidy$strategy = NULL
+
+subsidy = subsidy[!duplicated(subsidy[c('scenario', 'GID_0', 'type')]),]
+
+subsidy$scenario = factor(subsidy$scenario, levels=c("S1_25_10_2",
+                                                       "S2_200_50_5",
+                                                       "S3_400_100_10"),
+                           labels=c("S1 (<25 Mbps)",
+                                    "S2 (<200 Mbps)",
+                                    "S3 (<400 Mbps)"))
+
+subsidy$GID_0 = factor(subsidy$GID_0,
+                        levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
+                        labels=c('Malawi', 'Uganda', 'Senegal', 'Kenya', 
+                                 'Pakistan', 'Albania', 'Peru', 'Mexico'))
+
+names(subsidy)[names(subsidy) == 'scenario'] <- 'Scenario'
+names(subsidy)[names(subsidy) == 'type'] <- 'Strategy'
+
+subsidy$Strategy[subsidy$Strategy == 'Baseline (%)'] <- "Baseline ($Bn)"
+subsidy$Strategy[subsidy$Strategy == 'Lowest (%)'] <- 'Lowest ($Bn)'
+
+# subsidy$required_state_subsidy = round(subsidy$required_state_subsidy / 1e9, 3)
+
+subsidy <- spread(subsidy, GID_0, cumulative_subsidy_bn)
+
+table8 = subsidy %>%
+  mutate(
+    Malawi = cb(Malawi),
+    Uganda = cb(Uganda),
+    Senegal = cb(Senegal),
+    Kenya = cb(Kenya),
+    Pakistan = cb(Pakistan),
+    Albania = cb(Albania),
+    Peru = cb(Peru),
+    Mexico = cb(Mexico)
+  ) %>%
+  kable(escape = F, 
+        caption = '(C) Government Subsidy to Reach Universal Access NPV 2020-2030 by Country') %>%
+  kable_classic("striped", full_width = F, html_font = "Cambria") %>%
+  row_spec(0, align = "c") %>%
+  add_header_above(
+    c(" "= 2, "C1" = 2, "C2" = 2, "C3" = 1, "C4" = 1, "C5" = 1, "C6" = 1)) %>%
+  footnote(number = c("Technology Strategy: 5G NSA with Wireless Backhaul.",
+                      "Infrastructure Sharing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 1 d.p."))
+
+folder <- dirname(rstudioapi::getSourceEditorContext()$path)
+path = file.path(folder, 'figures_tables')
+setwd(path)
+kableExtra::save_kable(table8, file='f_c_subsidy.png', zoom = 1.5)
+
 
 ##################CLUSTER COSTS
 #get folder directory
@@ -576,16 +1060,7 @@ pop$iso3 <- as.character(pop$iso3)
 
 results <- merge(results, pop, by='iso3', all=FALSE)
 
-#Not sure if this is right
-#Current costs are for a user on a network with 25% market share
-#We then multiply the user cost across the whole population?
-#check and revise this
 results$total_market_cost <- results$mean_cost_per_pop * results$population
-
-# results$gdp_percentage <- (results$total_market_cost / 5) / results$gdp * 100
-
-# results$confidence = factor(results$confidence, levels=c('5','50', '95'),
-#                             labels=c("lower", 'mean', "upper"))
 
 results <- results[(results$confidence == 50),]
 
@@ -628,10 +1103,10 @@ headline_costs <- spread(headline_costs, metric, total_market_cost)
 headline_costs <- headline_costs %>%
   group_by(scenario, strategy) %>%
   summarize(
-    `Baseline (US$Tn)` = round(sum(Baseline)/1e12, 2),
-    `Lowest (US$Tn)` = round(sum(Lowest)/1e12, 2),
-    `Baseline (GDP%)` = round((sum(Baseline)/5) / sum(gdp) * 100, 2),
-    `Lowest (GDP%)` = round((sum(Lowest)/5)/ sum(gdp) * 100, 2)
+    `Baseline (US$Tn)` = signif(sum(Baseline)/1e12, 2),
+    `Lowest (US$Tn)` = signif(sum(Lowest)/1e12, 2),
+    `Baseline (GDP%)` = signif((sum(Baseline)/10) / sum(gdp) * 100, 2),
+    `Lowest (GDP%)` = signif((sum(Lowest)/10)/ sum(gdp) * 100, 2)
     )
 
 names(headline_costs)[names(headline_costs)=="strategy"] <- "Strategy"
@@ -670,16 +1145,20 @@ table4 = headline_costs %>%
   add_header_above(
     c(" " = 2,
       "Total Cost" = 2,
-      "5-Year GDP Share" = 2
-    ))
+      "10-Year GDP Share" = 2
+    )) %>%
+  footnote(number = c("Infrastructure Sharing Strategy: Baseline.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(table4, file='e_costs_by_income_group.png', zoom = 1.5)
+kableExtra::save_kable(table4, file='g_costs_by_income_group.png', zoom = 1.5)
 
-path = file.path(folder, 'vis_results', 'headline_costs.csv')
-write.csv(headline_costs, path, row.names=FALSE)
+# path = file.path(folder, 'vis_results', 'headline_costs.csv')
+# write.csv(headline_costs, path, row.names=FALSE)
 
 inc_group_costs = results[!(results$income_group == 'HIC'),]
 
@@ -708,8 +1187,8 @@ inc_group_costs <- select(inc_group_costs, scenario, strategy,
 
 inc_group_costs =  inc_group_costs %>% spread(econ_metric, value)
 
-path = file.path(folder, 'vis_results', 'test.csv')
-write.csv(inc_group_costs, path, row.names=FALSE)
+# path = file.path(folder, 'vis_results', 'test.csv')
+# write.csv(inc_group_costs, path, row.names=FALSE)
 
 inc_group_costs <- inc_group_costs %>%
   group_by(scenario, strategy, combined) %>%
@@ -717,11 +1196,11 @@ inc_group_costs <- inc_group_costs %>%
     `population` = sum(population),
     `total_cost $USDbn` = (sum(total_market_cost)/1e9),
     `(GDP$Bn)` = round(sum(gdp)/1e9),
-    `(GDP%)` = round((sum(total_market_cost)/5) / sum(gdp) * 100, 2),
+    `(GDP%)` = signif((sum(total_market_cost)/10) / sum(gdp) * 100, 2),
   )
 
-path = file.path(folder, 'vis_results', 'test2.csv')
-write.csv(inc_group_costs, path, row.names=FALSE)
+# path = file.path(folder, 'vis_results', 'test2.csv')
+# write.csv(inc_group_costs, path, row.names=FALSE)
 
 inc_group_costs$combined = factor(inc_group_costs$combined,
                 levels=c(
@@ -740,6 +1219,8 @@ inc_group_costs$combined = factor(inc_group_costs$combined,
                   'Baseline\nUMIC',
                   'Lowest\nUMIC'
                 ))
+
+inc_group_costs <- select(inc_group_costs, scenario, strategy, combined, `(GDP%)`)
 
 inc_group_costs <- spread(inc_group_costs, combined, `(GDP%)`)
 
@@ -779,15 +1260,19 @@ table5 = inc_group_costs %>%
   row_spec(0, align = "c") %>%
   add_header_above(
     c(" "= 2,
-      "Low\nIncome\n(5-Year GDP%)" = 2,
-      "Lower\nMiddle Income\n(5-Year GDP%)" = 2,
-      "Upper\nMiddle Income\n(5-Year GDP%)" = 2
-      ))
+      "Low\nIncome\n(10-Year GDP%)" = 2,
+      "Lower\nMiddle Income\n(10-Year GDP%)" = 2,
+      "Upper\nMiddle Income\n(10-Year GDP%)" = 2
+      )) %>%
+  footnote(number = c("Infrastructure Sharing Strategy: Baseline.",
+                      "Spectrum Pricing Strategy: Baseline.",
+                      "Taxation Strategy: Baseline.",
+                      "Results rounded to 2 s.f."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-path = file.path(folder, 'tables')
+path = file.path(folder, 'figures_tables')
 setwd(path)
-kableExtra::save_kable(table5, file='f_costs_by_income_group.png', zoom = 1.5)
+kableExtra::save_kable(table5, file='h_costs_by_income_group.png', zoom = 1.5)
 
-path = file.path(folder, 'vis_results', 'costs_by_income_group.csv')
-write.csv(inc_group_costs, path, row.names=FALSE)
+# path = file.path(folder, 'vis_results', 'costs_by_income_group.csv')
+# write.csv(inc_group_costs, path, row.names=FALSE)
