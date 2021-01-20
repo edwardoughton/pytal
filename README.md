@@ -18,11 +18,11 @@ Citation
 - Oughton, E. J. et al. (2021) Policy choices can help keep 4G and 5G universal broadband
   affordable, arXiv id: 3565357.
 
-The pytal approach
-==================
+The **pytal** approach
+======================
 The aim is to be able to assess representative countries using a spatially-explicit modeling
-codebase, and then use these estimates to scale the results globally. Using metrics which
-represent the costs of 4G and 5G deployment, a k-means clustering method groups low- and
+codebase, and then use these estimates to scale the results globally. Firstly, using metrics
+which affect 4G and 5G infrastructure deployment, a k-means clustering method groups low- and
 middle-income countries into similar clusters based on GDP per capita, population density and
 existing 4G roll-out.
 
@@ -38,14 +38,17 @@ In Oughton et al. (2021) the analysis includes eight representative countries ac
 clusters, including Malawi, Uganda, Kenya, Senegal, Pakistan, Albania, Peru and Mexico. For
 different types of cellular technologies the cost composition can be obtained.
 
-## Example 5G costs for representative countries
+## Example of 5G costs for representative countries
 <p align="center">
   <img src="/figures/percentage_of_total_private_cost.png" />
 </p>
 
 The aim of achieving universal broadband is highly important for economic development,
 therefore `pytal` helps to quantify the social cost for this target given different user
-capacities (up to 25, 200 or 400 Mbps).
+capacities (for example, up to 25, 200 or 400 Mbps per user as the peak speed). The social
+cost to society (the private cost + government cost) represents the cost of achieving universal
+broadband. This includes any net required government subsidy, after spectrum and taxation
+income is accounted for.
 
 ## Example technology costs for representative countries
 <p align="center">
@@ -56,7 +59,9 @@ Global estimates for 4G and 5G roll-out
 =======================================
 Once different strategies have been modeled for representative countries, the results can be
 scaled within each country cluster to provide global cost estimates. This allows researchers
-to understand the required investment for each country, or by each country income group.
+to understand the required investment for each country, or by each country income group. The
+results are reported for the required percentage of annual GDP which would need to be invested
+over the next decade.
 
 ## Global costs by income group
 <p align="center">
@@ -142,4 +147,5 @@ Then
 Thanks for the support
 ======================
 
-**pyTAL** was written and developed at the `Environmental Change Institute, University of Oxford <http://www.eci.ox.ac.uk>`_ within the EPSRC-sponsored MISTRAL programme, as part of the `Infrastructure Transition Research Consortium <http://www.itrc.org.uk/>`_.
+**pytal** was jointly developed at the University of Oxford and George Mason University, with
+funding support from UKRI (EPSRC) and the World Bank 5G Flagship.
