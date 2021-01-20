@@ -65,7 +65,7 @@ country, or by country income group. In the figure below we repor
 
 ## Global costs by income group
 <p align="center">
-  <img src="/figures/h_costs_by_income_group.png" />
+  <img src="/figures/costs_by_income_group.png" />
 </p>
 
 
