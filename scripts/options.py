@@ -58,7 +58,7 @@ def generate_tech_options():
                                     )
                                     output.append({
                                         'scenario': scenario,
-                                        'strategy':strategy
+                                        'strategy': strategy
                                     })
 
     return output
@@ -103,7 +103,7 @@ def generate_business_model_options():
                                     )
                                     output.append({
                                         'scenario': scenario,
-                                        'strategy':strategy
+                                        'strategy': strategy
                                     })
 
     return output
@@ -163,7 +163,7 @@ def generate_policy_options():
                                     )
                                     output.append({
                                         'scenario': scenario,
-                                        'strategy':strategy
+                                        'strategy': strategy
                                     })
 
     return output
@@ -208,7 +208,7 @@ def generate_mixed_options():
                                     )
                                     output.append({
                                         'scenario': scenario,
-                                        'strategy':strategy
+                                        'strategy': strategy
                                     })
 
     return output
