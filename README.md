@@ -25,7 +25,7 @@ The aim is to be able to assess representative countries using a spatially-expli
 codebase, and then use these estimates to scale the results globally. Firstly, using metrics
 which affect 4G and 5G infrastructure deployment, a k-means clustering method groups low- and
 middle-income countries into similar clusters based on GDP per capita, population density and
-existing 4G roll-out.
+existing 4G deployment.
 
 ## Global country clustering
 
@@ -56,7 +56,7 @@ income is accounted for.
   <img src="/figures/baseline_tech_country_costs.png" />
 </p>
 
-Global estimates for 4G and 5G roll-out
+Global estimates for 4G and 5G deployment
 =======================================
 Once different strategies have been modeled for representative countries, the results can be
 scaled within each country cluster to provide global cost estimates. This allows researchers
