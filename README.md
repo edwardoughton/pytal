@@ -15,7 +15,7 @@ helping to connect more people to a faster Internet.
 Citation
 ---------
 
-- Oughton, E.J., Comini, N., Foster, V., Hall, J.W., 2021. Policy choices can help keep 4G
+- Oughton, E.J., Comini, N., Foster, V., and Hall, J.W. (2021) Policy choices can help keep 4G
   and 5G universal broadband affordable. arXiv:2101.07820 [cs, econ, q-fin].
 
 
