@@ -10,7 +10,7 @@ digital infrastructure strategies, particularly for 4G and 5G deployment.
 
 **pytal** enables researchers to examine trade-offs in infrastructure decisions relating to
 technologies, infrastructure sharing, regulation and taxation, with the ultimate aim of
-helping to connect more people to the Internet.
+helping to connect more people to a faster Internet.
 
 Citation
 ---------
