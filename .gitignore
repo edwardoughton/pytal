@@ -118,3 +118,5 @@ vis/global_cost/figures/*
 vis/tables/*
 vis/figures_tables/*
 vis/vis_results/*
+vis/report_map_map_clearance/data_inputs/*
+vis/report_map_map_clearance/figures/*

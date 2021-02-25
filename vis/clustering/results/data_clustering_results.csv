@@ -1,174 +1,174 @@
-,ISO_3digit,country,cluster
-1,AFG,afghanistan,C1
-3,ALB,albania,C4
-4,DZA,algeria,C5
-7,AGO,angola,C2
-11,ARG,argentina,C6
-12,ARM,armenia,C4
-16,AZE,azerbaijan,C4
-21,BLR,belarus,C5
-23,BLZ,belize,C5
-24,BEN,benin,C2
-26,BTN,bhutan,C2
-27,BOL,bolivia,C2
-29,BIH,bosniaandherzegovina,C1
-30,BWA,botswana,C5
-32,BRA,brazil,C6
-35,BGR,bulgaria,C6
-36,BFA,burkinafaso,C1
-37,BDI,burundi,C3
-39,KHM,cambodia,C2
-40,CMR,cameroon,C2
-44,TCD,chad,C1
-46,CHN,china,C6
-49,COL,colombia,C5
-51,COD,"congo,dem.rep.",C1
-52,COG,"congo,rep.",C1
-54,CRI,costarica,C6
-55,CIV,coted'ivoire,C1
-62,DJI,djibouti,C1
-64,DOM,dominicanrepublic,C4
-65,ECU,ecuador,C5
-66,EGY,"egypt,arabrep.",C2
-67,SLV,elsalvador,C3
-71,SWZ,eswatini,C1
-72,ETH,ethiopia,C2
-75,FJI,fiji,C4
-81,GAB,gabon,C5
-82,GMB,"gambia,the",C1
-83,GEO,georgia,C4
-85,GHA,ghana,C2
-92,GTM,guatemala,C4
-95,GNB,guinea-bissau,C1
-96,GUY,guyana,C1
-97,HTI,haiti,C3
-100,HND,honduras,C2
-104,IND,india,C3
-105,IDN,indonesia,C4
-106,IRN,iran(islamicrepublicof),C5
-107,IRQ,iraq,C1
-112,JAM,jamaica,C3
-115,JOR,jordan,C4
-116,KAZ,kazakhstan,C6
-117,KEN,kenya,C2
-123,KGZ,kyrgyzrepublic,C2
-124,LAO,laopdr,C2
-127,LSO,lesotho,C2
-128,LBR,liberia,C2
-129,LBY,libya,C5
-134,MDG,madagascar,C2
-135,MWI,malawi,C1
-136,MYS,malaysia,C6
-138,MLI,mali,C1
-145,MEX,mexico,C6
-147,MDA,moldova,C4
-149,MNG,mongolia,C5
-150,MNE,montenegro,C6
-152,MAR,morocco,C4
-153,MOZ,mozambique,C1
-154,MMR,myanmar,C1
-155,NAM,namibia,C5
-157,NPL,nepal,C1
-161,NIC,nicaragua,C2
-163,NGA,nigeria,C3
-170,PAK,pakistan,C3
-174,PNG,papuanewguinea,C2
-175,PRY,paraguay,C5
-176,PER,peru,C5
-177,PHL,philippines,C3
-185,ROU,romania,C6
-186,RUS,russianfederation,C6
-187,RWA,rwanda,C3
-196,SEN,senegal,C2
-197,SRB,serbia,C4
-199,SLE,sierraleone,C1
-204,SLB,solomonislands,C1
-205,SOM,somalia,C1
-206,ZAF,southafrica,C5
-210,LKA,srilanka,C3
-214,SDN,sudan(the),C1
-215,SUR,suriname,C5
-219,SYR,syrianarabrepublic,C2
-221,TJK,tajikistan,C2
-222,TZA,tanzania,C1
-223,THA,thailand,C4
-224,TLS,timor-leste,C1
-225,TGO,togo,C1
-229,TUN,tunisia,C4
-230,TUR,turkey,C6
-231,TKM,turkmenistan,C5
-234,UGA,uganda,C1
-235,UKR,ukraine,C2
-241,UZB,uzbekistan,C2
-242,VUT,vanuatu,C2
-243,VEN,venezuela(bolivarianrepublicof),C6
-244,VNM,vietnam,C3
-250,ZMB,zambia,C1
-251,ZWE,zimbabwe,C1
-110,AND,andorra,High Income
-2,ATG,antiguaandbarbuda,High Income
-310,ABW,aruba,High Income
-410,AUS,australia,High Income
-5,AUT,austria,High Income
-6,BHR,bahrain,High Income
-73,BRB,barbados,High Income
-8,BEL,belgium,High Income
-9,BMU,bermuda,High Income
-10,BRN,bruneidarussalam,High Income
-111,CAN,canada,High Income
-121,CHL,chile,High Income
-13,HRV,croatia,High Income
-14,CYP,cyprus,High Income
-15,CZE,czechrepublic,High Income
-162,DNK,denmark,High Income
-17,EST,estonia,High Income
-18,FIN,finland,High Income
-19,FRA,france,High Income
-20,PYF,frenchpolynesia,High Income
-211,DEU,germany,High Income
-22,GIB,gibraltar,High Income
-232,GRC,greece,High Income
-245,GRL,greenland,High Income
-25,GUM,guam,High Income
-261,HUN,hungary,High Income
-271,ISL,iceland,High Income
-28,IRL,ireland,High Income
-291,IMN,isleofman,High Income
-301,ISR,israel,High Income
-31,ITA,italy,High Income
-321,JPN,japan,High Income
-33,KOR,"korea,rep.",High Income
-34,KWT,kuwait,High Income
-351,LVA,latvia,High Income
-361,LIE,liechtenstein,High Income
-371,LTU,lithuania,High Income
-38,LUX,luxembourg,High Income
-391,MAC,"macaosar,china",High Income
-401,MLT,malta,High Income
-41,MCO,monaco,High Income
-42,NLD,netherlands,High Income
-43,NCL,newcaledonia,High Income
-441,NZL,newzealand,High Income
-45,NOR,norway,High Income
-461,OMN,oman,High Income
-47,PLW,palau,High Income
-48,PAN,panama,High Income
-491,POL,poland,High Income
-50,PRT,portugal,High Income
-511,PRI,puertorico,High Income
-521,QAT,qatar,High Income
-53,SAU,saudiarabia,High Income
-541,SYC,seychelles,High Income
-551,SGP,singapore,High Income
-56,SXM,sintmaarten(dutchpart),High Income
-57,SVN,slovenia,High Income
-58,ESP,spain,High Income
-59,SWE,sweden,High Income
-60,CHE,switzerland,High Income
-61,TTO,trinidadandtobago,High Income
-621,TCA,turksandcaicosislands,High Income
-63,ARE,unitedarabemirates,High Income
-641,GBR,unitedkingdom,High Income
-651,USA,unitedstates,High Income
-661,URY,uruguay,High Income
-671,VIR,virginislands(u.s.),High Income
+"","ISO_3digit","country","cluster"
+"1","AFG","afghanistan","C1"
+"3","ALB","albania","C4"
+"4","DZA","algeria","C5"
+"7","AGO","angola","C2"
+"11","ARG","argentina","C6"
+"12","ARM","armenia","C4"
+"16","AZE","azerbaijan","C4"
+"21","BLR","belarus","C5"
+"23","BLZ","belize","C5"
+"24","BEN","benin","C2"
+"26","BTN","bhutan","C2"
+"27","BOL","bolivia","C2"
+"29","BIH","bosniaandherzegovina","C1"
+"30","BWA","botswana","C5"
+"32","BRA","brazil","C6"
+"35","BGR","bulgaria","C6"
+"36","BFA","burkinafaso","C1"
+"37","BDI","burundi","C3"
+"39","KHM","cambodia","C2"
+"40","CMR","cameroon","C2"
+"44","TCD","chad","C1"
+"46","CHN","china","C6"
+"49","COL","colombia","C5"
+"51","COD","congo,dem.rep.","C1"
+"52","COG","congo,rep.","C1"
+"54","CRI","costarica","C6"
+"55","CIV","coted'ivoire","C1"
+"62","DJI","djibouti","C1"
+"64","DOM","dominicanrepublic","C4"
+"65","ECU","ecuador","C5"
+"66","EGY","egypt,arabrep.","C2"
+"67","SLV","elsalvador","C3"
+"71","SWZ","eswatini","C1"
+"72","ETH","ethiopia","C2"
+"75","FJI","fiji","C4"
+"81","GAB","gabon","C5"
+"82","GMB","gambia,the","C1"
+"83","GEO","georgia","C4"
+"85","GHA","ghana","C2"
+"92","GTM","guatemala","C4"
+"95","GNB","guinea-bissau","C1"
+"96","GUY","guyana","C1"
+"97","HTI","haiti","C3"
+"100","HND","honduras","C2"
+"104","IND","india","C3"
+"105","IDN","indonesia","C4"
+"106","IRN","iran(islamicrepublicof)","C5"
+"107","IRQ","iraq","C1"
+"112","JAM","jamaica","C3"
+"115","JOR","jordan","C4"
+"116","KAZ","kazakhstan","C6"
+"117","KEN","kenya","C2"
+"123","KGZ","kyrgyzrepublic","C2"
+"124","LAO","laopdr","C2"
+"127","LSO","lesotho","C2"
+"128","LBR","liberia","C2"
+"129","LBY","libya","C5"
+"134","MDG","madagascar","C2"
+"135","MWI","malawi","C1"
+"136","MYS","malaysia","C6"
+"138","MLI","mali","C1"
+"145","MEX","mexico","C6"
+"147","MDA","moldova","C4"
+"149","MNG","mongolia","C5"
+"150","MNE","montenegro","C6"
+"152","MAR","morocco","C4"
+"153","MOZ","mozambique","C1"
+"154","MMR","myanmar","C1"
+"155","NAM","namibia","C5"
+"157","NPL","nepal","C1"
+"161","NIC","nicaragua","C2"
+"163","NGA","nigeria","C3"
+"170","PAK","pakistan","C3"
+"174","PNG","papuanewguinea","C2"
+"175","PRY","paraguay","C5"
+"176","PER","peru","C5"
+"177","PHL","philippines","C3"
+"185","ROU","romania","C6"
+"186","RUS","russianfederation","C6"
+"187","RWA","rwanda","C3"
+"196","SEN","senegal","C2"
+"197","SRB","serbia","C4"
+"199","SLE","sierraleone","C1"
+"204","SLB","solomonislands","C1"
+"205","SOM","somalia","C1"
+"206","ZAF","southafrica","C5"
+"210","LKA","srilanka","C3"
+"214","SDN","sudan(the)","C1"
+"215","SUR","suriname","C5"
+"219","SYR","syrianarabrepublic","C2"
+"221","TJK","tajikistan","C2"
+"222","TZA","tanzania","C1"
+"223","THA","thailand","C4"
+"224","TLS","timor-leste","C1"
+"225","TGO","togo","C1"
+"229","TUN","tunisia","C4"
+"230","TUR","turkey","C6"
+"231","TKM","turkmenistan","C5"
+"234","UGA","uganda","C1"
+"235","UKR","ukraine","C2"
+"241","UZB","uzbekistan","C2"
+"242","VUT","vanuatu","C2"
+"243","VEN","venezuela(bolivarianrepublicof)","C6"
+"244","VNM","vietnam","C3"
+"250","ZMB","zambia","C1"
+"251","ZWE","zimbabwe","C1"
+"110","AND","andorra","High Income"
+"2","ATG","antiguaandbarbuda","High Income"
+"310","ABW","aruba","High Income"
+"410","AUS","australia","High Income"
+"5","AUT","austria","High Income"
+"6","BHR","bahrain","High Income"
+"73","BRB","barbados","High Income"
+"8","BEL","belgium","High Income"
+"9","BMU","bermuda","High Income"
+"10","BRN","bruneidarussalam","High Income"
+"111","CAN","canada","High Income"
+"121","CHL","chile","High Income"
+"13","HRV","croatia","High Income"
+"14","CYP","cyprus","High Income"
+"15","CZE","czechrepublic","High Income"
+"162","DNK","denmark","High Income"
+"17","EST","estonia","High Income"
+"18","FIN","finland","High Income"
+"19","FRA","france","High Income"
+"20","PYF","frenchpolynesia","High Income"
+"211","DEU","germany","High Income"
+"22","GIB","gibraltar","High Income"
+"232","GRC","greece","High Income"
+"245","GRL","greenland","High Income"
+"25","GUM","guam","High Income"
+"261","HUN","hungary","High Income"
+"271","ISL","iceland","High Income"
+"28","IRL","ireland","High Income"
+"291","IMN","isleofman","High Income"
+"301","ISR","israel","High Income"
+"31","ITA","italy","High Income"
+"321","JPN","japan","High Income"
+"33","KOR","korea,rep.","High Income"
+"34","KWT","kuwait","High Income"
+"351","LVA","latvia","High Income"
+"361","LIE","liechtenstein","High Income"
+"371","LTU","lithuania","High Income"
+"38","LUX","luxembourg","High Income"
+"391","MAC","macaosar,china","High Income"
+"401","MLT","malta","High Income"
+"41","MCO","monaco","High Income"
+"42","NLD","netherlands","High Income"
+"43","NCL","newcaledonia","High Income"
+"441","NZL","newzealand","High Income"
+"45","NOR","norway","High Income"
+"461","OMN","oman","High Income"
+"47","PLW","palau","High Income"
+"48","PAN","panama","High Income"
+"491","POL","poland","High Income"
+"50","PRT","portugal","High Income"
+"511","PRI","puertorico","High Income"
+"521","QAT","qatar","High Income"
+"53","SAU","saudiarabia","High Income"
+"541","SYC","seychelles","High Income"
+"551","SGP","singapore","High Income"
+"56","SXM","sintmaarten(dutchpart)","High Income"
+"57","SVN","slovenia","High Income"
+"58","ESP","spain","High Income"
+"59","SWE","sweden","High Income"
+"60","CHE","switzerland","High Income"
+"61","TTO","trinidadandtobago","High Income"
+"621","TCA","turksandcaicosislands","High Income"
+"63","ARE","unitedarabemirates","High Income"
+"641","GBR","unitedkingdom","High Income"
+"651","USA","unitedstates","High Income"
+"661","URY","uruguay","High Income"
+"671","VIR","virginislands(u.s.)","High Income"

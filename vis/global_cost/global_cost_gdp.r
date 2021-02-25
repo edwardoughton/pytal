@@ -36,10 +36,6 @@ pop$iso3 <- as.character(pop$iso3)
 
 results <- merge(results, pop, by='iso3', all=FALSE)
 
-#Not sure if this is right
-#Current costs are for a user on a network with 25% market share
-#We then multiply the user cost across the whole population?
-#check and revise this
 results$total_cost <- results$mean_cost_per_user * results$population
 
 results$gdp_percentage <- (results$total_cost / 5) / results$gdp * 100
