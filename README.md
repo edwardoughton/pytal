@@ -140,9 +140,9 @@ First run the following initial preprocessing script to extract the necessary fi
 
     python scripts/preprocess.py
 
-Then
+Then:
 
-    python scripts/core.py
+    python scripts/run.py
 
 
 Thanks for the support
