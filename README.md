@@ -2,7 +2,6 @@ Python Telecommunications Assessment Library (pytal)
 ===================================================
 
 [![Build Status](https://travis-ci.com/edwardoughton/pytal.svg?branch=master)](https://travis-ci.com/edwardoughton/pytal)
-[![Documentation Status](https://readthedocs.org/projects/pytal/badge/?version=latest)](https://pytal.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/edwardoughton/pytal/badge.svg?branch=master)](https://coveralls.io/github/edwardoughton/pytal?branch=master)
 
 **pytal** provides open-source assessment tools to help quantify the effectiveness of different
