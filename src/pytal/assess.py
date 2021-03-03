@@ -154,7 +154,7 @@ def get_spectrum_costs(region, strategy, global_parameters, country_parameters):
     country_parameters : dict
         All country specific parameters.
 
-    Output
+    Returns
     ------
     region : dict
         Contains all regional data.
@@ -284,8 +284,8 @@ def allocate_available_excess(region):
     region : dict
         Contains all regional data.
 
-    Output
-    ------
+    Returns
+    -------
     region : dict
         Contains all regional data.
 
@@ -314,7 +314,7 @@ def estimate_subsidies(region, available_for_cross_subsidy):
     available_for_cross_subsidy : int
         The amount of capital available for cross-subsidization.
 
-    Output
+    Returns
     ------
     region : dict
         Contains all regional data.
@@ -379,6 +379,21 @@ def calculate_total_market_costs(regions, option, country_parameters):
     """
     Calculate the costs for all Mobile Network Operators (MNOs).
 
+
+    Parameters
+    ----------
+    regions : list of dicts
+        Data for all regions (one dict per region).
+    option : dict
+        The strategy options being tested.
+    country_parameters : dict
+        All country specific parameters.
+
+    Returns
+    -------
+    output : list of dicts
+        Data for all regions (one dict per region).
+
     """
     output = []
 
@@ -421,6 +436,16 @@ def calculate_total_market_costs(regions, option, country_parameters):
 
 def calc(region, metric, ms):
     """
+    Short calculation function, for simplicity.
+
+    Parameters
+    ----------
+    region : dict
+        Data for region being modeled.
+    metric : string
+        The metric being calculated.
+    ms : float
+        Market share parameter.
 
     """
     if metric in region:

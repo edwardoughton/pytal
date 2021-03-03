@@ -740,7 +740,7 @@ def local_net_costs(region, costs, strategy, country_parameters,
     core = strategy.split('_')[1]
     cost_each = costs['regional_node_lower_{}'.format(core)]
 
-    #have 1 local node n km^2
+    # have 1 local node per n km^2
     local_nodes_proportion = (
         region['area_km2'] / global_parameters['local_node_spacing_km2'])
 
@@ -1184,7 +1184,7 @@ INFRA_SHARING_ASSETS = {
         'power_generator_battery_system',
     ],
     'active': [
-        'single_sector_antenna',  ##these items need renaming
+        'single_sector_antenna',
         'single_remote_radio_unit',
         'io_fronthaul',
         'processing',
@@ -1209,34 +1209,8 @@ INFRA_SHARING_ASSETS = {
         'backhaul',
         'cloud_backhaul',
     ],
-    # 'mocn': [
-    #     'single_sector_antenna',  ##these items need renaming
-    #     'single_remote_radio_unit',
-    #     'io_fronthaul',
-    #     'processing',
-    #     'io_s1_x2',
-    #     'control_unit',
-    #     'cooling_fans',
-    #     'distributed_power_supply_converter',
-    #     'bbu_cabinet',
-    #     'fronthaul',
-    #     'cots_processing',
-    #     'io_n2_n3',
-    #     'low_latency_switch',
-    #     'rack',
-    #     'cloud_power_supply_converter',
-    #     'tower',
-    #     'civil_materials',
-    #     'transportation',
-    #     'installation',
-    #     'site_rental',
-    #     'power_generator_battery_system',
-    #     'power',
-    #     'backhaul',
-    #     'cloud_backhaul',
-    # ],
     'shared': [
-        'single_sector_antenna',  ##these items need renaming
+        'single_sector_antenna',
         'single_remote_radio_unit',
         'io_fronthaul',
         'processing',
@@ -1267,7 +1241,6 @@ INFRA_SHARING_ASSETS = {
         'core_node',
     ],
 }
-
 
 COST_TYPE = {
     'single_sector_antenna': 'capex_and_opex',
