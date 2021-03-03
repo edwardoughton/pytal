@@ -140,7 +140,7 @@ First run the following initial preprocessing script to extract the necessary fi
 
     python scripts/preprocess.py
 
-Then:
+Then once you have all preprocessed data, you can run the model:
 
     python scripts/run.py
 
