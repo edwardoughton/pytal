@@ -87,7 +87,7 @@ Activate it (run this each time you switch projects):
 
 First, install optional packages:
 
-    conda install fiona shapely rtree pyproj
+    conda install geopandas fiona shapely rtree pyproj
 
 Then install pytal:
 
