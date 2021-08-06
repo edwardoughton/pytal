@@ -254,20 +254,34 @@ def test_greenfield_4g(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = greenfield_4g(setup_region[0],
-        '4G_epc_microwave_shared_baseline_baseline_baseline',
+        '4G_epc_microwave_srn_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_epc'] * 2) /
+         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_epc'] * 2) /
+         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+
+    #test srn wholesale core network
+    setup_region[0]['geotype'] = 'rural'
+    cost_structure = greenfield_4g(setup_region[0],
+        '4G_epc_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
     assert cost_structure['core_node'] == (
         (setup_costs['core_node_epc'] * 2) /
          (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
-        (setup_country_parameters['networks']['baseline_urban']))
+        (setup_country_parameters['networks']['baseline_rural']))
     assert cost_structure['regional_node'] == (
         (setup_costs['regional_node_epc'] * 2) /
          (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
-        (setup_country_parameters['networks']['baseline_urban']))
+        (setup_country_parameters['networks']['baseline_rural']))
 
 
 def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
@@ -314,9 +328,20 @@ def test_upgrade_to_4g(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = upgrade_to_4g(setup_region[0],
-        '4G_epc_microwave_shared_baseline_baseline_baseline',
+        '4G_epc_microwave_srn_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['regional_node'] == int(
+        (setup_costs['regional_node_epc'] * 2) /
+         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+
+    #test srn wholesale core network
+    setup_region[0]['geotype'] = 'rural'
+    cost_structure = upgrade_to_4g(setup_region[0],
+        '4G_epc_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
@@ -376,19 +401,32 @@ def test_greenfield_5g_nsa(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = greenfield_5g_nsa(setup_region[0],
-        '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        '5G_nsa_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
     assert cost_structure['core_node'] == (
         (setup_costs['core_node_nsa'] * 2) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_nsa'] * 2) /
+         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+
+    #test srn wholesale core network
+    setup_region[0]['geotype'] = 'rural'
+    cost_structure = greenfield_5g_nsa(setup_region[0],
+        '5G_nsa_microwave_srn_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == ((setup_costs['core_node_nsa'] * 2) /
         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
         (setup_country_parameters['networks']['baseline_urban']))
     assert cost_structure['regional_node'] == (
         (setup_costs['regional_node_nsa'] * 2) /
-         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
         (setup_country_parameters['networks']['baseline_urban']))
 
 
@@ -436,16 +474,28 @@ def test_upgrade_to_5g_nsa(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = upgrade_to_5g_nsa(setup_region[0],
-        '5G_nsa_microwave_shared_baseline_baseline_baseline',
+        '5G_nsa_microwave_srn_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
+
+    assert cost_structure['core_node'] == ((setup_costs['core_node_nsa'] * 2) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_nsa'] * 2) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+
+    #test srn wholesale core network
+    setup_region[0]['geotype'] = 'rural'
+    cost_structure = upgrade_to_5g_nsa(setup_region[0],
+        '5G_nsa_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 
     assert cost_structure['core_node'] == ((setup_costs['core_node_nsa'] * 2) /
         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
         (setup_country_parameters['networks']['baseline_urban']))
-
     assert cost_structure['regional_node'] == (
         (setup_costs['regional_node_nsa'] * 2) /
         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
@@ -503,20 +553,31 @@ def test_greenfield_5g_sa(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = greenfield_5g_sa(setup_region[0],
-        '5G_sa_microwave_shared_baseline_baseline_baseline',
+        '5G_sa_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
+    assert cost_structure['core_node'] == (
+        (setup_costs['core_node_sa'] * 2) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
+    assert cost_structure['regional_node'] == (
+        (setup_costs['regional_node_sa'] * 2) /
+        (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']))
 
+    setup_region[0]['geotype'] = 'rural'
+    cost_structure = greenfield_5g_sa(setup_region[0],
+        '5G_sa_microwave_srn_baseline_baseline_baseline',
+        setup_costs, setup_global_parameters,
+        setup_core_lut, setup_country_parameters)
     assert cost_structure['core_node'] == (
         (setup_costs['core_node_sa'] * 2) /
         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
-        (setup_country_parameters['networks']['baseline_urban']))
+        (setup_country_parameters['networks']['baseline_rural']))
     assert cost_structure['regional_node'] == (
         (setup_costs['regional_node_sa'] * 2) /
         (setup_region[0]['new_mno_sites'] + setup_region[0]['upgraded_mno_sites']) /
-        (setup_country_parameters['networks']['baseline_urban']))
+        (setup_country_parameters['networks']['baseline_rural']))
 
 
 def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
@@ -566,9 +627,9 @@ def test_upgrade_to_5g_sa(setup_region, setup_option, setup_costs,
     setup_region[0]['sites_3G'] = 3
     setup_region[0]['network_site_density'] = 2
 
-    #test shared wholesale core network
+    #test srn wholesale core network
     cost_structure = upgrade_to_5g_sa(setup_region[0],
-        '5G_sa_microwave_shared_baseline_baseline_baseline',
+        '5G_sa_microwave_srn_baseline_baseline_baseline',
         setup_costs, setup_global_parameters,
         setup_core_lut, setup_country_parameters)
 

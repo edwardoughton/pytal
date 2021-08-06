@@ -124,6 +124,21 @@ def test_find_site_density(
 
     assert answer == 2
 
+    answer = find_site_density(
+        {'demand_mbps_km2': 0.005, #OBF is high on this test, hence large demand.
+        'geotype': 'urban'},
+        { #generation_core_backhaul_sharing_networks_spectrum_tax
+        'scenario': 'S1_50_5_1',
+        'strategy': '5G_epc_microwave_baseline_baseline_high_high_high'
+        },
+        setup_global_parameters,
+        setup_country_parameters,
+        setup_lookup,
+        setup_ci
+    )
+
+    assert answer == 0.01
+
 
 def test_estimate_site_upgrades(
     setup_region,
@@ -242,7 +257,7 @@ def test_estimate_backhaul_upgrades(
         setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 27
+    assert answer['backhaul_new'] == 87
 
     answer = estimate_backhaul_upgrades(
         setup_region[0],
@@ -250,7 +265,7 @@ def test_estimate_backhaul_upgrades(
         setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 10
+    assert answer['backhaul_new'] == 70
 
     setup_region[0]['backhaul_fiber'] = 100
 
@@ -260,7 +275,7 @@ def test_estimate_backhaul_upgrades(
         setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 0
+    assert answer['backhaul_new'] == 57
 
     setup_region[0]['backhaul_fiber'] = 0
     setup_region[0]['backhaul_microwave'] = 100
@@ -271,7 +286,7 @@ def test_estimate_backhaul_upgrades(
         setup_country_parameters
     )
 
-    assert answer['backhaul_new'] == 0
+    assert answer['backhaul_new'] == 57
 
 
 def test_lookup_capacity():

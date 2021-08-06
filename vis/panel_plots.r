@@ -313,7 +313,7 @@ data <- data[(
     data$strategy == '5G_nsa_microwave_baseline_baseline_baseline_baseline' |
     data$strategy == '5G_nsa_microwave_passive_baseline_baseline_baseline' |
     data$strategy == '5G_nsa_microwave_active_baseline_baseline_baseline' |
-    data$strategy == '5G_nsa_microwave_shared_baseline_baseline_baseline'),]
+    data$strategy == '5G_nsa_microwave_srn_baseline_baseline_baseline'),]
 
 data <- data[!(data$value == "NA"),]
 
@@ -321,7 +321,7 @@ data$strategy = factor(data$strategy, levels=c("Revenue",
                         "5G_nsa_microwave_baseline_baseline_baseline_baseline",
                          "5G_nsa_microwave_passive_baseline_baseline_baseline",
                          "5G_nsa_microwave_active_baseline_baseline_baseline",
-                         "5G_nsa_microwave_shared_baseline_baseline_baseline"),
+                         "5G_nsa_microwave_srn_baseline_baseline_baseline"),
                 labels=c("Revenue",
                         "Baseline (No sharing)",
                         "Passive (Site Sharing)",
@@ -801,10 +801,10 @@ labels=c("Required Subsidy",
 ))
 
 data$strategy = factor(data$strategy, levels=c(
-  "4G_epc_microwave_shared_baseline_low_low",
-  "4G_epc_fiber_shared_baseline_low_low",
-  "5G_nsa_microwave_shared_baseline_low_low",
-  "5G_sa_fiber_shared_baseline_low_low"),
+  "4G_epc_microwave_srn_baseline_low_low",
+  "4G_epc_fiber_srn_baseline_low_low",
+  "5G_nsa_microwave_srn_baseline_low_low",
+  "5G_sa_fiber_srn_baseline_low_low"),
   labels=c("4G (MW)",
            "4G (FB)",
            "5G NSA (MW)",
@@ -839,7 +839,7 @@ data <- data[(data$confidence == 50),]
 
 names(data)[names(data) == 'GID_0'] <- 'country'
 
-data <- data[(data$strategy == '5G_nsa_microwave_shared_baseline_low_low'),]
+data <- data[(data$strategy == '5G_nsa_microwave_srn_baseline_low_low'),]
 
 data$combined <- paste(data$country, data$scenario, sep="_")
 

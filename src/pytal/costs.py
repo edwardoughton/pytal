@@ -249,8 +249,13 @@ def greenfield_4g(region, strategy, costs, global_parameters,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / networks
-            cost_structure[key] = value
+            if sharing == 'srn':
+                if geotype == 'urban' or geotype == 'suburban':
+                    cost_structure[key] = value
+                else:
+                    cost_structure[key] = value / networks
+            else:
+                cost_structure[key] = value / networks
 
     return cost_structure
 
@@ -319,8 +324,13 @@ def upgrade_to_4g(region, strategy, costs, global_parameters,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / networks
-            cost_structure[key] = value
+            if sharing == 'srn':
+                if geotype == 'urban' or geotype == 'suburban':
+                    cost_structure[key] = value
+                else:
+                    cost_structure[key] = value / networks
+            else:
+                cost_structure[key] = value / networks
 
     return cost_structure
 
@@ -395,8 +405,13 @@ def greenfield_5g_nsa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / networks
-            cost_structure[key] = value
+            if sharing == 'srn':
+                if geotype == 'urban' or geotype == 'suburban':
+                    cost_structure[key] = value
+                else:
+                    cost_structure[key] = value / networks
+            else:
+                cost_structure[key] = value / networks
 
     return cost_structure
 
@@ -468,8 +483,13 @@ def upgrade_to_5g_nsa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / networks
-            cost_structure[key] = value
+            if sharing == 'srn':
+                if geotype == 'urban' or geotype == 'suburban':
+                    cost_structure[key] = value
+                else:
+                    cost_structure[key] = value / networks
+            else:
+                cost_structure[key] = value / networks
 
     return cost_structure
 
@@ -545,8 +565,13 @@ def greenfield_5g_sa(region, strategy, costs,
         if not key in shared_assets:
             cost_structure[key] = value
         else:
-            value = value / networks
-            cost_structure[key] = value
+            if sharing == 'srn':
+                if geotype == 'urban' or geotype == 'suburban':
+                    cost_structure[key] = value
+                else:
+                    cost_structure[key] = value / networks
+            else:
+                cost_structure[key] = value / networks
 
     return cost_structure
 
@@ -1209,7 +1234,7 @@ INFRA_SHARING_ASSETS = {
         'backhaul',
         'cloud_backhaul',
     ],
-    'shared': [
+    'srn': [
         'single_sector_antenna',
         'single_remote_radio_unit',
         'io_fronthaul',

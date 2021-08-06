@@ -141,11 +141,11 @@ active <- data_bus_mod %>%
   filter(societal_cost == min(societal_cost)) 
 active$strategy_summary = 'active'
 
-shared <- data_bus_mod %>%
-  filter(str_detect(strategy, "_shared_baseline_baseline_baseline")) %>% 
+srn <- data_bus_mod %>%
+  filter(str_detect(strategy, "_srn_baseline_baseline_baseline")) %>% 
   group_by(GID_0, scenario) %>%
   filter(societal_cost == min(societal_cost)) 
-shared$strategy_summary = 'shared'
+srn$strategy_summary = 'srn'
 
 #policy options
 data_policy <- read.csv(file.path(folder, '..', 'results', 'national_market_cost_results_policy_options.csv'))
@@ -182,21 +182,21 @@ data_mixed <- data_mixed[(data_mixed$confidence == 50),]
 data_mixed <- select(data_mixed, GID_0, scenario, strategy, confidence, societal_cost)
 
 mixed <- data_mixed %>%
-  filter(str_detect(strategy, "_shared_baseline_low_low")) %>% 
+  filter(str_detect(strategy, "_srn_baseline_low_low")) %>% 
   group_by(GID_0, scenario) %>%
   filter(societal_cost == min(societal_cost)) 
 mixed$strategy_summary = 'mixed'
 
 ####################
 #Aggregate results
-results = rbind(baseline, passive, active, shared, 
+results = rbind(baseline, passive, active, srn, 
                 spectrum_low, spectrum_high,
                 tax_low, tax_high, mixed)
 
 results$tech = sapply(strsplit(results$strategy, "_"), "[", 1)
 results$backhaul = sapply(strsplit(results$strategy, "_"), "[", 3)
 
-rm(data_tech, data_bus_mod, data_policy, baseline, passive, active, shared, 
+rm(data_tech, data_bus_mod, data_policy, baseline, passive, active, srn, 
    spectrum_low, spectrum_high, tax_low, tax_high)
 
 results$GID_0 = factor(results$GID_0,
@@ -237,8 +237,8 @@ results = results %>%
     color=ifelse(grepl("4G (W)", passive, fixed = T), "blue", "black"))) %>%
   mutate(active = cell_spec(active, "html", 
      color=ifelse(grepl("4G (W)", active, fixed = T), "blue", "black"))) %>%
-  mutate(shared = cell_spec(shared, "html", 
-     color=ifelse(grepl("4G (W)", shared, fixed = T), "blue", "black"))) %>%
+  mutate(srn = cell_spec(srn, "html", 
+     color=ifelse(grepl("4G (W)", srn, fixed = T), "blue", "black"))) %>%
   mutate(spectrum_low = cell_spec(spectrum_low, "html", 
      color=ifelse(grepl("4G (W)", spectrum_low, fixed = T), "blue", "black"))) %>%
   mutate(spectrum_high = cell_spec(spectrum_high, "html", 
@@ -250,13 +250,13 @@ results = results %>%
   mutate(mixed = cell_spec(mixed, "html", 
      color=ifelse(grepl("4G (W)", mixed, fixed = T), "blue", "black")))
 
-results = select(results, Country, Scenario, baseline, passive, active, shared, 
+results = select(results, Country, Scenario, baseline, passive, active, srn, 
                  spectrum_low, spectrum_high, tax_low, tax_high, mixed)
 
 names(results)[names(results)=="baseline"] <- "Baseline"
 names(results)[names(results)=="passive"] <- "Passive"
 names(results)[names(results)=="active"] <- "Active"
-names(results)[names(results)=="shared"] <- "SRN"
+names(results)[names(results)=="srn"] <- "SRN"
 names(results)[names(results)=="spectrum_low"] <- "Low P."
 names(results)[names(results)=="spectrum_high"] <- "High P."
 names(results)[names(results)=="tax_low"] <- "Low T."
@@ -370,7 +370,7 @@ results$GID_0 = factor(results$GID_0,
                        levels=c('MWI', 'UGA', 'SEN', 'KEN', 'PAK', 'ALB', 'PER', 'MEX'),
                        labels=c('Malawi', 'Uganda', 'Senegal', 'Kenya', 'Pakistan', 'Albania', 'Peru', 'Mexico'))
 results$strategy_summary = factor(results$strategy_summary,
-                                  levels=c('baseline', 'passive', 'active', 'shared',
+                                  levels=c('baseline', 'passive', 'active', 'srn',
                                            'spectrum_low', 'spectrum_high', 'tax_low', 'tax_high', 'mixed'),
                                   labels = c('Baseline', 'Passive', 'Active', 'SRN',
                                              'Low P.', 'High P.', 'Low T.', 'High T.', 'Mixed'))
@@ -1076,10 +1076,10 @@ results$strategy = factor(results$strategy, levels=c(
   "4G_epc_fiber_baseline_baseline_baseline_baseline",
   "5G_nsa_microwave_baseline_baseline_baseline_baseline",
   "5G_sa_fiber_baseline_baseline_baseline_baseline",
-  '4G_epc_microwave_shared_baseline_low_low',
-  '4G_epc_fiber_shared_baseline_low_low',
-  '5G_nsa_microwave_shared_baseline_low_low',
-  '5G_sa_fiber_shared_baseline_low_low'
+  '4G_epc_microwave_srn_baseline_low_low',
+  '4G_epc_fiber_srn_baseline_low_low',
+  '5G_nsa_microwave_srn_baseline_low_low',
+  '5G_sa_fiber_srn_baseline_low_low'
   ),
   labels=c(
     "4G (W)",
