@@ -72,7 +72,7 @@ pysim5g_plot_capacity_km2 = ggplot(data, aes(x=r_distance/1000, y=capacity_mbps_
 panel = ggarrange(pysim5g_plot_se, pysim5g_plot_capacity, pysim5g_plot_capacity_km2,  
                   common.legend = TRUE, legend = 'bottom', ncol = 1, nrow = 3)
 
-path = file.path(folder, 'figures', 'pysim5g_panel.png', dpi=300)
-ggsave(path, units="in", width=8, height=10)
+path = file.path(folder, 'figures', 'pysim5g_panel.png')
+ggsave(path, units="in", width=8, height=10, dpi=300)
 print(panel)
 dev.off()

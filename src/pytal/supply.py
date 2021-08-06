@@ -366,11 +366,11 @@ def estimate_backhaul_upgrades(region, strategy, country_parameters):
     backhaul = strategy.split('_')[2]
     geotype = region['geotype'].split(' ')[0]
     networks = country_parameters['networks']['baseline' + '_' + geotype]
-    all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites']) / networks
+    all_sites = (region['new_mno_sites'] + region['upgraded_mno_sites']) #/ networks
 
     if backhaul == 'fiber':
 
-        existing_fiber = region['backhaul_fiber'] / networks
+        existing_fiber = math.floor(region['backhaul_fiber'] / networks)
 
         if existing_fiber < all_sites:
             region['backhaul_new'] =  math.ceil(all_sites - existing_fiber)
@@ -379,8 +379,8 @@ def estimate_backhaul_upgrades(region, strategy, country_parameters):
 
     elif backhaul == 'microwave':
 
-        existing_backhaul = (region['backhaul_microwave'] +
-            region['backhaul_fiber']) / networks
+        existing_backhaul = math.floor((region['backhaul_microwave'] +
+            region['backhaul_fiber']) / networks)
 
         if existing_backhaul < all_sites:
             region['backhaul_new'] =  math.ceil(all_sites - existing_backhaul)
