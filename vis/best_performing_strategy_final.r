@@ -638,13 +638,13 @@ results_S2 = read.csv(file.path(folder, 'spectrum_ratio.csv'))
 results_S2$Scenario = NULL
 specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
 
-results_S2$Pakistan = specify_decimal(results_S2$Pakistan, 2)
-results_S2$Albania = specify_decimal(results_S2$Albania, 2)
-results_S2$Peru = specify_decimal(results_S2$Peru, 2)
-results_S2$Mexico = specify_decimal(results_S2$Mexico, 2)
+results_S2$Pakistan = specify_decimal(results_S2$Pakistan, 0)
+results_S2$Albania = specify_decimal(results_S2$Albania, 1)
+results_S2$Peru = specify_decimal(results_S2$Peru, 0)
+results_S2$Mexico = specify_decimal(results_S2$Mexico, 0)
 
 table4 = results_S2 %>%
-  kable(escape = F, caption = 'Spectrum Pricing Results by Country', digits=2) %>%
+  kable(escape = F, caption = 'Spectrum Pricing Results by Country', digits=1) %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   row_spec(which(results_S2$Malawi >6), bold = T, color = "black", background = "lightgrey") %>%
@@ -653,8 +653,7 @@ table4 = results_S2 %>%
   footnote(number = c("Scenario: S2 (<200 Mbps).",
                       "Technology Strategy: 5G NSA with Wireless Backhaul.",
                       "Infrastructure Sharing Strategy: Baseline.",
-                      "Taxation Strategy: Baseline.",
-                      "Results rounded to 2 d.p."))
+                      "Taxation Strategy: Baseline."))
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'figures_tables')
@@ -1157,8 +1156,8 @@ path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table4, file='g_costs_by_income_group.png', zoom = 1.5)
 
-# path = file.path(folder, 'vis_results', 'headline_costs.csv')
-# write.csv(headline_costs, path, row.names=FALSE)
+path = file.path(folder, 'vis_results', 'headline_costs.csv')
+write.csv(headline_costs, path, row.names=FALSE)
 
 inc_group_costs = results[!(results$income_group == 'HIC'),]
 
@@ -1274,5 +1273,5 @@ path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table5, file='h_costs_by_income_group.png', zoom = 1.5)
 
-# path = file.path(folder, 'vis_results', 'costs_by_income_group.csv')
-# write.csv(inc_group_costs, path, row.names=FALSE)
+path = file.path(folder, 'vis_results', 'costs_by_income_group.csv')
+write.csv(inc_group_costs, path, row.names=FALSE)
