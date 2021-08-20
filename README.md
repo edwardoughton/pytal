@@ -45,8 +45,8 @@ different types of cellular technologies the cost composition can be obtained.
 </p>
 
 The aim of achieving universal broadband is highly important for economic development,
-therefore `pytal` helps to quantify the social cost for this target given different user
-capacities (for example, up to 25, 200 or 400 Mbps per user as the peak speed). The social
+therefore `pytal` helps to quantify the financial cost for this target given different user
+capacities (for example, up to 25, 200 or 400 Mbps per user as the peak speed). The financial
 cost to society (the private cost + government cost) represents the cost of achieving universal
 broadband. This includes any net required government subsidy, after spectrum and taxation
 income is accounted for.
