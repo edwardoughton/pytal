@@ -214,7 +214,7 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 #get data
 data <- read.csv(file.path(folder, 'gdp_perc_results.csv'), stringsAsFactors = F)
 
-shapes <- file.path(folder, '..','clustering','data_inputs', "global_countries.shp")
+shapes <- file.path(folder, '..','clustering','data_inputs', "DisputedAreasWGS84.shp")
 
 #fortify the data AND keep trace of the commune code! (Takes ~2 minutes)
 gde_15 <- readOGR(shapes, layer = "global_countries")

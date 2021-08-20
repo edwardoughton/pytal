@@ -264,7 +264,7 @@ names(results)[names(results)=="tax_high"] <- "High T."
 names(results)[names(results)=="mixed"] <- "Lowest"
 
 results = kable(results, "html", escape = F, 
-  caption = "Least (Social) Cost Technology for Universal Coverage") %>% 
+  caption = "Least (Financial) Cost Technology for Universal Coverage") %>% 
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   add_header_above(
     c(" "= 3, 
@@ -279,7 +279,7 @@ setwd(path)
 kableExtra::save_kable(results, file = 'b_best_performing_technology.png', zoom = 1.5)
 
 #################
-#Social Cost = MNO cost + govt cost
+#Financial Cost = MNO cost + govt cost
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 
 #technology
@@ -406,8 +406,8 @@ results_wide = results_wide %>%
 results_wide = with(results_wide, results_wide[order(Scenario, Strategy, Metric),])
 
 results_wide$Metric = factor(results_wide$Metric,
-                             levels=c('private_cost', 'government_cost', 'societal_cost'),
-                             labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Social Cost ($Bn)'))
+       levels=c('private_cost', 'government_cost', 'societal_cost'),
+       labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Financial Cost ($Bn)'))
 
 results_wide = select(results_wide, Scenario, Strategy, Metric,
               Malawi, Uganda, Senegal, Kenya, Pakistan, Albania, Peru, Mexico)
@@ -460,7 +460,7 @@ kableExtra::save_kable(table1, file='sup_baseline_tech_country_costs.png', zoom 
 path = file.path(folder, 'vis_results', 'sup_baseline_tech_country_costs.csv')
 write.csv(results_wide, path, row.names=FALSE)
 
-results_wide = results_wide[(results_wide$Metric == 'Social Cost ($Bn)'),]
+results_wide = results_wide[(results_wide$Metric == 'Financial Cost ($Bn)'),]
 
 table1 = results_wide %>%
   mutate(
@@ -509,7 +509,7 @@ names(results_wide)[names(results_wide)=="strategy_summary"] <- "Strategy"
 
 results_wide$Metric = factor(results_wide$Metric,
                              levels=c('private_cost', 'government_cost', 'societal_cost'),
-                             labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Social Cost ($Bn)'))
+                             labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Financial Cost ($Bn)'))
 
 results_wide = with(results_wide, results_wide[order(Scenario, Strategy),])
 
@@ -545,7 +545,7 @@ path = file.path(folder, 'vis_results', 'sup_infra_sharing_country_costs.csv')
 write.csv(results_wide, path, row.names=FALSE)
 
 #######################################
-results_wide = results_wide[(results_wide$Metric == 'Social Cost ($Bn)'),]
+results_wide = results_wide[(results_wide$Metric == 'Financial Cost ($Bn)'),]
 
 table2 = results_wide %>%
   mutate(
@@ -592,7 +592,7 @@ names(results_wide)[names(results_wide)=="strategy_summary"] <- "Strategy"
 
 results_wide$Metric = factor(results_wide$Metric,
                              levels=c('private_cost', 'government_cost', 'societal_cost'),
-                             labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Social Cost ($Bn)'))
+                             labels=c('Private Cost ($Bn)', 'Government Cost ($Bn)','Financial Cost ($Bn)'))
 
 results_wide$Strategy = factor(results_wide$Strategy,
                                levels=c('Low P.', 'Baseline', 'High P.'),
@@ -802,7 +802,7 @@ table6 = all_data %>%
     Peru = cb(Peru),
     Mexico = cb(Mexico)
   ) %>%
-  kable(escape = F, caption = '(A) Social Cost of Universal Access NPV 2020-2030 by Country') %>%
+  kable(escape = F, caption = '(A) Financial Cost of Universal Access NPV 2020-2030 by Country') %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
   add_header_above(
