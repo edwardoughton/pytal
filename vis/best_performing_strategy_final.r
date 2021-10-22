@@ -638,12 +638,27 @@ results_S2 = read.csv(file.path(folder, 'spectrum_ratio.csv'))
 results_S2$Scenario = NULL
 specify_decimal <- function(x, k) trimws(format(round(x, k), nsmall=k))
 
-results_S2$Pakistan = specify_decimal(results_S2$Pakistan, 0)
+results_S2$Pakistan = specify_decimal(results_S2$Pakistan, 1)
 results_S2$Albania = specify_decimal(results_S2$Albania, 1)
-results_S2$Peru = specify_decimal(results_S2$Peru, 0)
-results_S2$Mexico = specify_decimal(results_S2$Mexico, 0)
+results_S2$Peru = specify_decimal(results_S2$Peru, 1)
+results_S2$Mexico = specify_decimal(results_S2$Mexico, 1)
+
+results_S2$Pakistan = as.numeric(results_S2$Pakistan)
+results_S2$Albania = as.numeric(results_S2$Albania)
+results_S2$Peru = as.numeric(results_S2$Peru)
+results_S2$Mexico = as.numeric(results_S2$Mexico)
 
 table4 = results_S2 %>%
+  mutate(
+    Malawi = cb(Malawi),
+    Uganda = cb(Uganda),
+    Senegal = cb(Senegal),
+    Kenya = cb(Kenya),
+    Pakistan = cb(Pakistan),
+    Albania = cb(Albania),
+    Peru = cb(Peru),
+    Mexico = cb(Mexico)
+  ) %>%
   kable(escape = F, caption = 'Spectrum Pricing Results by Country', digits=1) %>%
   kable_classic("striped", full_width = F, html_font = "Cambria") %>%
   row_spec(0, align = "c") %>%
@@ -659,6 +674,11 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table4, file='d_S2_spectrum_costs_ratio.png', zoom = 1.5)
+
+
+
+
+
 
 ###################NATIONAL COST PROFILE FOR BASELINE
 
@@ -1015,6 +1035,22 @@ setwd(path)
 kableExtra::save_kable(table8, file='f_c_subsidy.png', zoom = 1.5)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##################CLUSTER COSTS
 #get folder directory
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -1155,6 +1191,22 @@ folder <- dirname(rstudioapi::getSourceEditorContext()$path)
 path = file.path(folder, 'figures_tables')
 setwd(path)
 kableExtra::save_kable(table4, file='g_costs_by_income_group.png', zoom = 1.5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 path = file.path(folder, 'vis_results', 'headline_costs.csv')
 write.csv(headline_costs, path, row.names=FALSE)
