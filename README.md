@@ -14,8 +14,7 @@ helping to connect more people to a faster Internet.
 Citation
 ---------
 
-- Oughton, E.J., Comini, N., Foster, V., and Hall, J.W. (2021) Policy choices can help keep 4G
-  and 5G universal broadband affordable. [World Bank Policy Research Working Paper](https://documents.worldbank.org/en/publication/documents-reports/documentdetail/658521614715617195/policy-choices-can-help-keep-4g-and-5g-universal-broadband-affordable).
+- Oughton, E.J., Comini, N., Foster, V., Hall, J.W., 2022. Policy choices can help keep 4G and 5G universal broadband affordable. Technological Forecasting and Social Change 176, 121409. https://doi.org/10.1016/j.techfore.2021.121409
 
 
 
