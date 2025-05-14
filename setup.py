@@ -25,7 +25,7 @@ setup(
     long_description=readme(),
     long_description_content_type="text/markdown",
     author='Ed Oughton',
-    author_email='eoughton@gmu.edu',
+    author_email='',
     url='https://github.com/edwardoughton/pytal',
     packages=find_packages('src'),
     package_dir={'': 'src'},
